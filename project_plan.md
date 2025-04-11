@@ -35,10 +35,10 @@ A web application that performs multiple image analysis techniques to detect and
 ### 2. Backend Development
 
 #### Core Image Analysis Components
-- [ ] Implement Error Level Analysis (ELA)
-  - [ ] Image resaving with different quality levels
-  - [ ] Difference calculation
-  - [ ] Threshold-based anomaly detection
+- [x] Implement Error Level Analysis (ELA)
+  - [x] Image resaving with different quality levels
+  - [x] Difference calculation
+  - [x] Threshold-based anomaly detection
 
 - [ ] Implement Residual Pixel Analysis
   - [ ] Image filtering
