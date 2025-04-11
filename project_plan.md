@@ -82,8 +82,11 @@ A web application that performs multiple image analysis techniques to detect and
 - [ ] Test end-to-end functionality
 
 ### 5. Testing
-- [ ] Create test dataset of manipulated images
-- [ ] Write unit tests for analysis components
+- [x] Create test dataset of manipulated images
+- [x] Write unit tests for analysis components
+  - [x] ELA analysis tests
+  - [ ] Residual analysis tests
+  - [ ] PRNU analysis tests
 - [ ] Write integration tests for API endpoints
 - [ ] Perform frontend testing
 - [ ] Conduct performance testing
@@ -103,6 +106,10 @@ A web application that performs multiple image analysis techniques to detect and
 ## Directory Structure
 ```
 image-tamper-detector/
+├── data/
+│   └── samples/
+│       ├── original/     # Original, untampered images
+│       └── tampered/     # Known tampered images for testing
 ├── backend/
 │   ├── app/
 │   │   ├── __init__.py
@@ -137,4 +144,8 @@ image-tamper-detector/
 - Consider adding image size limits and format restrictions
 - Implement proper cleanup of temporary files
 - Consider adding caching for frequently analyzed images
-- Add proper logging for debugging and monitoring 
+- Add proper logging for debugging and monitoring
+- Maintain a diverse set of sample images for testing and demonstration:
+  - Original images should be unmodified and from reliable sources
+  - Tampered images should include various manipulation techniques
+  - Include metadata about the type of tampering in each sample 
