@@ -41,9 +41,9 @@ A web application that performs multiple image analysis techniques to detect and
   - [x] Threshold-based anomaly detection
 
 - [ ] Implement PRNU (Photo Response Non-Uniformity) Analysis
-  - [ ] Noise extraction
-  - [ ] Pattern matching
-  - [ ] Correlation analysis
+  - [x] Noise extraction
+  - [x] Pattern matching
+  - [x] Correlation analysis
 
 #### API Development
 - [ ] Set up FastAPI application structure
@@ -80,7 +80,7 @@ A web application that performs multiple image analysis techniques to detect and
 - [x] Create test dataset of manipulated images
 - [x] Write unit tests for analysis components
   - [x] ELA analysis tests
-  - [ ] PRNU analysis tests
+  - [x] PRNU analysis tests
 - [ ] Write integration tests for API endpoints
 - [ ] Perform frontend testing
 - [ ] Conduct performance testing
