@@ -17,6 +17,9 @@ def create_tampered_image(input_path: str, output_path: str):
     if img is None:
         raise ValueError(f"Could not read image: {input_path}")
     
+    # resize image to 1920x1080
+    img = cv2.resize(img, (1920, 1080))
+
     # Get dimensions
     height, width = img.shape[:2]
     

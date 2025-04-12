@@ -40,11 +40,6 @@ A web application that performs multiple image analysis techniques to detect and
   - [x] Difference calculation
   - [x] Threshold-based anomaly detection
 
-- [ ] Implement Residual Pixel Analysis
-  - [ ] Image filtering
-  - [ ] Residual calculation
-  - [ ] Statistical analysis of residuals
-
 - [ ] Implement PRNU (Photo Response Non-Uniformity) Analysis
   - [ ] Noise extraction
   - [ ] Pattern matching
@@ -85,7 +80,6 @@ A web application that performs multiple image analysis techniques to detect and
 - [x] Create test dataset of manipulated images
 - [x] Write unit tests for analysis components
   - [x] ELA analysis tests
-  - [ ] Residual analysis tests
   - [ ] PRNU analysis tests
 - [ ] Write integration tests for API endpoints
 - [ ] Perform frontend testing
@@ -117,7 +111,6 @@ image-tamper-detector/
 │   │   ├── analysis/
 │   │   │   ├── __init__.py
 │   │   │   ├── ela.py
-│   │   │   ├── residual.py
 │   │   │   └── prnu.py
 │   │   ├── api/
 │   │   │   ├── __init__.py
