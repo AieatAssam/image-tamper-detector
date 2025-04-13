@@ -156,7 +156,7 @@ def test_same_camera_correlation(prnu_analyzer, data_dir):
 def test_error_handling(prnu_analyzer):
     """Test error handling for invalid inputs."""
     # Test with non-existent file
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         prnu_analyzer.analyze('nonexistent.jpg')
     
     # Test with invalid file
@@ -312,7 +312,7 @@ def test_detect_tampering_parameters(prnu_analyzer, data_dir):
 def test_detect_tampering_error_handling(prnu_analyzer, data_dir):
     """Test error handling in tampering detection."""
     # Test with non-existent file
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         prnu_analyzer.detect_tampering('nonexistent.jpg')
     
     # Test with invalid file

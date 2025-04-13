@@ -4,7 +4,8 @@ Photo Response Non-Uniformity (PRNU) analysis module for image tampering detecti
 import numpy as np
 import cv2
 from pathlib import Path
-from typing import Tuple, Optional, List
+import io
+from typing import Tuple, Optional, List, Union
 from scipy import signal
 from scipy.interpolate import griddata
 
@@ -119,12 +120,26 @@ class PRNUAnalyzer:
             correlation = np.sum(p1_norm * p2_norm) / (p1_norm.size - 1)
             return np.clip(correlation, -1, 1)
     
-    def analyze(self, image_path: str | Path) -> Tuple[np.ndarray, np.ndarray]:
+    def _load_image_from_bytes(self, image_bytes: bytes) -> np.ndarray:
+        """Load an image from bytes."""
+        try:
+            # Read image bytes into numpy array
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if image is None:
+                raise ValueError("Failed to decode image bytes")
+            return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        except Exception as e:
+            raise ValueError(f"Error loading image from bytes: {e}")
+
+    def analyze(self, image_input: Union[str, Path, bytes]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Perform PRNU analysis on an image.
         
         Args:
-            image_path (str | Path): Path to the image file
+            image_input: Can be one of:
+                - Path to the image file (str or Path)
+                - Bytes of the image file (bytes)
             
         Returns:
             Tuple[np.ndarray, np.ndarray]: Tuple containing:
@@ -135,19 +150,21 @@ class PRNUAnalyzer:
             FileNotFoundError: If image file doesn't exist
             ValueError: If image can't be processed
         """
-        # Convert path to Path object
-        image_path = Path(image_path)
-        if not image_path.exists():
-            raise FileNotFoundError(f"Image not found: {image_path}")
-            
         try:
-            # Read image using OpenCV
-            image = cv2.imread(str(image_path))
-            if image is None:
-                raise ValueError("Failed to read image")
-                
-            # Convert to RGB
-            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # Handle different input types
+            if isinstance(image_input, (str, Path)):
+                image_path = Path(image_input)
+                if not image_path.exists():
+                    raise FileNotFoundError(f"Image not found: {image_path}")
+                # Read image using OpenCV
+                image = cv2.imread(str(image_path))
+                if image is None:
+                    raise ValueError("Failed to read image")
+                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            elif isinstance(image_input, bytes):
+                image_rgb = self._load_image_from_bytes(image_input)
+            else:
+                raise ValueError("Invalid input type. Must be string, Path, or bytes")
             
             # Extract noise residual
             noise_residual = self.extract_noise_residual(image_rgb)
@@ -244,7 +261,7 @@ class PRNUAnalyzer:
         return heatmap
 
     def detect_tampering(self,
-                        image_path: str | Path,
+                        image_input: Union[str, Path, bytes],
                         reference_pattern: Optional[np.ndarray] = None,
                         correlation_threshold: float = 0.5,
                         window_size: int = 64,
@@ -254,7 +271,9 @@ class PRNUAnalyzer:
         Analyze an image for tampering and return a decision with visualization.
         
         Args:
-            image_path: Path to the image file
+            image_input: Can be one of:
+                - Path to the image file (str or Path)
+                - Bytes of the image file (bytes)
             reference_pattern: Reference PRNU pattern (must be a numpy array)
             correlation_threshold: Threshold for correlation values (0-1).
                 Lower values indicate potential tampering
@@ -272,7 +291,7 @@ class PRNUAnalyzer:
             ValueError: If image is invalid or reference pattern has wrong type
         """
         # Analyze the image
-        image_rgb, noise_residual = self.analyze(image_path)
+        image_rgb, noise_residual = self.analyze(image_input)
         
         # If reference pattern provided, validate its type
         if reference_pattern is not None and not isinstance(reference_pattern, np.ndarray):
