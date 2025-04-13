@@ -7,6 +7,8 @@ from fastapi.responses import JSONResponse
 from fastapi.openapi.utils import get_openapi
 from pathlib import Path
 import os
+import base64
+import cv2
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 import logging
@@ -18,6 +20,13 @@ from backend.app.analysis.entropy import EntropyAnalyzer
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+def encode_image_to_base64(image_array) -> str:
+    """Convert numpy array to base64 string."""
+    success, buffer = cv2.imencode('.png', image_array)
+    if not success:
+        raise ValueError("Failed to encode image")
+    return base64.b64encode(buffer).decode('utf-8')
 
 # Response models
 class AnalysisDetails(BaseModel):
@@ -35,6 +44,7 @@ class AnalysisResponse(BaseModel):
     is_tampered: bool = Field(..., description="Whether the image is detected as tampered/AI-generated")
     confidence_score: float = Field(..., ge=0, le=1, description="Confidence score of the detection (0-1)")
     analysis_type: str = Field(..., description="Type of analysis performed (ELA, PRNU, or Entropy)")
+    visualization_base64: str = Field(..., description="Base64 encoded visualization image showing detected issues")
     details: Dict[str, Any] = Field(..., description="Detailed analysis results")
 
     class Config:
@@ -43,6 +53,7 @@ class AnalysisResponse(BaseModel):
                 "is_tampered": True,
                 "confidence_score": 0.85,
                 "analysis_type": "ELA",
+                "visualization_base64": "base64_encoded_image_string",
                 "details": {
                     "edge_discontinuity": 0.65,
                     "texture_variance": 1500.0,
@@ -61,12 +72,18 @@ class CombinedAnalysisResponse(BaseModel):
     ela_result: Optional[Dict[str, Any]] = Field(None, description="Results from ELA analysis")
     prnu_result: Optional[Dict[str, Any]] = Field(None, description="Results from PRNU analysis")
     entropy_result: Optional[Dict[str, Any]] = Field(None, description="Results from entropy analysis")
+    ela_visualization_base64: Optional[str] = Field(None, description="Base64 encoded ELA visualization")
+    prnu_visualization_base64: Optional[str] = Field(None, description="Base64 encoded PRNU visualization")
+    entropy_visualization_base64: Optional[str] = Field(None, description="Base64 encoded entropy visualization")
 
     class Config:
         json_schema_extra = {
             "example": {
                 "is_tampered": True,
                 "confidence_score": 0.75,
+                "ela_visualization_base64": "base64_encoded_image_string",
+                "prnu_visualization_base64": "base64_encoded_image_string",
+                "entropy_visualization_base64": "base64_encoded_image_string",
                 "ela_result": {
                     "is_tampered": True,
                     "edge_discontinuity": 0.65,
@@ -160,19 +177,20 @@ async def analyze_ela(
         file: Image file to analyze (JPEG recommended)
         
     Returns:
-        AnalysisResponse: Analysis results including tampering detection and confidence score
+        AnalysisResponse: Analysis results including tampering detection, visualization, and confidence score
         
     Raises:
         HTTPException: If file processing or analysis fails
     """
     try:
         contents = await file.read()
-        is_tampered, _, features = ela_analyzer.detect_tampering(contents)
+        is_tampered, visualization, features = ela_analyzer.detect_tampering(contents)
         
         return {
             "is_tampered": is_tampered,
             "confidence_score": 1 - min(1.0, features.edge_discontinuity),
             "analysis_type": "ELA",
+            "visualization_base64": encode_image_to_base64(visualization),
             "details": {
                 "edge_discontinuity": float(features.edge_discontinuity),
                 "texture_variance": float(features.texture_variance),
@@ -204,19 +222,20 @@ async def analyze_prnu(
         file: Image file to analyze
         
     Returns:
-        AnalysisResponse: Analysis results including tampering detection and confidence score
+        AnalysisResponse: Analysis results including tampering detection, visualization, and confidence score
         
     Raises:
         HTTPException: If file processing or analysis fails
     """
     try:
         contents = await file.read()
-        is_tampered, _ = prnu_analyzer.detect_tampering(contents)
+        is_tampered, visualization = prnu_analyzer.detect_tampering(contents)
         
         return {
             "is_tampered": is_tampered,
             "confidence_score": 0.8,  # Default confidence
             "analysis_type": "PRNU",
+            "visualization_base64": encode_image_to_base64(visualization),
             "details": {
                 "method": "Photo Response Non-Uniformity Analysis",
                 "description": "Analysis of sensor pattern noise"
@@ -244,19 +263,20 @@ async def analyze_entropy(
         file: Image file to analyze
         
     Returns:
-        AnalysisResponse: Analysis results including AI-generation detection and confidence score
+        AnalysisResponse: Analysis results including AI-generation detection, visualization, and confidence score
         
     Raises:
         HTTPException: If file processing or analysis fails
     """
     try:
         contents = await file.read()
-        is_ai_generated, _, matching_proportion = entropy_analyzer.detect_ai_generated(contents)
+        is_ai_generated, visualization, matching_proportion = entropy_analyzer.detect_ai_generated(contents)
         
         return {
             "is_tampered": is_ai_generated,
             "confidence_score": float(1 - matching_proportion),
             "analysis_type": "Entropy",
+            "visualization_base64": encode_image_to_base64(visualization),
             "details": {
                 "matching_proportion": float(matching_proportion),
                 "method": "Entropy Analysis",
@@ -288,16 +308,16 @@ async def analyze_combined(
         file: Image file to analyze
         
     Returns:
-        CombinedAnalysisResponse: Combined analysis results from all methods
+        CombinedAnalysisResponse: Combined analysis results including visualizations from all methods
         
     Raises:
         HTTPException: If file processing or analysis fails
     """
     try:
         contents = await file.read()
-        ela_tampered, _, ela_features = ela_analyzer.detect_tampering(contents)
-        prnu_tampered, _ = prnu_analyzer.detect_tampering(contents)
-        entropy_tampered, _, matching_proportion = entropy_analyzer.detect_ai_generated(contents)
+        ela_tampered, ela_vis, ela_features = ela_analyzer.detect_tampering(contents)
+        prnu_tampered, prnu_vis = prnu_analyzer.detect_tampering(contents)
+        entropy_tampered, entropy_vis, matching_proportion = entropy_analyzer.detect_ai_generated(contents)
 
         confidence_scores = [
             1 - min(1.0, ela_features.edge_discontinuity),  # ELA confidence
@@ -311,6 +331,9 @@ async def analyze_combined(
         return {
             "is_tampered": is_tampered,
             "confidence_score": combined_confidence,
+            "ela_visualization_base64": encode_image_to_base64(ela_vis),
+            "prnu_visualization_base64": encode_image_to_base64(prnu_vis),
+            "entropy_visualization_base64": encode_image_to_base64(entropy_vis),
             "ela_result": {
                 "is_tampered": ela_tampered,
                 "edge_discontinuity": float(ela_features.edge_discontinuity),
