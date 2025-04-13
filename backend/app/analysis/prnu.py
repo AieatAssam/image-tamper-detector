@@ -6,6 +6,7 @@ import cv2
 from pathlib import Path
 from typing import Tuple, Optional, List
 from scipy import signal
+from scipy.interpolate import griddata
 
 class PRNUAnalyzer:
     def __init__(self, 
@@ -156,48 +157,184 @@ class PRNUAnalyzer:
         except Exception as e:
             raise ValueError(f"Error during PRNU analysis: {e}")
     
-    def create_tampering_heatmap(self, 
-                               reference_pattern: np.ndarray,
-                               test_pattern: np.ndarray,
-                               window_size: int = 64,
-                               stride: int = 32) -> np.ndarray:
+    def create_tampering_heatmap(self,
+                            reference_pattern: np.ndarray,
+                            test_pattern: np.ndarray,
+                            window_size: int = 64,
+                            stride: int = 32) -> np.ndarray:
         """
-        Create a tampering heatmap by computing local correlations.
+        Create a heatmap showing local correlations between reference and test patterns.
         
         Args:
-            reference_pattern (np.ndarray): Reference PRNU pattern
-            test_pattern (np.ndarray): Test image PRNU pattern
-            window_size (int): Size of sliding window
-            stride (int): Stride for sliding window
+            reference_pattern: Reference PRNU pattern
+            test_pattern: Test image PRNU pattern
+            window_size: Size of sliding window
+            stride: Step size for sliding window
             
         Returns:
-            np.ndarray: Heatmap showing local correlation values
+            2D array of correlation values (0-1), where lower values indicate potential tampering
         """
         # Ensure both patterns have the same shape
         if reference_pattern.shape != test_pattern.shape:
             # Resize test pattern to match reference pattern
-            if len(reference_pattern.shape) == 3:
-                test_pattern = cv2.resize(test_pattern, 
-                                        (reference_pattern.shape[1], reference_pattern.shape[0]))
-            else:
-                raise ValueError("Patterns must have same shape and dimensions")
+            test_pattern = cv2.resize(
+                test_pattern,
+                (reference_pattern.shape[1], reference_pattern.shape[0])
+            )
+            # Add channel dimension if needed
+            if len(test_pattern.shape) == 2 and len(reference_pattern.shape) == 3:
+                test_pattern = test_pattern[..., np.newaxis]
+            elif len(reference_pattern.shape) == 2 and len(test_pattern.shape) == 3:
+                reference_pattern = reference_pattern[..., np.newaxis]
         
         height, width = reference_pattern.shape[:2]
         heatmap = np.zeros((height, width))
+        window_count = np.zeros((height, width))
         
+        # Compute local correlations using sliding window
         for y in range(0, height - window_size + 1, stride):
             for x in range(0, width - window_size + 1, stride):
                 # Extract windows
                 ref_window = reference_pattern[y:y+window_size, x:x+window_size]
                 test_window = test_pattern[y:y+window_size, x:x+window_size]
                 
-                # Compute local correlation
-                correlation = self.compute_correlation(ref_window, test_window)
+                # Compute correlation for each color channel
+                correlations = []
+                for c in range(ref_window.shape[2]):
+                    ref_channel = ref_window[..., c].flatten()
+                    test_channel = test_window[..., c].flatten()
+                    
+                    # Center the data
+                    ref_channel = ref_channel - np.mean(ref_channel)
+                    test_channel = test_channel - np.mean(test_channel)
+                    
+                    # Compute normalized correlation
+                    norm_ref = np.linalg.norm(ref_channel)
+                    norm_test = np.linalg.norm(test_channel)
+                    
+                    if norm_ref > 0 and norm_test > 0:
+                        correlation = np.dot(ref_channel, test_channel) / (norm_ref * norm_test)
+                        correlations.append(max(0, correlation))  # Clip negative correlations
                 
-                # Normalize correlation to [0, 1] range
-                correlation = (correlation + 1) / 2
-                
-                # Update heatmap
-                heatmap[y:y+window_size, x:x+window_size] = correlation
-                
+                # Use average correlation across channels
+                if correlations:
+                    correlation = np.mean(correlations)
+                    
+                    # Update heatmap with weighted contribution
+                    weight = np.ones((window_size, window_size))
+                    heatmap[y:y+window_size, x:x+window_size] += correlation * weight
+                    window_count[y:y+window_size, x:x+window_size] += weight
+        
+        # Normalize heatmap
+        valid_mask = window_count > 0
+        heatmap[valid_mask] /= window_count[valid_mask]
+        
+        # Fill in any gaps using interpolation
+        if np.any(~valid_mask):
+            y_coords, x_coords = np.nonzero(valid_mask)
+            values = heatmap[valid_mask]
+            y_grid, x_grid = np.mgrid[0:height, 0:width]
+            heatmap = griddata(
+                (y_coords, x_coords),
+                values,
+                (y_grid, x_grid),
+                method='nearest'
+            )
+        
         return heatmap
+
+    def detect_tampering(self,
+                        image_path: str | Path,
+                        reference_pattern: Optional[np.ndarray] = None,
+                        correlation_threshold: float = 0.5,
+                        window_size: int = 64,
+                        stride: int = 32,
+                        overlay_alpha: float = 0.6) -> Tuple[bool, np.ndarray]:
+        """
+        Analyze an image for tampering and return a decision with visualization.
+        
+        Args:
+            image_path: Path to the image file
+            reference_pattern: Reference PRNU pattern (must be a numpy array)
+            correlation_threshold: Threshold for correlation values (0-1).
+                Lower values indicate potential tampering
+            window_size: Size of sliding window for local analysis
+            stride: Stride for sliding window
+            overlay_alpha: Transparency of the overlay (0-1)
+            
+        Returns:
+            Tuple containing:
+                - Boolean indicating if tampering was detected
+                - Visualization with tampered regions highlighted
+                
+        Raises:
+            FileNotFoundError: If image file does not exist
+            ValueError: If image is invalid or reference pattern has wrong type
+        """
+        # Analyze the image
+        image_rgb, noise_residual = self.analyze(image_path)
+        
+        # If reference pattern provided, validate its type
+        if reference_pattern is not None and not isinstance(reference_pattern, np.ndarray):
+            raise ValueError("Reference pattern must be a numpy array")
+        
+        # If no reference pattern provided, use the image's own pattern
+        if reference_pattern is None:
+            reference_pattern = noise_residual
+        
+        # Create tampering heatmap
+        heatmap = self.create_tampering_heatmap(
+            reference_pattern,
+            noise_residual,
+            window_size=window_size,
+            stride=stride
+        )
+        
+        # Create visualization
+        # Convert heatmap to color visualization (red indicates tampering)
+        heatmap_vis = np.zeros((image_rgb.shape[0], image_rgb.shape[1], 3), dtype=np.uint8)
+        
+        # Resize heatmap to match image dimensions
+        heatmap_resized = cv2.resize(
+            heatmap,
+            (image_rgb.shape[1], image_rgb.shape[0]),
+            interpolation=cv2.INTER_LINEAR
+        )
+        
+        # Create visualization mask (red for low correlation, indicating tampering)
+        heatmap_vis[..., 2] = ((1 - heatmap_resized) * 255).astype(np.uint8)  # Red channel
+        
+        # Create mask for potentially tampered regions
+        tampered_mask = heatmap_resized < correlation_threshold
+        
+        # Calculate percentage of potentially tampered pixels
+        tampered_percentage = float(np.mean(tampered_mask))  # Convert to Python float
+        is_tampered = bool(tampered_percentage > 0.05)  # Convert to Python bool
+        
+        # Create final visualization
+        image_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+        
+        # Create overlay by blending the original image with the heatmap visualization
+        overlay = cv2.addWeighted(
+            image_bgr,
+            1.0,
+            heatmap_vis,
+            overlay_alpha,
+            0
+        )
+        
+        # Create final visualization by combining original and overlay based on tampered regions
+        visualization = image_bgr.copy()
+        visualization[tampered_mask] = overlay[tampered_mask]
+        
+        # Add a border around tampered regions for better visibility
+        if is_tampered:
+            # Create a dilated mask to highlight boundaries
+            kernel = np.ones((3,3), np.uint8)
+            dilated_mask = cv2.dilate(tampered_mask.astype(np.uint8), kernel, iterations=1)
+            edge_mask = dilated_mask - tampered_mask.astype(np.uint8)
+            
+            # Add red border
+            visualization[edge_mask == 1] = [0, 0, 255]  # BGR format
+        
+        return is_tampered, visualization
