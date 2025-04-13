@@ -7,3 +7,4 @@ pillow>=8.3.1
 matplotlib>=3.4.3 
 pytest
 scipy>=1.7.0
+scikit-image>=0.19.0
