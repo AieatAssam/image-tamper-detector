@@ -45,10 +45,22 @@ A web application that performs multiple image analysis techniques to detect and
   - [x] Pattern matching
   - [x] Correlation analysis
 
+- [x] Implement Entropy-based AI Detection
+  - [x] Local entropy calculation
+  - [x] Cross-channel pattern analysis
+  - [x] Threshold-based classification
+  - [x] Visualization of suspicious regions
+  - [x] Parameter tuning and validation
+  - [x] Test cases for natural and AI-generated images
+
 #### API Development
 - [ ] Set up FastAPI application structure
 - [ ] Implement file upload endpoint
 - [ ] Create analysis pipeline
+  - [ ] ELA analysis integration
+  - [ ] PRNU analysis integration
+  - [ ] Entropy analysis integration
+  - [ ] Combined results aggregation
 - [ ] Implement rate limiting
 - [ ] Add error handling
 - [ ] Create response models
@@ -67,6 +79,10 @@ A web application that performs multiple image analysis techniques to detect and
 - [ ] Implement image preview
 - [ ] Create heatmap overlay for tampered areas
 - [ ] Add analysis results display
+  - [ ] ELA visualization
+  - [ ] PRNU correlation map
+  - [ ] Entropy pattern visualization
+  - [ ] Combined analysis view
 - [ ] Implement loading states
 - [ ] Add error handling and user feedback
 
@@ -81,6 +97,10 @@ A web application that performs multiple image analysis techniques to detect and
 - [x] Write unit tests for analysis components
   - [x] ELA analysis tests
   - [x] PRNU analysis tests
+  - [x] Entropy analysis tests
+    - [x] Natural image detection
+    - [x] AI-generated image detection
+    - [x] Parameter validation
 - [ ] Write integration tests for API endpoints
 - [ ] Perform frontend testing
 - [ ] Conduct performance testing
@@ -90,6 +110,12 @@ A web application that performs multiple image analysis techniques to detect and
 - [ ] Setup instructions
 - [ ] Usage guide
 - [ ] Analysis methodology explanation
+  - [ ] ELA methodology
+  - [ ] PRNU methodology
+  - [x] Entropy analysis methodology
+    - [x] Parameter descriptions
+    - [x] Detection thresholds
+    - [x] Interpretation guidelines
 
 ### 7. Deployment
 - [ ] Set up production environment
@@ -111,6 +137,7 @@ image-tamper-detector/
 │   │   ├── analysis/
 │   │   │   ├── __init__.py
 │   │   │   ├── ela.py
+│   │   │   ├── entropy.py
 │   │   │   └── prnu.py
 │   │   ├── api/
 │   │   │   ├── __init__.py
@@ -141,4 +168,10 @@ image-tamper-detector/
 - Maintain a diverse set of sample images for testing and demonstration:
   - Original images should be unmodified and from reliable sources
   - Tampered images should include various manipulation techniques
-  - Include metadata about the type of tampering in each sample 
+  - AI-generated images should include various types (not just text-based)
+  - Include metadata about the type of tampering/generation in each sample
+- Entropy analysis parameters:
+  - radius = 4 (local entropy calculation)
+  - tolerance = 0.12 (entropy matching)
+  - matching_threshold = 0.35 (AI detection)
+  - uniformity_threshold = 0.2 (local patterns) 

@@ -1,6 +1,6 @@
 # Image Tamper Detector
 
-A sophisticated image tampering detection system that combines multiple analysis techniques to identify potentially manipulated regions in digital images. The system uses Error Level Analysis (ELA), Photo Response Non-Uniformity (PRNU), and computer vision techniques to detect areas that may have been digitally altered or generated.
+A sophisticated image tampering detection system that combines multiple analysis techniques to identify potentially manipulated regions in digital images. The system uses Error Level Analysis (ELA), Photo Response Non-Uniformity (PRNU), Entropy Analysis, and computer vision techniques to detect areas that may have been digitally altered or generated.
 
 ## Features
 
@@ -9,6 +9,10 @@ A sophisticated image tampering detection system that combines multiple analysis
   - Image splicing and copy-paste manipulation
   - AI-generated content
   - Images from different source cameras
+- **Entropy-based AI Detection**: Advanced entropy analysis for identifying AI-generated content:
+  - Cross-channel entropy pattern analysis
+  - Local uniformity detection
+  - Natural vs. artificial pattern discrimination
 - **Visual Heatmaps**: Generate visual heatmaps highlighting potentially tampered regions
 - **Multi-technique Analysis**: Combines results from multiple detection methods
 - **Configurable Parameters**: Adjustable sensitivity and threshold settings
@@ -23,15 +27,16 @@ image-tamper-detector/
 ├── backend/           # Backend API and core logic
 │   ├── app/          # Main application code
 │   │   ├── analysis/ # Image analysis algorithms
-│   │   │   ├── ela.py   # Error Level Analysis
-│   │   │   └── prnu.py  # Photo Response Non-Uniformity
+│   │   │   ├── ela.py     # Error Level Analysis
+│   │   │   ├── entropy.py # Entropy-based AI Detection
+│   │   │   └── prnu.py    # Photo Response Non-Uniformity
 │   │   ├── api/      # API endpoints
 │   │   └── utils/    # Utility functions
 │   └── tests/        # Unit tests
 ├── data/             # Test and sample images
 │   ├── samples/      # Sample images for testing
 │   │   ├── original/ # Original untampered images
-│   │   └── tampered/ # Known tampered images
+│   │   └── tampered/ # Known tampered/AI-generated images
 │   └── processed/    # Processed results
 └── requirements.txt  # Project dependencies
 ```
@@ -79,8 +84,9 @@ python -m pytest backend/tests/
 
 For specific test modules:
 ```bash
-python -m pytest backend/tests/test_ela.py  # Test ELA module
-python -m pytest backend/tests/test_prnu.py  # Test PRNU module
+python -m pytest backend/tests/test_ela.py    # Test ELA module
+python -m pytest backend/tests/test_prnu.py   # Test PRNU module
+python -m pytest backend/tests/test_entropy.py # Test Entropy module
 ```
 
 ### API Endpoints
@@ -93,6 +99,7 @@ The system provides the following REST API endpoints:
     - Tampering probability
     - ELA heatmap
     - PRNU correlation map
+    - Entropy analysis visualization
     - Combined analysis results
 
 ### Configuration
@@ -108,6 +115,12 @@ Key parameters that can be adjusted:
 - `WINDOW_SIZE`: Size of analysis window (default: 64)
 - `STRIDE`: Window stride for analysis (default: 32)
 - `SIGMA`: Gaussian filter sigma (default: 5.0)
+
+#### Entropy Analysis Parameters
+- `RADIUS`: Local entropy calculation window size (default: 4)
+- `TOLERANCE`: Entropy matching tolerance (default: 0.12)
+- `MATCHING_THRESHOLD`: AI detection threshold (default: 0.35)
+- `UNIFORMITY_THRESHOLD`: Local pattern uniformity threshold (default: 0.2)
 
 ## Technical Details
 
@@ -128,6 +141,16 @@ PRNU analysis detects image tampering by:
    - AI-generated content (lacking proper sensor patterns)
    - Images from different source cameras
 
+### Entropy-based AI Detection
+
+The system uses entropy analysis to detect AI-generated content by:
+1. Computing local entropy patterns across color channels
+2. Analyzing cross-channel entropy consistency
+3. Identifying artificial patterns characteristic of AI generation:
+   - Natural images: Higher matching proportions (>35%)
+   - AI-generated images: Lower matching proportions (<35%)
+4. Generating visualizations of suspicious regions
+
 ### Thresholds
 
 - ELA thresholds:
@@ -137,6 +160,10 @@ PRNU analysis detects image tampering by:
   - Same camera: > 0.5 correlation
   - Different cameras: < 0.5 correlation
   - Tampered regions: Local correlation variations
+- Entropy thresholds:
+  - Natural images: > 35% matching entropy patterns
+  - AI-generated: < 35% matching entropy patterns
+  - Local uniformity: > 20% for pattern detection
 
 ## Contributing
 
