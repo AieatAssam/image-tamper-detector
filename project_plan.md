@@ -55,11 +55,16 @@ A web application that performs multiple image analysis techniques to detect and
   - [x] Test cases for natural and AI-generated images
 
 - [ ] Implement C2PA Metadata Analysis
-  - [ ] C2PA manifest extraction
-  - [ ] Signature validation
-  - [ ] Provenance chain verification
-  - [ ] Claim verification and parsing
+  - [x] C2PA manifest extraction
+  - [ ] ~~Signature validation~~ (Not supported in current Python library)
+  - [ ] ~~Provenance chain verification~~ (Not supported in current Python library)
+  - [ ] ~~Claim verification and parsing~~ (Not supported in current Python library)
   - [ ] Integration with other analysis results
+  - [ ] Add fallback detection methods when C2PA is not available
+  - [ ] Document C2PA library limitations
+    - [ ] Python library does not support V2 API features
+    - [ ] Limited manifest parsing capabilities
+    - [ ] No signature validation support
 
 #### API Development
 - [ ] Set up FastAPI application structure
