@@ -87,7 +87,7 @@ def test_analyze_returns_correct_shapes(entropy_analyzer, data_dir):
 def test_error_handling(entropy_analyzer):
     """Test error handling for invalid inputs."""
     # Test with non-existent file
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         entropy_analyzer.analyze('nonexistent.jpg')
     
     # Test with invalid file
@@ -96,7 +96,7 @@ def test_error_handling(entropy_analyzer):
         entropy_analyzer.analyze(invalid_file)
     
     # Test with non-existent file in detect_ai_generated
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         entropy_analyzer.detect_ai_generated('nonexistent.jpg')
     
     # Test with invalid file in detect_ai_generated

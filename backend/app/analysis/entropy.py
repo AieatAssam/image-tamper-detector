@@ -9,7 +9,8 @@ by Fred Rohrer (https://blog.frohrer.com/detecting-ai-generated-images-using-ent
 import numpy as np
 import cv2
 from pathlib import Path
-from typing import Tuple, Optional
+import io
+from typing import Tuple, Optional, Union
 from dataclasses import dataclass
 from skimage.morphology import disk
 from skimage import filters
@@ -88,12 +89,26 @@ class EntropyAnalyzer:
         uniformity_mask = local_std < (self.uniformity_threshold * 255)
         return uniformity_mask
         
-    def analyze(self, image_path: str | Path) -> Tuple[np.ndarray, EntropyFeatures]:
+    def _load_image_from_bytes(self, image_bytes: bytes) -> np.ndarray:
+        """Load an image from bytes."""
+        try:
+            # Read image bytes into numpy array
+            nparr = np.frombuffer(image_bytes, np.uint8)
+            image = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if image is None:
+                raise ValueError("Failed to decode image bytes")
+            return cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        except Exception as e:
+            raise ValueError(f"Error loading image from bytes: {e}")
+
+    def analyze(self, image_input: Union[str, Path, bytes]) -> Tuple[np.ndarray, EntropyFeatures]:
         """
         Analyze an image using entropy-based detection.
         
         Args:
-            image_path: Path to the image file
+            image_input: Can be one of:
+                - Path to the image file (str or Path)
+                - Bytes of the image file (bytes)
             
         Returns:
             Tuple containing:
@@ -104,19 +119,21 @@ class EntropyAnalyzer:
             FileNotFoundError: If image file doesn't exist
             ValueError: If image can't be processed
         """
-        # Convert path to Path object
-        image_path = Path(image_path)
-        if not image_path.exists():
-            raise FileNotFoundError(f"Image not found: {image_path}")
-            
         try:
-            # Read image using OpenCV
-            image = cv2.imread(str(image_path))
-            if image is None:
-                raise ValueError("Failed to read image")
-                
-            # Convert to RGB
-            image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            # Handle different input types
+            if isinstance(image_input, (str, Path)):
+                image_path = Path(image_input)
+                if not image_path.exists():
+                    raise FileNotFoundError(f"Image not found: {image_path}")
+                # Read image using OpenCV
+                image = cv2.imread(str(image_path))
+                if image is None:
+                    raise ValueError("Failed to read image")
+                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            elif isinstance(image_input, bytes):
+                image_rgb = self._load_image_from_bytes(image_input)
+            else:
+                raise ValueError("Invalid input type. Must be string, Path, or bytes")
             
             # Convert to uint8 if necessary
             if image_rgb.dtype != np.uint8:
@@ -162,13 +179,15 @@ class EntropyAnalyzer:
             raise ValueError(f"Error during entropy analysis: {e}")
             
     def detect_ai_generated(self, 
-                          image_path: str | Path,
+                          image_input: Union[str, Path, bytes],
                           overlay_alpha: float = 0.6) -> Tuple[bool, np.ndarray, float]:
         """
         Detect if an image is likely AI-generated and return visualization.
         
         Args:
-            image_path: Path to the image file
+            image_input: Can be one of:
+                - Path to the image file (str or Path)
+                - Bytes of the image file (bytes)
             overlay_alpha: Transparency of the visualization overlay (0-1)
             
         Returns:
@@ -182,7 +201,7 @@ class EntropyAnalyzer:
             ValueError: If image can't be processed
         """
         # Analyze the image
-        image_rgb, features = self.analyze(image_path)
+        image_rgb, features = self.analyze(image_input)
         
         # Calculate proportion of matching pixels with uniform entropy
         matching_proportion = float(np.mean(
