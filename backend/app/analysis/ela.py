@@ -12,7 +12,7 @@ from PIL import Image
 import cv2
 from pathlib import Path
 import io
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Union
 from dataclasses import dataclass
 
 @dataclass
@@ -58,25 +58,40 @@ class ELAAnalyzer:
         
         return image
 
-    def analyze(self, image_path: str | Path) -> Tuple[np.ndarray, np.ndarray]:
+    def _load_image_from_bytes(self, image_bytes: bytes) -> Image.Image:
+        """Load an image from bytes."""
+        try:
+            return Image.open(io.BytesIO(image_bytes))
+        except Exception as e:
+            raise ValueError(f"Error loading image from bytes: {e}")
+
+    def analyze(self, image_input: Union[str, Path, bytes]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Perform Error Level Analysis on an image.
         
         Args:
-            image_path: Path to the image file
+            image_input: Can be one of:
+                - Path to the image file (str or Path)
+                - Bytes of the image file (bytes)
             
         Returns:
             Tuple containing:
                 - Original image as RGB numpy array
                 - ELA result as RGB numpy array showing error levels
         """
-        image_path = Path(image_path)
-        if not image_path.exists():
-            raise FileNotFoundError(f"Image not found: {image_path}")
-
         try:
-            # Open and preprocess image
-            original = Image.open(image_path)
+            # Handle different input types
+            if isinstance(image_input, (str, Path)):
+                image_path = Path(image_input)
+                if not image_path.exists():
+                    raise FileNotFoundError(f"Image not found: {image_path}")
+                original = Image.open(image_path)
+            elif isinstance(image_input, bytes):
+                original = self._load_image_from_bytes(image_input)
+            else:
+                raise ValueError("Invalid input type. Must be string, Path, or bytes")
+
+            # Preprocess image
             original = self._preprocess_image(original)
             
             # Save at high quality
@@ -189,28 +204,18 @@ class ELAAnalyzer:
         return np.mean(block_differences)
 
     def detect_tampering(self, 
-                        image_path: str | Path,
-                        edge_threshold: float = 0.45,  # Lowered to catch AI-generated patterns
-                        texture_threshold: float = 2000.0,  # Lower bound for AI-generated content
-                        noise_threshold: float = 25.0,  # Lower bound for AI-generated content
+                        image_input: Union[str, Path, bytes],
+                        edge_threshold: float = 0.45,
+                        texture_threshold: float = 2000.0,
+                        noise_threshold: float = 25.0,
                         compression_threshold: float = 100.0) -> Tuple[bool, np.ndarray, TamperingFeatures]:
         """
         Detect potential tampering in an image using multiple features.
         
-        For natural images:
-        - Edge discontinuity should be moderate (< edge_threshold)
-        - Texture variance should be high (> texture_threshold)
-        - Noise consistency should be high (> noise_threshold)
-        - Compression artifacts may vary
-        
-        For AI-generated/tampered images:
-        - Edge discontinuity may be higher (> edge_threshold)
-        - Texture variance is often lower (< texture_threshold)
-        - Noise consistency is often lower (< noise_threshold)
-        - Compression artifacts are often higher (> compression_threshold)
-        
         Args:
-            image_path: Path to the image file
+            image_input: Can be one of:
+                - Path to the image file (str or Path)
+                - Bytes of the image file (bytes)
             edge_threshold: Threshold for edge discontinuity
             texture_threshold: Lower bound for texture variance
             noise_threshold: Lower bound for noise consistency
@@ -223,7 +228,7 @@ class ELAAnalyzer:
                 - TamperingFeatures object with detailed scores
         """
         # Perform ELA analysis
-        original, ela_result = self.analyze(image_path)
+        original, ela_result = self.analyze(image_input)
         
         # Compute various features
         features = TamperingFeatures(

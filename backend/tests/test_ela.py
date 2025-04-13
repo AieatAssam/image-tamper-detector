@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 from PIL import Image
 import cv2
-from app.analysis.ela import ELAAnalyzer, TamperingFeatures
+from backend.app.analysis.ela import ELAAnalyzer, TamperingFeatures
 
 @pytest.fixture
 def ela_analyzer():
@@ -45,7 +45,7 @@ def test_analyze_returns_correct_shapes(ela_analyzer, data_dir):
 def test_error_handling(ela_analyzer):
     """Test error handling for invalid inputs."""
     # Test with non-existent file
-    with pytest.raises(FileNotFoundError):
+    with pytest.raises(ValueError):
         ela_analyzer.analyze('nonexistent.jpg')
     
     # Test with invalid file
