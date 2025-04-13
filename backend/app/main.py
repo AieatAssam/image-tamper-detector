@@ -319,6 +319,11 @@ async def analyze_combined(
         prnu_tampered, prnu_vis = prnu_analyzer.detect_tampering(contents)
         entropy_tampered, entropy_vis, matching_proportion = entropy_analyzer.detect_ai_generated(contents)
 
+        # Convert NumPy booleans to Python booleans
+        ela_tampered = bool(ela_tampered)
+        prnu_tampered = bool(prnu_tampered)
+        entropy_tampered = bool(entropy_tampered)
+
         confidence_scores = [
             1 - min(1.0, ela_features.edge_discontinuity),  # ELA confidence
             0.8 if prnu_tampered else 0.2,  # PRNU confidence
@@ -329,26 +334,45 @@ async def analyze_combined(
         is_tampered = any([ela_tampered, prnu_tampered, entropy_tampered])
 
         return {
-            "is_tampered": is_tampered,
-            "confidence_score": combined_confidence,
+            "is_tampered": bool(is_tampered),  # Convert to Python boolean
+            "confidence_score": float(combined_confidence),  # Ensure float
             "ela_visualization_base64": encode_image_to_base64(ela_vis),
             "prnu_visualization_base64": encode_image_to_base64(prnu_vis),
             "entropy_visualization_base64": encode_image_to_base64(entropy_vis),
             "ela_result": {
                 "is_tampered": ela_tampered,
-                "edge_discontinuity": float(ela_features.edge_discontinuity),
-                "texture_variance": float(ela_features.texture_variance),
-                "noise_consistency": float(ela_features.noise_consistency),
-                "compression_artifacts": float(ela_features.compression_artifacts)
+                "confidence_score": float(1 - min(1.0, ela_features.edge_discontinuity)),
+                "analysis_type": "ELA",
+                "visualization_base64": encode_image_to_base64(ela_vis),
+                "details": {
+                    "method": "Error Level Analysis",
+                    "description": "Analysis of JPEG compression artifacts",
+                    "edge_discontinuity": float(ela_features.edge_discontinuity),
+                    "texture_variance": float(ela_features.texture_variance),
+                    "noise_consistency": float(ela_features.noise_consistency),
+                    "compression_artifacts": float(ela_features.compression_artifacts)
+                }
             },
             "prnu_result": {
                 "is_tampered": prnu_tampered,
-                "method": "Photo Response Non-Uniformity Analysis"
+                "confidence_score": float(0.8 if prnu_tampered else 0.2),
+                "analysis_type": "PRNU",
+                "visualization_base64": encode_image_to_base64(prnu_vis),
+                "details": {
+                    "method": "Photo Response Non-Uniformity Analysis",
+                    "description": "Analysis of camera sensor patterns"
+                }
             },
             "entropy_result": {
                 "is_tampered": entropy_tampered,
-                "matching_proportion": float(matching_proportion),
-                "method": "Entropy Analysis"
+                "confidence_score": float(1 - matching_proportion),
+                "analysis_type": "Entropy",
+                "visualization_base64": encode_image_to_base64(entropy_vis),
+                "details": {
+                    "method": "Entropy Analysis",
+                    "description": "Analysis of patterns common in AI-generated images",
+                    "matching_proportion": float(matching_proportion)
+                }
             }
         }
 
