@@ -1,122 +1,282 @@
 """
 Error Level Analysis (ELA) module for detecting image tampering.
+
+This implementation is based on the methodology described in:
+'A Picture's Worth: Digital Image Analysis and Forensics'
+by Dr. Neal Krawetz, presented at Black Hat DC 2008,
+and enhanced with modern computer vision techniques.
 """
-import os
-from pathlib import Path
+
 import numpy as np
 from PIL import Image
 import cv2
-from typing import Tuple, Optional
+from pathlib import Path
+import io
+from typing import Tuple, Optional, List
+from dataclasses import dataclass
+
+@dataclass
+class TamperingFeatures:
+    """Container for various tampering detection features."""
+    edge_discontinuity: float  # Measure of edge consistency
+    texture_variance: float   # Variance in texture patterns
+    noise_consistency: float  # Consistency of noise patterns
+    compression_artifacts: float  # Level of compression artifacts
 
 class ELAAnalyzer:
-    def __init__(self, quality: int = 90, scale_factor: int = 15):
+    def __init__(self, 
+                 quality: int = 95,
+                 resave_quality: int = 75,
+                 max_image_size: int = 2000):
         """
-        Initialize ELA analyzer.
+        Initialize ELA analyzer with enhanced feature detection.
         
         Args:
-            quality (int): JPEG save quality (1-100) for recompression
-            scale_factor (int): Multiplication factor to make ELA differences more visible
+            quality: Initial JPEG quality level (1-100)
+            resave_quality: Quality level for resaving (should be lower than quality)
+            max_image_size: Maximum dimension for image processing
         """
-        if not 1 <= quality <= 100:
-            raise ValueError("Quality must be between 1 and 100")
+        if not 1 <= quality <= 100 or not 1 <= resave_quality <= 100:
+            raise ValueError("Quality values must be between 1 and 100")
+        if resave_quality >= quality:
+            raise ValueError("Resave quality should be lower than initial quality")
+            
         self.quality = quality
-        self.scale_factor = scale_factor
+        self.resave_quality = resave_quality
+        self.max_image_size = max_image_size
+
+    def _preprocess_image(self, image: Image.Image) -> Image.Image:
+        """Preprocess image for analysis."""
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Resize if necessary while maintaining aspect ratio
+        if max(image.size) > self.max_image_size:
+            ratio = self.max_image_size / max(image.size)
+            new_size = tuple(int(dim * ratio) for dim in image.size)
+            image = image.resize(new_size, Image.Resampling.LANCZOS)
+        
+        return image
 
     def analyze(self, image_path: str | Path) -> Tuple[np.ndarray, np.ndarray]:
         """
         Perform Error Level Analysis on an image.
         
         Args:
-            image_path (str | Path): Path to the image file
+            image_path: Path to the image file
             
         Returns:
-            Tuple[np.ndarray, np.ndarray]: Tuple containing:
+            Tuple containing:
                 - Original image as RGB numpy array
-                - ELA result as grayscale numpy array
-        
-        Raises:
-            FileNotFoundError: If image file doesn't exist
-            ValueError: If image can't be processed
+                - ELA result as RGB numpy array showing error levels
         """
-        # Convert path to Path object
         image_path = Path(image_path)
         if not image_path.exists():
             raise FileNotFoundError(f"Image not found: {image_path}")
 
-        # Read original image
         try:
+            # Open and preprocess image
             original = Image.open(image_path)
-            if original.mode != 'RGB':
-                original = original.convert('RGB')
-        except Exception as e:
-            raise ValueError(f"Failed to open image: {e}")
-
-        # Create temporary path for resaved image
-        temp_path = image_path.parent / f"temp_{image_path.name}"
-        
-        try:
-            # Save with specified quality
-            original.save(temp_path, 'JPEG', quality=self.quality)
+            original = self._preprocess_image(original)
             
-            # Open resaved image
-            resaved = Image.open(temp_path)
+            # Save at high quality
+            high_quality_buffer = io.BytesIO()
+            original.save(high_quality_buffer, format='JPEG', quality=self.quality)
+            high_quality_buffer.seek(0)
+            high_quality = Image.open(high_quality_buffer)
             
-            # Convert both to numpy arrays
-            original_array = np.array(original)
-            resaved_array = np.array(resaved)
+            # Resave at lower quality
+            low_quality_buffer = io.BytesIO()
+            high_quality.save(low_quality_buffer, format='JPEG', quality=self.resave_quality)
+            low_quality_buffer.seek(0)
+            low_quality = Image.open(low_quality_buffer)
             
-            # Calculate absolute difference and scale
-            ela = np.abs(original_array - resaved_array) * self.scale_factor
+            # Convert to numpy arrays
+            high_array = np.array(high_quality)
+            low_array = np.array(low_quality)
             
-            # Convert to grayscale for better visualization
-            ela_gray = cv2.cvtColor(ela, cv2.COLOR_RGB2GRAY)
+            # Calculate ELA with adaptive scaling
+            ela = np.abs(high_array - low_array)
+            max_diff = np.max(ela)
+            if max_diff > 0:
+                scale = 255.0 / max_diff
+                ela_enhanced = cv2.convertScaleAbs(ela * scale)
+            else:
+                ela_enhanced = cv2.convertScaleAbs(ela)
             
-            return original_array, ela_gray
+            return np.array(original), ela_enhanced
             
         except Exception as e:
             raise ValueError(f"Error during ELA analysis: {e}")
-        
-        finally:
-            # Clean up temporary file
-            if temp_path.exists():
-                os.remove(temp_path)
-    
-    def get_threshold_mask(self, ela_result: np.ndarray, 
-                          threshold: int = 50) -> np.ndarray:
-        """
-        Create a binary mask of potentially tampered regions.
-        
-        Args:
-            ela_result (np.ndarray): ELA result from analyze()
-            threshold (int): Threshold value for binary mask
-            
-        Returns:
-            np.ndarray: Binary mask where 1 indicates potential tampering
-        """
-        return (ela_result > threshold).astype(np.uint8)
 
-    def overlay_heatmap(self, original: np.ndarray, 
-                       ela_result: np.ndarray, 
-                       alpha: float = 0.5) -> np.ndarray:
+    def _compute_edge_discontinuity(self, ela_result: np.ndarray) -> float:
+        """Compute edge discontinuity score from ELA result."""
+        # Convert to grayscale if needed
+        if len(ela_result.shape) == 3:
+            gray = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = ela_result
+            
+        # Detect edges using Canny with more conservative thresholds
+        edges = cv2.Canny(gray, 50, 150)
+        
+        # Compute edge continuity using morphological operations
+        kernel = np.ones((3,3), np.uint8)
+        dilated = cv2.dilate(edges, kernel, iterations=1)
+        edge_gaps = cv2.subtract(dilated, edges)
+        
+        # Normalize the score to [0, 1] range with stronger normalization
+        score = np.sum(edge_gaps) / (np.sum(edges) + 1e-6)
+        return float(min(1.0, score / 4.0))  # Stronger normalization for more reasonable scores
+
+    def _compute_texture_variance(self, ela_result: np.ndarray) -> float:
+        """Compute texture variance score from ELA result."""
+        if len(ela_result.shape) == 3:
+            gray = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = ela_result
+            
+        # Compute local binary pattern (LBP) for texture analysis
+        kernel_size = 3
+        texture_kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size * kernel_size)
+        local_mean = cv2.filter2D(gray, -1, texture_kernel)
+        texture_variance = np.var(np.abs(gray - local_mean))
+        
+        return texture_variance
+
+    def _compute_noise_consistency(self, ela_result: np.ndarray) -> float:
+        """Compute noise consistency score from ELA result."""
+        if len(ela_result.shape) == 3:
+            gray = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = ela_result
+            
+        # Apply median filter to estimate noise
+        median = cv2.medianBlur(gray, 3)
+        noise = cv2.absdiff(gray, median)
+        
+        # Compute local noise statistics
+        kernel_size = 5
+        kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size * kernel_size)
+        local_std = cv2.filter2D(noise, -1, kernel)
+        
+        return np.std(local_std)
+
+    def _compute_compression_artifacts(self, ela_result: np.ndarray) -> float:
+        """Compute compression artifacts score from ELA result."""
+        if len(ela_result.shape) == 3:
+            gray = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
+        else:
+            gray = ela_result
+            
+        # Detect block artifacts (common in JPEG compression)
+        block_size = 8
+        h, w = gray.shape
+        blocks_h = h // block_size
+        blocks_w = w // block_size
+        
+        block_differences = []
+        for i in range(blocks_h - 1):
+            for j in range(blocks_w - 1):
+                block = gray[i*block_size:(i+1)*block_size, j*block_size:(j+1)*block_size]
+                next_block_h = gray[i*block_size:(i+1)*block_size, (j+1)*block_size:(j+2)*block_size]
+                next_block_v = gray[(i+1)*block_size:(i+2)*block_size, j*block_size:(j+1)*block_size]
+                
+                diff_h = np.mean(np.abs(block[:,-1] - next_block_h[:,0]))
+                diff_v = np.mean(np.abs(block[-1,:] - next_block_v[0,:]))
+                block_differences.extend([diff_h, diff_v])
+                
+        return np.mean(block_differences)
+
+    def detect_tampering(self, 
+                        image_path: str | Path,
+                        edge_threshold: float = 0.45,  # Lowered to catch AI-generated patterns
+                        texture_threshold: float = 2000.0,  # Lower bound for AI-generated content
+                        noise_threshold: float = 25.0,  # Lower bound for AI-generated content
+                        compression_threshold: float = 100.0) -> Tuple[bool, np.ndarray, TamperingFeatures]:
         """
-        Create a heatmap overlay of ELA results on the original image.
+        Detect potential tampering in an image using multiple features.
+        
+        For natural images:
+        - Edge discontinuity should be moderate (< edge_threshold)
+        - Texture variance should be high (> texture_threshold)
+        - Noise consistency should be high (> noise_threshold)
+        - Compression artifacts may vary
+        
+        For AI-generated/tampered images:
+        - Edge discontinuity may be higher (> edge_threshold)
+        - Texture variance is often lower (< texture_threshold)
+        - Noise consistency is often lower (< noise_threshold)
+        - Compression artifacts are often higher (> compression_threshold)
         
         Args:
-            original (np.ndarray): Original image array
-            ela_result (np.ndarray): ELA result from analyze()
-            alpha (float): Transparency of the overlay (0-1)
+            image_path: Path to the image file
+            edge_threshold: Threshold for edge discontinuity
+            texture_threshold: Lower bound for texture variance
+            noise_threshold: Lower bound for noise consistency
+            compression_threshold: Upper bound for compression artifacts
             
         Returns:
-            np.ndarray: Image with ELA heatmap overlay
+            Tuple containing:
+                - Boolean indicating if tampering was detected
+                - Visualization of the analysis
+                - TamperingFeatures object with detailed scores
         """
-        # Create heatmap
-        heatmap = cv2.applyColorMap(ela_result, cv2.COLORMAP_JET)
+        # Perform ELA analysis
+        original, ela_result = self.analyze(image_path)
         
-        # Ensure original is in BGR for OpenCV
-        if len(original.shape) == 3 and original.shape[2] == 3:
-            original_bgr = cv2.cvtColor(original, cv2.COLOR_RGB2BGR)
-        else:
-            original_bgr = cv2.cvtColor(original, cv2.COLOR_GRAY2BGR)
+        # Compute various features
+        features = TamperingFeatures(
+            edge_discontinuity=self._compute_edge_discontinuity(ela_result),
+            texture_variance=self._compute_texture_variance(ela_result),
+            noise_consistency=self._compute_noise_consistency(ela_result),
+            compression_artifacts=self._compute_compression_artifacts(ela_result)
+        )
+        
+        # Create visualization
+        visualization = np.copy(original)
+        
+        # Detect tampering based on multiple features
+        edge_violation = features.edge_discontinuity > edge_threshold
+        texture_violation = features.texture_variance < texture_threshold  # Look for unusually LOW texture
+        noise_violation = features.noise_consistency < noise_threshold    # Look for unusually LOW noise
+        compression_violation = features.compression_artifacts > compression_threshold
+        
+        # Debug print violations
+        print(f"\nViolations detected:")
+        print(f"Edge violation: {edge_violation}")
+        print(f"Texture violation: {texture_violation}")
+        print(f"Noise violation: {noise_violation}")
+        print(f"Compression violation: {compression_violation}")
+        
+        # Count violations with special handling for AI-generated content
+        # We consider texture and noise violations together as one strong indicator
+        violation_count = sum([
+            edge_violation,
+            compression_violation,
+            (texture_violation or noise_violation)  # Count as 1 if either is present
+        ])
+        
+        print(f"Total violation count: {violation_count}")
+        
+        is_tampered = violation_count >= 2  # At least two types of violations needed
+        
+        if is_tampered:
+            # Highlight suspicious regions
+            mask = np.zeros_like(ela_result, dtype=np.uint8)
             
-        # Blend images
-        return cv2.addWeighted(original_bgr, 1-alpha, heatmap, alpha, 0)
+            # Edge discontinuities
+            if edge_violation:
+                edges = cv2.Canny(ela_result, 50, 150)
+                mask = cv2.addWeighted(mask, 1, cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB), 0.5, 0)
+            
+            # Texture anomalies
+            if texture_violation or noise_violation:
+                gray = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
+                _, thresh = cv2.threshold(gray, np.mean(gray) + np.std(gray), 255, cv2.THRESH_BINARY)
+                mask = cv2.addWeighted(mask, 1, cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB), 0.3, 0)
+            
+            # Apply the mask to the visualization
+            visualization = cv2.addWeighted(visualization, 0.7, mask, 0.3, 0)
+        
+        return is_tampered, visualization, features
