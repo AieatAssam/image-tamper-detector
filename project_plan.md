@@ -15,6 +15,7 @@ A web application that performs multiple image analysis techniques to detect and
 - python-multipart (MIT) - For handling file uploads
 - slowapi (MIT) - For rate limiting
 - uvicorn (BSD) - ASGI server
+- c2pa-python (MIT/Apache-2.0) - For C2PA metadata scanning and validation
 
 ### Frontend
 - HTML5/CSS3
@@ -52,6 +53,13 @@ A web application that performs multiple image analysis techniques to detect and
   - [x] Visualization of suspicious regions
   - [x] Parameter tuning and validation
   - [x] Test cases for natural and AI-generated images
+
+- [ ] Implement C2PA Metadata Analysis
+  - [ ] C2PA manifest extraction
+  - [ ] Signature validation
+  - [ ] Provenance chain verification
+  - [ ] Claim verification and parsing
+  - [ ] Integration with other analysis results
 
 #### API Development
 - [ ] Set up FastAPI application structure
@@ -101,6 +109,11 @@ A web application that performs multiple image analysis techniques to detect and
     - [x] Natural image detection
     - [x] AI-generated image detection
     - [x] Parameter validation
+  - [ ] C2PA metadata analysis tests
+    - [ ] Manifest extraction tests
+    - [ ] Signature validation tests
+    - [ ] Provenance chain tests
+    - [ ] Integration tests with other detectors
 - [ ] Write integration tests for API endpoints
 - [ ] Perform frontend testing
 - [ ] Conduct performance testing
@@ -116,6 +129,11 @@ A web application that performs multiple image analysis techniques to detect and
     - [x] Parameter descriptions
     - [x] Detection thresholds
     - [x] Interpretation guidelines
+  - [ ] C2PA analysis methodology
+    - [ ] Manifest structure explanation
+    - [ ] Validation process
+    - [ ] Trust chain verification
+    - [ ] Integration with other analysis methods
 
 ### 7. Deployment
 - [ ] Set up production environment
@@ -138,7 +156,8 @@ image-tamper-detector/
 │   │   │   ├── __init__.py
 │   │   │   ├── ela.py
 │   │   │   ├── entropy.py
-│   │   │   └── prnu.py
+│   │   │   ├── prnu.py
+│   │   │   └── c2pa.py
 │   │   ├── api/
 │   │   │   ├── __init__.py
 │   │   │   └── endpoints.py
