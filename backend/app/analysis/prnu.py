@@ -1,5 +1,7 @@
 """
-Photo Response Non-Uniformity (PRNU) analysis module for image tampering detection.
+Minimal Photo Response Non-Uniformity (PRNU) uniformity detector for image tampering detection.
+Inspired by https://github.com/polimi-ispl/prnu-python/blob/master/prnu/functions.py
+and the Binghamton PRNU toolbox.
 """
 import numpy as np
 import cv2
@@ -8,24 +10,167 @@ import io
 from typing import Tuple, Optional, List, Union
 from scipy import signal
 from scipy.interpolate import griddata
+import pywt  # Add pywt for wavelet denoising
+import logging  # Add logging for debugging
+from scipy.ndimage import median_filter, gaussian_filter
+
+def prnu_uniformity(
+    image: Union[str, np.ndarray],
+    noise_filter_sigma: float = 3.0,
+    window_size: int = 64,
+    stride: int = 32,
+    variance_threshold: float = 0.001
+) -> Tuple[bool, float, np.ndarray]:
+    """
+    Extracts the noise residual from an image, computes the local variance of the noise,
+    and returns a uniformity score. Uniform PRNU (low variance) means not tampered,
+    inconsistent (high variance) means tampered.
+
+    Args:
+        image: Path to image or numpy array (RGB or BGR)
+        noise_filter_sigma: Sigma for Gaussian denoising
+        window_size: Size of the sliding window for local variance
+        stride: Stride for the sliding window
+        variance_threshold: Threshold for variance to flag as tampered
+
+    Returns:
+        is_tampered: True if image is likely tampered (inconsistent PRNU)
+        uniformity_score: Mean local variance of the noise residual
+        noise_map: The extracted noise residual (same shape as input)
+    """
+    # Load image if path
+    if isinstance(image, str):
+        img = cv2.imread(image, cv2.IMREAD_COLOR)
+        if img is None:
+            raise ValueError(f"Could not load image: {image}")
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    elif isinstance(image, np.ndarray):
+        img = image.copy()
+        if img.ndim == 2:
+            img = np.stack([img]*3, axis=-1)
+        elif img.shape[2] == 4:
+            img = img[..., :3]
+    else:
+        raise ValueError("Input must be a file path or numpy array")
+
+    img = img.astype(np.float32)
+    # Extract noise residual (simple denoising as in prnu-python)
+    # Use median filter + gaussian filter as in Binghamton toolbox
+    denoised = median_filter(img, size=3)
+    denoised = gaussian_filter(denoised, sigma=noise_filter_sigma)
+    noise = img - denoised
+    # Normalize noise
+    noise = noise - np.mean(noise)
+    # Compute local variance map
+    h, w, c = noise.shape
+    var_map = np.zeros((h, w), dtype=np.float32)
+    for y in range(0, h - window_size + 1, stride):
+        for x in range(0, w - window_size + 1, stride):
+            window = noise[y:y+window_size, x:x+window_size, :]
+            local_var = np.var(window)
+            var_map[y:y+window_size, x:x+window_size] += local_var
+    # Normalize by number of times each pixel was covered
+    count_map = np.zeros((h, w), dtype=np.float32)
+    for y in range(0, h - window_size + 1, stride):
+        for x in range(0, w - window_size + 1, stride):
+            count_map[y:y+window_size, x:x+window_size] += 1
+    count_map[count_map == 0] = 1
+    var_map /= count_map
+    # Uniformity score: mean of local variance
+    uniformity_score = float(np.mean(var_map))
+    is_tampered = uniformity_score > variance_threshold
+    return is_tampered, uniformity_score, noise
 
 class PRNUAnalyzer:
-    def __init__(self, 
-                 wavelet: str = 'db8', 
-                 levels: int = 4,
-                 sigma: float = 5.0):
+    def __init__(self,
+                 noise_filter_sigma: float = 3.0,
+                 window_size: int = 64,
+                 stride: int = 32,
+                 variance_threshold: float = 0.001):
         """
-        Initialize PRNU analyzer.
-        
+        Initialize PRNU analyzer for tampering detection.
         Args:
-            wavelet (str): Wavelet type for noise extraction
-            levels (int): Number of wavelet decomposition levels
-            sigma (float): Sigma for Gaussian filtering
+            noise_filter_sigma: Sigma for Gaussian denoising
+            window_size: Size of the sliding window for local variance
+            stride: Stride for the sliding window
+            variance_threshold: Threshold for variance to flag as tampered
         """
-        self.wavelet = wavelet
-        self.levels = levels
-        self.sigma = sigma
-        
+        self.noise_filter_sigma = noise_filter_sigma
+        self.window_size = window_size
+        self.stride = stride
+        self.variance_threshold = variance_threshold
+
+    def _load_image(self, image_input: Union[str, Path, bytes, np.ndarray]) -> np.ndarray:
+        if isinstance(image_input, (str, Path)):
+            img = cv2.imread(str(image_input), cv2.IMREAD_COLOR)
+            if img is None:
+                raise ValueError(f"Could not load image: {image_input}")
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        elif isinstance(image_input, bytes):
+            nparr = np.frombuffer(image_input, np.uint8)
+            img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+            if img is None:
+                raise ValueError("Failed to decode image bytes")
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        elif isinstance(image_input, np.ndarray):
+            img = image_input.copy()
+            if img.ndim == 2:
+                img = np.stack([img]*3, axis=-1)
+            elif img.shape[2] == 4:
+                img = img[..., :3]
+        else:
+            raise ValueError("Input must be a file path, bytes, or numpy array")
+        return img.astype(np.float32)
+
+    def detect_tampering(self,
+                        image_input: Union[str, Path, bytes, np.ndarray],
+                        overlay_alpha: float = 0.8  # Even higher alpha for a more prominent heatmap
+                        ) -> Tuple[bool, np.ndarray, float]:
+        """
+        Detect image tampering using PRNU uniformity (variance of noise residual).
+        Args:
+            image_input: Path, bytes, or numpy array for the image.
+            overlay_alpha: Transparency for the overlay visualization.
+        Returns:
+            is_tampered: True if image is likely tampered (inconsistent PRNU)
+            visualization: Image with high-variance regions highlighted in red (heatmap style)
+            uniformity_score: Mean local variance of the noise residual
+        """
+        img = self._load_image(image_input)
+        # Extract noise residual (median + gaussian filter as in prnu-python)
+        denoised = median_filter(img, size=3)
+        denoised = gaussian_filter(denoised, sigma=self.noise_filter_sigma)
+        noise = img - denoised
+        noise = noise - np.mean(noise)
+        h, w, c = noise.shape
+        var_map = np.zeros((h, w), dtype=np.float32)
+        for y in range(0, h - self.window_size + 1, self.stride):
+            for x in range(0, w - self.window_size + 1, self.stride):
+                window = noise[y:y+self.window_size, x:x+self.window_size, :]
+                local_var = np.var(window)
+                var_map[y:y+self.window_size, x:x+self.window_size] += local_var
+        # Normalize by number of times each pixel was covered
+        count_map = np.zeros((h, w), dtype=np.float32)
+        for y in range(0, h - self.window_size + 1, self.stride):
+            for x in range(0, w - self.window_size + 1, self.stride):
+                count_map[y:y+self.window_size, x:x+self.window_size] += 1
+        count_map[count_map == 0] = 1
+        var_map /= count_map
+        # Uniformity score: mean of local variance
+        uniformity_score = float(np.mean(var_map))
+        is_tampered = uniformity_score > self.variance_threshold
+        # Visualization: heatmap overlay (continuous, not binary)
+        grayscale = cv2.cvtColor(img.astype(np.uint8), cv2.COLOR_RGB2GRAY)
+        visualization = cv2.cvtColor(grayscale, cv2.COLOR_GRAY2BGR)
+        # Normalize var_map for heatmap (0 = no highlight, 1 = max highlight)
+        norm_var_map = (var_map - np.min(var_map)) / (np.max(var_map) - np.min(var_map) + 1e-8)
+        # Create heatmap: red channel intensity proportional to normalized variance
+        heatmap = np.zeros_like(visualization, dtype=np.uint8)
+        heatmap[..., 2] = (norm_var_map * 255).astype(np.uint8)  # Red channel
+        # Overlay heatmap on grayscale image
+        visualization = cv2.addWeighted(visualization, 1.0, heatmap, overlay_alpha, 0)
+        return is_tampered, visualization, uniformity_score
+
     def extract_noise_residual(self, image: np.ndarray) -> np.ndarray:
         """
         Extract noise residual from an image using wavelet-based denoising.
@@ -38,25 +183,23 @@ class PRNUAnalyzer:
         """
         # Convert to float32 for processing
         img_float = image.astype(np.float32)
-        
-        # Process each color channel separately
         noise_residual = np.zeros_like(img_float)
         
         for channel in range(3):
-            # Extract channel
             img_channel = img_float[..., channel]
-            
-            # Apply Gaussian filtering
-            img_blur = cv2.GaussianBlur(img_channel, (0, 0), self.sigma)
-            
-            # Calculate noise residual
-            channel_residual = img_channel - img_blur
-            
-            # Normalize the residual
-            channel_residual = channel_residual - np.mean(channel_residual)
-            
-            noise_residual[..., channel] = channel_residual
-            
+            # Wavelet decomposition
+            coeffs = pywt.wavedec2(img_channel, 'db8', level=4)
+            # Zero out approximation coefficients (keep only details)
+            coeffsH = list(coeffs)
+            coeffsH[0] = np.zeros_like(coeffsH[0])
+            # Reconstruct noise
+            noise = pywt.waverec2(coeffsH, 'db8')
+            # Crop to original size
+            noise = noise[:img_channel.shape[0], :img_channel.shape[1]]
+            # Normalize
+            noise = noise - np.mean(noise)
+            noise_residual[..., channel] = noise
+        logging.debug(f"Noise residual shape: {noise_residual.shape}, mean: {np.mean(noise_residual)}, std: {np.std(noise_residual)}")
         return noise_residual
     
     def compute_prnu_pattern(self, noise_residuals: List[np.ndarray]) -> np.ndarray:
@@ -94,31 +237,24 @@ class PRNUAnalyzer:
         # Ensure patterns have same shape
         if pattern1.shape != pattern2.shape:
             raise ValueError("Patterns must have same shape")
-            
         # For 3D arrays (RGB), compute correlation for each channel and average
         if len(pattern1.shape) == 3:
             correlations = []
             for channel in range(pattern1.shape[2]):
-                p1 = pattern1[..., channel]
-                p2 = pattern2[..., channel]
-                
-                # Normalize patterns
-                p1_norm = (p1 - np.mean(p1)) / (np.std(p1) + 1e-10)
-                p2_norm = (p2 - np.mean(p2)) / (np.std(p2) + 1e-10)
-                
-                # Compute normalized cross-correlation
-                corr = np.sum(p1_norm * p2_norm) / (p1_norm.size - 1)
+                p1 = pattern1[..., channel].flatten()
+                p2 = pattern2[..., channel].flatten()
+                # Use np.corrcoef for clarity
+                corr = np.corrcoef(p1, p2)[0, 1]
                 correlations.append(corr)
-                
-            return np.clip(np.mean(correlations), -1, 1)
+            result = float(np.mean(correlations))
+            logging.debug(f"Channel correlations: {correlations}, mean: {result}")
+            return np.clip(result, -1, 1)
         else:
-            # Normalize patterns
-            p1_norm = (pattern1 - np.mean(pattern1)) / (np.std(pattern1) + 1e-10)
-            p2_norm = (pattern2 - np.mean(pattern2)) / (np.std(pattern2) + 1e-10)
-            
-            # Compute normalized cross-correlation
-            correlation = np.sum(p1_norm * p2_norm) / (p1_norm.size - 1)
-            return np.clip(correlation, -1, 1)
+            p1 = pattern1.flatten()
+            p2 = pattern2.flatten()
+            corr = np.corrcoef(p1, p2)[0, 1]
+            logging.debug(f"Single channel correlation: {corr}")
+            return np.clip(float(corr), -1, 1)
     
     def _load_image_from_bytes(self, image_bytes: bytes) -> np.ndarray:
         """Load an image from bytes."""
@@ -203,49 +339,32 @@ class PRNUAnalyzer:
                 test_pattern = test_pattern[..., np.newaxis]
             elif len(reference_pattern.shape) == 2 and len(test_pattern.shape) == 3:
                 reference_pattern = reference_pattern[..., np.newaxis]
-        
         height, width = reference_pattern.shape[:2]
         heatmap = np.zeros((height, width))
         window_count = np.zeros((height, width))
-        
         # Compute local correlations using sliding window
         for y in range(0, height - window_size + 1, stride):
             for x in range(0, width - window_size + 1, stride):
-                # Extract windows
                 ref_window = reference_pattern[y:y+window_size, x:x+window_size]
                 test_window = test_pattern[y:y+window_size, x:x+window_size]
-                
-                # Compute correlation for each color channel
                 correlations = []
                 for c in range(ref_window.shape[2]):
                     ref_channel = ref_window[..., c].flatten()
                     test_channel = test_window[..., c].flatten()
-                    
-                    # Center the data
-                    ref_channel = ref_channel - np.mean(ref_channel)
-                    test_channel = test_channel - np.mean(test_channel)
-                    
-                    # Compute normalized correlation
-                    norm_ref = np.linalg.norm(ref_channel)
-                    norm_test = np.linalg.norm(test_channel)
-                    
-                    if norm_ref > 0 and norm_test > 0:
-                        correlation = np.dot(ref_channel, test_channel) / (norm_ref * norm_test)
-                        correlations.append(max(0, correlation))  # Clip negative correlations
-                
+                    # Use np.corrcoef for local correlation
+                    if np.std(ref_channel) > 1e-6 and np.std(test_channel) > 1e-6:
+                        correlation = np.corrcoef(ref_channel, test_channel)[0, 1]
+                        correlations.append(correlation)
                 # Use average correlation across channels
                 if correlations:
                     correlation = np.mean(correlations)
-                    
-                    # Update heatmap with weighted contribution
+                    # Update heatmap with weighted contribution (no negative clipping)
                     weight = np.ones((window_size, window_size))
                     heatmap[y:y+window_size, x:x+window_size] += correlation * weight
                     window_count[y:y+window_size, x:x+window_size] += weight
-        
         # Normalize heatmap
         valid_mask = window_count > 0
         heatmap[valid_mask] /= window_count[valid_mask]
-        
         # Fill in any gaps using interpolation
         if np.any(~valid_mask):
             y_coords, x_coords = np.nonzero(valid_mask)
@@ -257,79 +376,128 @@ class PRNUAnalyzer:
                 (y_grid, x_grid),
                 method='nearest'
             )
-        
+        logging.debug(f"Heatmap min: {np.min(heatmap)}, max: {np.max(heatmap)}, mean: {np.mean(heatmap)}")
         return heatmap
 
-    def detect_tampering(self,
-                        image_input: Union[str, Path, bytes],
-                        reference_pattern: Optional[np.ndarray] = None,
-                        correlation_threshold: float = 0.5,
-                        window_size: int = 64,
-                        stride: int = 32,
-                        overlay_alpha: float = 0.6) -> Tuple[bool, np.ndarray]:
+    def detect_prnu_inconsistency(self,
+                                  image_input: Union[str, Path, bytes],
+                                  window_size: int = 64,
+                                  stride: int = 32,
+                                  correlation_threshold: float = 0.5,
+                                  overlay_alpha: float = 0.6) -> Tuple[bool, np.ndarray, np.ndarray]:
         """
-        Analyze an image for tampering and return a decision with visualization.
-        
+        Detect PRNU inconsistency within a single image, useful for splicing or AI-generated image detection.
+        This method does not require a reference pattern. It computes the global PRNU pattern from the image itself,
+        then checks local consistency across the image.
+
         Args:
-            image_input: Can be one of:
-                - Path to the image file (str or Path)
-                - Bytes of the image file (bytes)
-            reference_pattern: Reference PRNU pattern (must be a numpy array)
-            correlation_threshold: Threshold for correlation values (0-1).
-                Lower values indicate potential tampering
-            window_size: Size of sliding window for local analysis
-            stride: Stride for sliding window
-            overlay_alpha: Transparency of the overlay (0-1)
-            
+            image_input: Path, bytes, or file-like object for the image.
+            window_size: Size of the sliding window for local analysis.
+            stride: Step size for the sliding window.
+            correlation_threshold: Minimum acceptable correlation for a region to be considered consistent.
+            overlay_alpha: Transparency for the overlay visualization.
+
         Returns:
-            Tuple containing:
-                - Boolean indicating if tampering was detected
-                - Visualization with tampered regions highlighted in red over grayscale
-                
-        Raises:
-            FileNotFoundError: If image file does not exist
-            ValueError: If image is invalid or reference pattern has wrong type
+            Tuple of:
+                - Boolean indicating if inconsistency (possible tampering/AI) is detected
+                - Visualization with inconsistent regions highlighted
+                - Heatmap of local PRNU consistency
         """
-        # Analyze the image
+        # Load and process image
         image_rgb, noise_residual = self.analyze(image_input)
-        
-        # If reference pattern provided, validate its type
-        if reference_pattern is not None and not isinstance(reference_pattern, np.ndarray):
-            raise ValueError("Reference pattern must be a numpy array")
-        
-        # If no reference pattern provided, use the image's own pattern
-        if reference_pattern is None:
-            reference_pattern = noise_residual
-        
-        # Create tampering heatmap
-        heatmap = self.create_tampering_heatmap(
-            reference_pattern,
-            noise_residual,
-            window_size=window_size,
-            stride=stride
-        )
-        
-        # Create mask for potentially tampered regions
-        heatmap_resized = cv2.resize(
-            heatmap,
-            (image_rgb.shape[1], image_rgb.shape[0]),
-            interpolation=cv2.INTER_LINEAR
-        )
-        tampered_mask = heatmap_resized < correlation_threshold
-        
-        # Calculate percentage of potentially tampered pixels
-        tampered_percentage = float(np.mean(tampered_mask))  # Convert to Python float
-        is_tampered = bool(tampered_percentage > 0.05)  # Convert to Python bool
-        
-        # Convert original image to grayscale while preserving 3 channels for overlay
+        height, width = noise_residual.shape[:2]
+
+        # Print debug info about image and windowing
+        print(f"[PRNU] Image shape: {image_rgb.shape}, window_size: {window_size}, stride: {stride}")
+
+        # Compute global PRNU pattern (mean of noise residual)
+        global_pattern = np.mean(noise_residual, axis=(0, 1), keepdims=True)
+        # Normalize global pattern
+        global_pattern = (global_pattern - np.mean(global_pattern)) / (np.std(global_pattern) + 1e-10)
+
+        # Prepare heatmap
+        heatmap = np.zeros((height, width), dtype=np.float32)
+        window_count = np.zeros((height, width), dtype=np.float32)
+
+        # --- Robust windowing logic ---
+        # Use np.arange for window positions, always process at least one window
+        if height < window_size or width < window_size:
+            # If the image is smaller than the window, process one window covering the whole image
+            y_positions = np.array([0])
+            x_positions = np.array([0])
+            actual_window_size_y = height
+            actual_window_size_x = width
+        else:
+            y_positions = np.arange(0, height - window_size + 1, stride)
+            if y_positions.size == 0:
+                y_positions = np.array([0])
+            x_positions = np.arange(0, width - window_size + 1, stride)
+            if x_positions.size == 0:
+                x_positions = np.array([0])
+            actual_window_size_y = window_size
+            actual_window_size_x = window_size
+
+        # Slide window and compute local PRNU consistency
+        for y in y_positions:
+            for x in x_positions:
+                # For small images, window covers the whole image
+                wy = min(actual_window_size_y, height - y)
+                wx = min(actual_window_size_x, width - x)
+                local_window = noise_residual[y:y+wy, x:x+wx, :]
+                print(f"[PRNU] Processing window at (y={y}, x={x}), shape={local_window.shape}")
+                # Compute local PRNU pattern
+                local_pattern = np.mean(local_window, axis=(0, 1), keepdims=True)
+                # Normalize local pattern
+                local_pattern = (local_pattern - np.mean(local_pattern)) / (np.std(local_pattern) + 1e-10)
+                # Compute correlation for each channel
+                correlations = []
+                for c in range(local_pattern.shape[2]):
+                    g = global_pattern[..., c].flatten()
+                    l = local_pattern[..., c].flatten()
+                    if np.std(g) > 1e-6 and np.std(l) > 1e-6:
+                        corr = np.corrcoef(g, l)[0, 1]
+                        correlations.append(corr)
+                # Use mean correlation across channels
+                if correlations:
+                    correlation = float(np.mean(correlations))
+                    heatmap[y:y+wy, x:x+wx] += correlation
+                    window_count[y:y+wy, x:x+wx] += 1
+
+        print(f"[PRNU] window_count sum: {np.sum(window_count)} (should be > 0)")
+
+        # Robustness: If window_count is all zeros, set heatmap to zeros and warn
+        if np.all(window_count == 0):
+            print("[PRNU] WARNING: window_count is all zeros. No windows were processed. Setting heatmap to zeros.")
+            heatmap[:] = 0
+        else:
+            # Normalize heatmap
+            valid_mask = window_count > 0
+            heatmap[valid_mask] /= window_count[valid_mask]
+            # Fill in any gaps using interpolation
+            if np.any(~valid_mask):
+                y_coords, x_coords = np.nonzero(valid_mask)
+                values = heatmap[valid_mask]
+                y_grid, x_grid = np.mgrid[0:height, 0:width]
+                heatmap = griddata(
+                    (y_coords, x_coords),
+                    values,
+                    (y_grid, x_grid),
+                    method='nearest'
+                )
+        # Robustness: If any NaN in heatmap, set to zero and warn
+        if np.isnan(heatmap).any():
+            print("[PRNU] WARNING: NaN values in heatmap. Setting NaNs to zero.")
+            heatmap = np.nan_to_num(heatmap)
+        logging.debug(f"PRNU inconsistency heatmap: min={np.min(heatmap)}, max={np.max(heatmap)}, mean={np.mean(heatmap)}")
+        # Create mask for inconsistent regions
+        inconsistent_mask = heatmap < correlation_threshold
+        inconsistent_percentage = float(np.mean(inconsistent_mask))
+        is_inconsistent = bool(inconsistent_percentage > 0.05)
+        # Visualization
         grayscale = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
         visualization = cv2.cvtColor(grayscale, cv2.COLOR_GRAY2BGR)
-        
-        # Create overlay for tampered regions (bright red in BGR)
         overlay = np.zeros_like(visualization)
-        overlay[tampered_mask] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
-        
-        # Blend overlay with grayscale image
+        overlay[inconsistent_mask] = [0, 0, 255]
         visualization = cv2.addWeighted(
             visualization,
             1.0,
@@ -337,18 +505,11 @@ class PRNUAnalyzer:
             overlay_alpha,
             0
         )
-        
-        # Enhance red channel in tampered regions to make it more prominent
-        visualization[tampered_mask] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
-        
-        # Add a border around tampered regions for better visibility
-        if is_tampered:
-            # Create a dilated mask to highlight boundaries
+        visualization[inconsistent_mask] = [0, 0, 255]
+        # Add border for inconsistent regions
+        if is_inconsistent:
             kernel = np.ones((3,3), np.uint8)
-            dilated_mask = cv2.dilate(tampered_mask.astype(np.uint8), kernel, iterations=1)
-            edge_mask = dilated_mask - tampered_mask.astype(np.uint8)
-            
-            # Add red border
-            visualization[edge_mask == 1] = [0, 0, 255]  # BGR format
-        
-        return is_tampered, visualization
+            dilated_mask = cv2.dilate(inconsistent_mask.astype(np.uint8), kernel, iterations=1)
+            edge_mask = dilated_mask - inconsistent_mask.astype(np.uint8)
+            visualization[edge_mask == 1] = [0, 0, 255]
+        return is_inconsistent, visualization, heatmap

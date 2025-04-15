@@ -138,7 +138,8 @@ app.add_middleware(
 
 # Initialize analyzers
 ela_analyzer = ELAAnalyzer()
-prnu_analyzer = PRNUAnalyzer()
+# Set PRNU threshold to 300 to focus on AI-generated image detection (see tests for rationale)
+prnu_analyzer = PRNUAnalyzer(variance_threshold=300)
 entropy_analyzer = EntropyAnalyzer()
 
 @app.get("/", tags=["Info"])
@@ -211,37 +212,22 @@ async def analyze_prnu(
 ):
     """
     Perform PRNU (Photo Response Non-Uniformity) analysis on an uploaded image.
-    
-    This endpoint analyzes camera sensor patterns to detect potential image tampering.
-    It works by detecting:
-    * Inconsistencies in sensor noise patterns
-    * Areas from different source cameras
-    * Digital manipulation that disrupts sensor patterns
-    
-    Args:
-        file: Image file to analyze
-        
-    Returns:
-        AnalysisResponse: Analysis results including tampering detection, visualization, and confidence score
-        
-    Raises:
-        HTTPException: If file processing or analysis fails
     """
     try:
         contents = await file.read()
-        is_tampered, visualization = prnu_analyzer.detect_tampering(contents)
-        
+        is_tampered, visualization, uniformity_score = prnu_analyzer.detect_tampering(contents)
         return {
             "is_tampered": is_tampered,
-            "confidence_score": 0.8,  # Default confidence
+            "confidence_score": 0.8 if is_tampered else 0.2,
             "analysis_type": "PRNU",
             "visualization_base64": encode_image_to_base64(visualization),
             "details": {
                 "method": "Photo Response Non-Uniformity Analysis",
-                "description": "Analysis of sensor pattern noise"
+                "description": "Analysis of sensor pattern noise",
+                "uniformity_score": float(uniformity_score),
+                "threshold": 300
             }
         }
-
     except Exception as e:
         logger.error(f"Error in PRNU analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -294,48 +280,25 @@ async def analyze_combined(
 ):
     """
     Perform combined analysis using all available methods.
-    
-    This endpoint runs all three analysis methods (ELA, PRNU, and Entropy)
-    and provides a comprehensive result. This is useful for:
-    * Higher confidence detection
-    * Cross-validation of results
-    * Detecting multiple types of manipulation
-    
-    The combined confidence score is weighted based on the reliability
-    of each method for different types of manipulation.
-    
-    Args:
-        file: Image file to analyze
-        
-    Returns:
-        CombinedAnalysisResponse: Combined analysis results including visualizations from all methods
-        
-    Raises:
-        HTTPException: If file processing or analysis fails
     """
     try:
         contents = await file.read()
         ela_tampered, ela_vis, ela_features = ela_analyzer.detect_tampering(contents)
-        prnu_tampered, prnu_vis = prnu_analyzer.detect_tampering(contents)
+        prnu_tampered, prnu_vis, prnu_uniformity_score = prnu_analyzer.detect_tampering(contents)
         entropy_tampered, entropy_vis, matching_proportion = entropy_analyzer.detect_ai_generated(contents)
-
-        # Convert NumPy booleans to Python booleans
         ela_tampered = bool(ela_tampered)
         prnu_tampered = bool(prnu_tampered)
         entropy_tampered = bool(entropy_tampered)
-
         confidence_scores = [
-            1 - min(1.0, ela_features.edge_discontinuity),  # ELA confidence
-            0.8 if prnu_tampered else 0.2,  # PRNU confidence
-            float(1 - matching_proportion)  # Entropy confidence
+            1 - min(1.0, ela_features.edge_discontinuity),
+            0.8 if prnu_tampered else 0.2,
+            float(1 - matching_proportion)
         ]
-        
         combined_confidence = sum(confidence_scores) / len(confidence_scores)
         is_tampered = any([ela_tampered, prnu_tampered, entropy_tampered])
-
         return {
-            "is_tampered": bool(is_tampered),  # Convert to Python boolean
-            "confidence_score": float(combined_confidence),  # Ensure float
+            "is_tampered": bool(is_tampered),
+            "confidence_score": float(combined_confidence),
             "ela_visualization_base64": encode_image_to_base64(ela_vis),
             "prnu_visualization_base64": encode_image_to_base64(prnu_vis),
             "entropy_visualization_base64": encode_image_to_base64(entropy_vis),
@@ -360,7 +323,9 @@ async def analyze_combined(
                 "visualization_base64": encode_image_to_base64(prnu_vis),
                 "details": {
                     "method": "Photo Response Non-Uniformity Analysis",
-                    "description": "Analysis of camera sensor patterns"
+                    "description": "Analysis of camera sensor patterns",
+                    "uniformity_score": float(prnu_uniformity_score),
+                    "threshold": 300
                 }
             },
             "entropy_result": {
@@ -375,7 +340,6 @@ async def analyze_combined(
                 }
             }
         }
-
     except Exception as e:
         logger.error(f"Error in combined analysis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
