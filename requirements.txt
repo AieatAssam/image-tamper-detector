@@ -2,7 +2,7 @@ numpy>=1.21.0
 opencv-python>=4.5.3
 scikit-learn>=0.24.2
 tensorflow
-tensorflow-metal
+#tensorflow-metal
 pillow>=8.3.1
 matplotlib>=3.4.3 
 pytest

@@ -6,42 +6,38 @@ RUN npm install
 COPY frontend/ ./
 RUN npm run build
 
-# Build stage for backend
-FROM python:3.11-slim AS backend-builder
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
 # Final stage
-FROM python:3.11-slim
+FROM python:3.12-slim
 WORKDIR /app
 
-# Install system dependencies for OpenCV
+# Install system dependencies for OpenCV and Nginx
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgl1-mesa-glx \
     libglib2.0-0 \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy backend dependencies and code
-COPY --from=backend-builder /usr/local/lib/python3.11/site-packages/ /usr/local/lib/python3.11/site-packages/
+# Install Python dependencies and copy backend code
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ ./backend/
 
 # Copy frontend build
 COPY --from=frontend-builder /app/frontend/dist/ ./frontend/dist/
 
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
 # Copy startup script
 COPY scripts/start-docker.sh ./
 RUN chmod +x start-docker.sh
 
-# Install a lightweight web server for frontend
-RUN pip install --no-cache-dir uvicorn
-
-# Expose ports
-EXPOSE 8000 5173
+# Expose single port for Nginx
+EXPOSE 80
 
 # Set environment variables
 ENV PYTHONPATH=/app
 ENV PYTHONUNBUFFERED=1
 
-# Start both services
+# Start services
 CMD ["./start-docker.sh"] 
