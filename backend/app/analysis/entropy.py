@@ -229,7 +229,7 @@ class EntropyAnalyzer:
         Returns:
             Tuple containing:
                 - Boolean indicating if image is likely AI-generated
-                - Visualization with suspicious regions highlighted
+                - Visualization with suspicious regions highlighted in red over grayscale
                 - Proportion of pixels with matching entropy
                 
         Raises:
@@ -250,14 +250,16 @@ class EntropyAnalyzer:
         # AI-generated images tend to have lower proportions of matching entropy patterns
         is_ai_generated = matching_proportion < self.matching_threshold
         
-        # Create visualization
-        visualization = image_rgb.copy()
+        # Convert original image to grayscale while preserving 3 channels for overlay
+        grayscale = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
+        visualization = cv2.cvtColor(grayscale, cv2.COLOR_GRAY2BGR)  # Note: Using BGR here
         
-        # Create overlay for suspicious regions (red highlight)
+        # Create overlay for suspicious regions (bright red highlight in BGR)
         overlay = np.zeros_like(visualization)
-        overlay[suspicious_regions] = [255, 0, 0]  # Red for suspicious regions
+        overlay[suspicious_regions] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
         
-        # Blend overlay with original image
+        # Blend overlay with grayscale image
+        # Use additive blending to make red regions more visible
         visualization = cv2.addWeighted(
             visualization,
             1.0,
@@ -265,5 +267,8 @@ class EntropyAnalyzer:
             overlay_alpha,
             0
         )
+        
+        # Enhance red channel in suspicious regions to make it more prominent
+        visualization[suspicious_regions] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
         
         return is_ai_generated, visualization, matching_proportion 

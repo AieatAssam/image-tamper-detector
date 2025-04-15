@@ -224,7 +224,7 @@ class ELAAnalyzer:
         Returns:
             Tuple containing:
                 - Boolean indicating if tampering was detected
-                - Visualization of the analysis
+                - Visualization with suspicious regions highlighted in red over grayscale
                 - TamperingFeatures object with detailed scores
         """
         # Perform ELA analysis
@@ -238,13 +238,10 @@ class ELAAnalyzer:
             compression_artifacts=self._compute_compression_artifacts(ela_result)
         )
         
-        # Create visualization
-        visualization = np.copy(original)
-        
         # Detect tampering based on multiple features
         edge_violation = features.edge_discontinuity > edge_threshold
         texture_violation = features.texture_variance < texture_threshold  # Look for unusually LOW texture
-        noise_violation = features.noise_consistency < noise_threshold    # Look for unusually LOW noise
+        noise_violation = features.noise_consistency < noise_threshold
         compression_violation = features.compression_artifacts > compression_threshold
         
         # Debug print violations
@@ -266,22 +263,66 @@ class ELAAnalyzer:
         
         is_tampered = violation_count >= 2  # At least two types of violations needed
         
+        # Convert original image to grayscale while preserving 3 channels for overlay
+        grayscale = cv2.cvtColor(original, cv2.COLOR_RGB2GRAY)
+        visualization = cv2.cvtColor(grayscale, cv2.COLOR_GRAY2BGR)
+        
         if is_tampered:
-            # Highlight suspicious regions
-            mask = np.zeros_like(ela_result, dtype=np.uint8)
+            # Create suspicious regions mask
+            suspicious_mask = np.zeros_like(original, dtype=np.uint8)
             
-            # Edge discontinuities
+            # Add edge discontinuities to mask with more selective thresholding
             if edge_violation:
-                edges = cv2.Canny(ela_result, 50, 150)
-                mask = cv2.addWeighted(mask, 1, cv2.cvtColor(edges, cv2.COLOR_GRAY2RGB), 0.5, 0)
+                edges = cv2.Canny(ela_result, 100, 200)  # Increased thresholds for more selective edge detection
+                edges = cv2.dilate(edges, np.ones((2,2), np.uint8), iterations=1)  # Slight dilation
+                suspicious_mask |= cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)
             
-            # Texture anomalies
+            # Add texture and noise anomalies to mask with more selective thresholding
             if texture_violation or noise_violation:
-                gray = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
-                _, thresh = cv2.threshold(gray, np.mean(gray) + np.std(gray), 255, cv2.THRESH_BINARY)
-                mask = cv2.addWeighted(mask, 1, cv2.cvtColor(thresh, cv2.COLOR_GRAY2RGB), 0.3, 0)
+                gray_ela = cv2.cvtColor(ela_result, cv2.COLOR_RGB2GRAY)
+                # Use more aggressive thresholding to reduce highlighted areas
+                threshold = np.mean(gray_ela) + 2 * np.std(gray_ela)  # Increased threshold
+                _, thresh = cv2.threshold(gray_ela, threshold, 255, cv2.THRESH_BINARY)
+                # Clean up the mask with morphological operations
+                thresh = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, np.ones((3,3), np.uint8))
+                suspicious_mask |= cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
             
-            # Apply the mask to the visualization
-            visualization = cv2.addWeighted(visualization, 0.7, mask, 0.3, 0)
+            # Create final mask
+            final_mask = np.any(suspicious_mask > 0, axis=2)
+            
+            # Clean up the mask to reduce noise
+            kernel = np.ones((3,3), np.uint8)
+            final_mask = cv2.morphologyEx(final_mask.astype(np.uint8), cv2.MORPH_OPEN, kernel)
+            final_mask = cv2.morphologyEx(final_mask, cv2.MORPH_CLOSE, kernel)
+            
+            # Create overlay for suspicious regions (bright red in BGR with reduced opacity)
+            overlay = np.zeros_like(visualization)
+            overlay[final_mask > 0] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
+            
+            # Blend overlay with grayscale image using reduced alpha
+            visualization = cv2.addWeighted(
+                visualization,
+                1.0,
+                overlay,
+                0.4,  # Reduced alpha for better visibility
+                0
+            )
+            
+            # Add subtle red tint to suspicious regions instead of full red
+            visualization[final_mask > 0] = cv2.addWeighted(
+                visualization[final_mask > 0],
+                0.7,  # Keep more of the original grayscale
+                np.full_like(visualization[final_mask > 0], [0, 0, 255]),
+                0.3,  # Less red
+                0
+            )
+            
+            # Add a thin border around suspicious regions
+            kernel = np.ones((2,2), np.uint8)  # Smaller kernel for thinner border
+            dilated_mask = cv2.dilate(final_mask, kernel, iterations=1)
+            edge_mask = dilated_mask - final_mask
+            
+            # Add red border with reduced intensity
+            visualization[edge_mask > 0] = [0, 0, 200]  # Slightly less bright red
         
         return is_tampered, visualization, features

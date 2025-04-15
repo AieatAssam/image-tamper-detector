@@ -284,7 +284,7 @@ class PRNUAnalyzer:
         Returns:
             Tuple containing:
                 - Boolean indicating if tampering was detected
-                - Visualization with tampered regions highlighted
+                - Visualization with tampered regions highlighted in red over grayscale
                 
         Raises:
             FileNotFoundError: If image file does not exist
@@ -309,42 +309,37 @@ class PRNUAnalyzer:
             stride=stride
         )
         
-        # Create visualization
-        # Convert heatmap to color visualization (red indicates tampering)
-        heatmap_vis = np.zeros((image_rgb.shape[0], image_rgb.shape[1], 3), dtype=np.uint8)
-        
-        # Resize heatmap to match image dimensions
+        # Create mask for potentially tampered regions
         heatmap_resized = cv2.resize(
             heatmap,
             (image_rgb.shape[1], image_rgb.shape[0]),
             interpolation=cv2.INTER_LINEAR
         )
-        
-        # Create visualization mask (red for low correlation, indicating tampering)
-        heatmap_vis[..., 2] = ((1 - heatmap_resized) * 255).astype(np.uint8)  # Red channel
-        
-        # Create mask for potentially tampered regions
         tampered_mask = heatmap_resized < correlation_threshold
         
         # Calculate percentage of potentially tampered pixels
         tampered_percentage = float(np.mean(tampered_mask))  # Convert to Python float
         is_tampered = bool(tampered_percentage > 0.05)  # Convert to Python bool
         
-        # Create final visualization
-        image_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+        # Convert original image to grayscale while preserving 3 channels for overlay
+        grayscale = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
+        visualization = cv2.cvtColor(grayscale, cv2.COLOR_GRAY2BGR)
         
-        # Create overlay by blending the original image with the heatmap visualization
-        overlay = cv2.addWeighted(
-            image_bgr,
+        # Create overlay for tampered regions (bright red in BGR)
+        overlay = np.zeros_like(visualization)
+        overlay[tampered_mask] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
+        
+        # Blend overlay with grayscale image
+        visualization = cv2.addWeighted(
+            visualization,
             1.0,
-            heatmap_vis,
+            overlay,
             overlay_alpha,
             0
         )
         
-        # Create final visualization by combining original and overlay based on tampered regions
-        visualization = image_bgr.copy()
-        visualization[tampered_mask] = overlay[tampered_mask]
+        # Enhance red channel in tampered regions to make it more prominent
+        visualization[tampered_mask] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
         
         # Add a border around tampered regions for better visibility
         if is_tampered:
