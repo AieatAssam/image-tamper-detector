@@ -23,13 +23,15 @@ class EntropyFeatures:
     entropy_blue: np.ndarray   # Local entropy map for blue channel
     matching_mask: np.ndarray  # Mask of pixels with similar entropy across channels
     uniformity_mask: np.ndarray  # Mask of pixels with uniform entropy patterns
+    color_consistency_mask: np.ndarray  # Mask of pixels with consistent color but varying entropy
 
 class EntropyAnalyzer:
     def __init__(self, 
                  radius: int = 4,  # Balanced radius for local entropy calculation
                  tolerance: float = 0.12,  # Tolerance for entropy matching
                  matching_threshold: float = 0.35,  # Threshold for AI detection
-                 uniformity_threshold: float = 0.2):  # Threshold for local uniformity
+                 uniformity_threshold: float = 0.2,  # Threshold for local uniformity
+                 color_consistency_threshold: float = 0.15):  # Threshold for color consistency
         """
         Initialize Entropy analyzer for AI-generated image detection.
         
@@ -38,6 +40,7 @@ class EntropyAnalyzer:
             tolerance: Tolerance for considering entropy values similar across channels
             matching_threshold: Threshold for the proportion of matching pixels to classify as AI-generated
             uniformity_threshold: Threshold for local entropy uniformity
+            color_consistency_threshold: Threshold for color consistency in local regions
         """
         if radius < 1:
             raise ValueError("Radius must be at least 1")
@@ -47,11 +50,14 @@ class EntropyAnalyzer:
             raise ValueError("Matching threshold must be between 0 and 1")
         if not 0 < uniformity_threshold < 1:
             raise ValueError("Uniformity threshold must be between 0 and 1")
+        if not 0 < color_consistency_threshold < 1:
+            raise ValueError("Color consistency threshold must be between 0 and 1")
             
         self.radius = radius
         self.tolerance = tolerance
         self.matching_threshold = matching_threshold
         self.uniformity_threshold = uniformity_threshold
+        self.color_consistency_threshold = color_consistency_threshold
         self.kernel_size = 2 * radius + 1
         self.selem = disk(radius)  # Structural element for entropy calculation
         
@@ -66,6 +72,26 @@ class EntropyAnalyzer:
             normalized = np.zeros_like(entropy_map, dtype=np.uint8)
         return normalized
         
+    def _compute_color_consistency(self, image: np.ndarray) -> np.ndarray:
+        """Compute mask of regions with consistent colors but varying entropy."""
+        # Convert to float32 for calculations
+        img_float = image.astype(np.float32) / 255.0
+        
+        # Calculate local color statistics
+        mean_color = cv2.blur(img_float, (self.kernel_size, self.kernel_size))
+        mean_color2 = cv2.blur(img_float * img_float, (self.kernel_size, self.kernel_size))
+        
+        # Compute local color variance for each channel
+        var_color = mean_color2 - mean_color * mean_color
+        std_color = np.sqrt(np.maximum(var_color, 0))
+        
+        # Average standard deviation across channels
+        avg_std_color = np.mean(std_color, axis=2)
+        
+        # Create color consistency mask
+        color_consistency_mask = avg_std_color < self.color_consistency_threshold
+        return color_consistency_mask
+
     def _compute_uniformity_mask(self, entropy_maps: list[np.ndarray]) -> np.ndarray:
         """Compute mask of regions with uniform entropy patterns."""
         # Stack entropy maps
@@ -85,9 +111,15 @@ class EntropyAnalyzer:
         # Normalize local standard deviation
         local_std = self._normalize_entropy(local_std)
         
-        # Create uniformity mask
+        # Create uniformity mask with stricter threshold for AI detection
         uniformity_mask = local_std < (self.uniformity_threshold * 255)
-        return uniformity_mask
+        
+        # Apply morphological operations to clean up the mask
+        kernel = np.ones((3, 3), np.uint8)
+        uniformity_mask = cv2.morphologyEx(uniformity_mask.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
+        uniformity_mask = cv2.morphologyEx(uniformity_mask, cv2.MORPH_OPEN, kernel)
+        
+        return uniformity_mask.astype(bool)
         
     def _load_image_from_bytes(self, image_bytes: bytes) -> np.ndarray:
         """Load an image from bytes."""
@@ -155,7 +187,7 @@ class EntropyAnalyzer:
             entropy_diff_gb = np.abs(entropy_green - entropy_blue)
             
             # Create mask where entropy differences are within tolerance
-            tolerance_scaled = self.tolerance * 255  # Scale tolerance to uint8 range
+            tolerance_scaled = self.tolerance * 255
             matching_mask = (
                 (entropy_diff_rg < tolerance_scaled) & 
                 (entropy_diff_rb < tolerance_scaled) & 
@@ -167,12 +199,16 @@ class EntropyAnalyzer:
                 entropy_red, entropy_green, entropy_blue
             ])
             
+            # Compute color consistency mask
+            color_consistency_mask = self._compute_color_consistency(image_rgb)
+            
             return image_rgb, EntropyFeatures(
                 entropy_red=entropy_red,
                 entropy_green=entropy_green,
                 entropy_blue=entropy_blue,
                 matching_mask=matching_mask,
-                uniformity_mask=uniformity_mask
+                uniformity_mask=uniformity_mask,
+                color_consistency_mask=color_consistency_mask
             )
             
         except Exception as e:
@@ -203,10 +239,13 @@ class EntropyAnalyzer:
         # Analyze the image
         image_rgb, features = self.analyze(image_input)
         
-        # Calculate proportion of matching pixels with uniform entropy
-        matching_proportion = float(np.mean(
-            features.matching_mask & features.uniformity_mask
-        ))
+        # Calculate proportion of matching pixels with uniform entropy and consistent color
+        suspicious_regions = (
+            features.matching_mask & 
+            features.uniformity_mask & 
+            features.color_consistency_mask
+        )
+        matching_proportion = float(np.mean(suspicious_regions))
         
         # AI-generated images tend to have lower proportions of matching entropy patterns
         is_ai_generated = matching_proportion < self.matching_threshold
@@ -214,9 +253,9 @@ class EntropyAnalyzer:
         # Create visualization
         visualization = image_rgb.copy()
         
-        # Create overlay for matching regions (red highlight)
+        # Create overlay for suspicious regions (red highlight)
         overlay = np.zeros_like(visualization)
-        overlay[features.matching_mask & features.uniformity_mask] = [255, 0, 0]  # Red for matching regions
+        overlay[suspicious_regions] = [255, 0, 0]  # Red for suspicious regions
         
         # Blend overlay with original image
         visualization = cv2.addWeighted(
