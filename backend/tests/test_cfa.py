@@ -1,4 +1,5 @@
 from io import BytesIO
+from unittest.mock import patch
 
 import cv2
 import numpy as np
@@ -48,3 +49,34 @@ def test_cfa_is_not_applicable_when_exif_dimensions_disagree():
 def test_small_image_without_exif_is_not_applicable():
     result = CfaDetector().run(_context(np.zeros((64, 64, 3), dtype=np.uint8)))
     assert result.state is DetectorState.NOT_APPLICABLE
+
+
+def test_cfa_requires_strict_real_camera_evidence():
+    exif = Image.Exif()
+    exif[0x010F] = "Example Camera"
+    exif[0x0110] = "Example Model"
+    output = BytesIO()
+    image = Image.fromarray(np.zeros((256, 256, 3), dtype=np.uint8), "RGB")
+    image.save(output, format="JPEG", exif=exif.tobytes())
+    relaxed = CfaDetector().run(ImageContext(output.getvalue()))
+    assert relaxed.state is DetectorState.NOT_APPLICABLE
+    assert relaxed.score is None and relaxed.flagged is None
+
+    exif[0xA002] = 256
+    output = BytesIO()
+    image.save(output, format="JPEG", exif=exif.tobytes())
+    strict = CfaDetector().run(ImageContext(output.getvalue()))
+    assert strict.state is DetectorState.APPLICABLE
+    assert strict.score is not None
+
+
+def test_cfa_reads_nested_exif_pixel_dimensions():
+    output = BytesIO()
+    Image.fromarray(np.zeros((256, 256, 3), dtype=np.uint8), "RGB").save(
+        output, format="JPEG"
+    )
+    ctx = ImageContext(output.getvalue())
+    nested_metadata = {0x010F: "Example Camera", 0x0110: "Example Model", 0xA002: 256}
+    with patch("backend.app.analysis.cfa._metadata", return_value=nested_metadata):
+        result = CfaDetector().run(ctx)
+    assert result.state is DetectorState.APPLICABLE

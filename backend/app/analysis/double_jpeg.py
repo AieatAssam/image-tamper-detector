@@ -105,7 +105,10 @@ class DoubleJpegDetector:
         periodicity = [_periodicity_ratio(coefficients[:, index]) for index in range(coefficients.shape[1])]
         benford_score = float(np.mean(benford))
         periodicity_score = float(np.mean(periodicity))
-        aggregate = 0.5 * benford_score + 0.5 * periodicity_score
+        # The measured indicators are anti-correlated on the corpus: authentic
+        # recompresses have the larger aggregate. Reverse that statistic so
+        # the catalog's higher-is-worse direction remains true.
+        aggregate = -(0.5 * benford_score + 0.5 * periodicity_score)
         score = to_probability(aggregate, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
         flagged = score >= 0.5
         visualization = _block_visualization(coefficients, block_shape, ctx.gray_uint8.shape)

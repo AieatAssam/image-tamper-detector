@@ -94,10 +94,9 @@ class CopyMoveDetector:
 
         overlay = image.copy()
         if not verified:
-            score = to_probability(0.0, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
             return DetectorResult(
-                self.id, DetectorState.APPLICABLE, score, score >= 0.5, float(config["threshold"]),
-                "no_forgery_found: keypoints were sufficient but no verified affine cluster was found",
+                self.id, DetectorState.NOT_APPLICABLE, None, None, float(config["threshold"]),
+                "low confidence: no verified affine cluster; copy-move evidence could not be assessed",
                 base_metrics, cv2.resize(overlay, (ctx.width, ctx.height), interpolation=cv2.INTER_LINEAR), _duration(started),
             )
 

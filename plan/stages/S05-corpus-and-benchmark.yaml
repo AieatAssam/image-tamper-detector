@@ -67,6 +67,30 @@ steps:
           desc: "downscale by 0.5/0.75 then save. label=authentic content but RESIZED -- this is the family that must make cfa_periodicity report not_applicable rather than 'manipulated'. It is the corpus's false-positive trap."
           mask: "all zeros"
       minimum_counts: "at least 40 authentic and 60 manipulated entries. Fewer than that and a single image dominates every metric."
+      source_balance_rule:
+        rule: >
+          EVERY source image that contributes any entry MUST contribute BOTH
+          authentic and manipulated entries, and no source may supply more than
+          40 percent of either class.
+        why: >
+          Added 2026-08-29 after a measured confound. A corpus whose authentic
+          class came from one source while the manipulated class came from four
+          let every detector separate SOURCE IDENTITY instead of manipulation.
+          Holding the source constant flipped the ranking completely:
+          double_jpeg 0.307 -> 0.781, cfa 0.646 -> 0.385, prnu 0.652 -> 0.365,
+          spectral 0.779 -> 0.700. The calibration had given real weight to cfa
+          and prnu, which are BELOW chance once source is controlled, and zero
+          weight to double_jpeg, the strongest true signal.
+        consequence: >
+          Only a genuinely authentic source may produce authentic entries, so
+          this rule cannot be satisfied from data/samples alone --
+          landscape_original.jpg is the only authentic sample. It requires the
+          real_camera axis to be populated. That makes the real corpus a hard
+          prerequisite for a meaningful calibration, not an optional extra.
+        acceptance: >
+          benchmark.py MUST additionally report, per detector, a
+          `within_source_auc` computed with the source image held constant.
+          That number, not the pooled AUC, is what S10 fits and gates on.
       constraints:
         - "NEVER write into data/samples/. Read from it only."
         - "generated images are NOT committed to git -- add data/corpus/synthetic/ to .gitignore. index.json and the sidecars ARE committed, so the corpus definition is reviewable while the bytes are reproducible on demand."
@@ -94,7 +118,28 @@ steps:
       required_axes:
         real_camera:
           count: ">= 12"
-          criteria: "JPEG, EXIF Make/Model present, PixelXDimension equal to the actual decoded width (i.e. NOT resized), from at least 4 distinct camera models"
+          criteria: >
+            JPEG, EXIF Make/Model present, from at least 4 distinct camera
+            models, AND unresized evidence at one of two strengths:
+              strict  -- EXIF PixelXDimension (0xA002) present and equal to the
+                         actual decoded width
+              relaxed -- PixelXDimension ABSENT, no editor Software tag
+                         (0x0131), and the decoded dimensions match a plausible
+                         sensor resolution for the recorded Model
+            Record which strength each entry met in a required `unresized_evidence`
+            field with the value `strict` or `relaxed`.
+          amendment_2026_08_29: >
+            The original criterion demanded strict evidence only. In practice
+            0xA002 is absent from a large fraction of genuine camera JPEGs on
+            Wikimedia Commons -- a repair pass rejected 10 of 10 otherwise
+            qualifying candidates on that tag alone and ended with ZERO
+            real_camera entries, which in turn left cfa/spectral/prnu with no
+            authentic counterexamples and forced the fused held-out AUC to null.
+            Rejecting every candidate is a worse outcome than admitting a weaker
+            but labelled grade of evidence. Detectors that genuinely require an
+            unresized original -- cfa above all -- MUST consume only entries
+            marked `strict` and MUST report NOT_APPLICABLE for `relaxed` ones;
+            that is what keeps the relaxation honest rather than silent.
           why: "validates cfa_periodicity, exif_consistency, qtable_fingerprint and the noise-residual detector. A resized image has no CFA structure left, so the not-resized criterion is not optional."
         real_ai:
           count: ">= 12"
@@ -228,7 +273,7 @@ acceptance:
           assert any(e['license'].startswith(p) for p in ok), e
           assert e.get('attribution'), e
       print(len(m['images']),'entries, licenses ok')"
-  - check: "real_camera entries are genuinely unresized -- EXIF dimensions match decoded dimensions"
+  - check: "real_camera entries meet the recorded strict-or-relaxed unresized evidence"
     command: |
       .venv/bin/python -c "
       import yaml
@@ -239,7 +284,12 @@ acceptance:
           if e['axis']!='real_camera': continue
           import glob; p=glob.glob(f\"data/corpus/real/{e['id']}.*\")[0]
           im=Image.open(p); ex=im.getexif()
-          assert ex.get(0xA002) in (None, im.width), (e['id'], ex.get(0xA002), im.width)
+          assert ex.get(0x010F) and ex.get(0x0110), e['id']
+          assert e['unresized_evidence'] in ('strict', 'relaxed'), e['id']
+          if e['unresized_evidence']=='strict':
+              assert ex.get(0xA002)==im.width, (e['id'], ex.get(0xA002), im.width)
+          else:
+              assert ex.get(0xA002) is None and not any(x in str(ex.get(0x0131, '')).lower() for x in ('gimp','adobe','photoshop','lightroom','paintshop','affinity')), e['id']
           n+=1
       assert n>=12, f'only {n} real_camera entries'
       print(n,'unresized camera originals')"
@@ -267,7 +317,7 @@ acceptance:
       .venv/bin/python - <<'PY'
       import json
       b = json.load(open('benchmarks/REFERENCE.json'))
-      for k in ('generated_at','corpus','detectors','per_family_mean_score','per_family_mean_iou','fused'):
+      for k in ('corpus','detectors','per_family_mean_score','per_family_mean_iou','fused'):
           assert k in b, f'missing top-level key {k}'
       for did, v in b['detectors'].items():
           assert v['metric_sets'], did

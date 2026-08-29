@@ -1,4 +1,6 @@
+import time
 from io import BytesIO
+
 import numpy as np
 from PIL import Image
 
@@ -30,3 +32,19 @@ def test_textureless_is_not_applicable():
     result = CopyMoveDetector().run(ImageContext(_jpeg(np.full((512, 512, 3), 128, dtype=np.uint8))))
     assert result.state is DetectorState.NOT_APPLICABLE
     assert "keypoint" in result.reason
+
+
+def test_real_textureless_copy_move_is_low_confidence():
+    result = CopyMoveDetector().run(ImageContext.from_path("data/samples/tampered/landscape_copy_paste.jpg"))
+    assert result.state is DetectorState.NOT_APPLICABLE
+    assert result.score is None and result.flagged is None
+    assert "low confidence" in result.reason
+    assert result.metrics["keypoints"] >= 100
+
+
+def test_copy_move_duration_cap_is_wall_clock():
+    started = time.perf_counter()
+    result = CopyMoveDetector().run(ImageContext.from_path("data/samples/tampered/landscape_copy_paste.jpg"))
+    elapsed = time.perf_counter() - started
+    assert result.state is DetectorState.NOT_APPLICABLE
+    assert elapsed < 15.0, f"copy_move took {elapsed:.1f}s"

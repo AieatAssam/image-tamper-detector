@@ -1,3 +1,4 @@
+import time
 from io import BytesIO
 
 import numpy as np
@@ -15,4 +16,11 @@ def test_ghosts_returns_a_bounded_map():
     assert result.state is DetectorState.APPLICABLE
     assert result.visualization is not None
     assert result.visualization.shape[:2] == (512, 768)
-    assert result.duration_ms < 8_000
+
+
+def test_ghosts_duration_cap_is_wall_clock():
+    started = time.perf_counter()
+    result = JpegGhostDetector().run(ImageContext.from_path("data/samples/original/landscape_original.jpg"))
+    elapsed = time.perf_counter() - started
+    assert result.state is DetectorState.APPLICABLE
+    assert elapsed < 8.0, f"jpeg_ghosts took {elapsed:.1f}s"

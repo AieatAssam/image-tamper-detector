@@ -4,7 +4,7 @@
   "label": "manipulated",
   "params": {
     "donor_quality": 95,
-    "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+    "donor_source": "data/samples/tampered/landscape_copy_paste.jpg",
     "feathered": false,
     "host_quality": 90,
     "region": [
@@ -16,5 +16,6 @@
     "seed": 20260828
   },
   "seed": 20260828,
-  "source_image": "data/samples/original/landscape_original.jpg"
+  "source_image": "data/corpus/real/cam_003.jpg",
+  "source_label": "authentic"
 }

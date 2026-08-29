@@ -10,7 +10,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -22,7 +23,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -34,7 +36,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -46,7 +49,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -58,7 +62,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -70,7 +75,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -82,7 +88,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -94,7 +101,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -106,7 +114,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_008.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -118,7 +127,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_009.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -130,7 +140,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_010.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_011.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -142,7 +153,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_011.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_012.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -154,7 +166,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_012.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -166,7 +179,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_013.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -178,7 +192,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_014.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -190,7 +205,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_015.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -202,7 +218,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_016.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -214,7 +231,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_017.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -226,7 +244,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_018.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -238,7 +257,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_019.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -250,7 +270,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_020.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -262,7 +283,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_021.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -274,7 +296,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_022.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_011.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -286,7 +309,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_023.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_012.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -298,7 +322,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_024.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -310,7 +335,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_025.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -322,7 +348,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_026.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -334,7 +361,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_027.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -346,7 +374,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_028.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -358,7 +387,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_029.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -370,7 +400,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_030.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "authentic_recompress",
@@ -382,7 +413,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_authentic_recompress_031.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -403,7 +435,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -412,7 +445,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_001_mask.png",
       "params": {
         "donor_quality": 90,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-02.png",
         "feathered": true,
         "host_quality": 80,
         "region": [
@@ -424,7 +457,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -433,7 +467,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_002_mask.png",
       "params": {
         "donor_quality": 95,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/samples/tampered/landscape_copy_paste.jpg",
         "feathered": false,
         "host_quality": 90,
         "region": [
@@ -445,7 +479,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -454,7 +489,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_003_mask.png",
       "params": {
         "donor_quality": 70,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_002.jpg",
         "feathered": true,
         "host_quality": 95,
         "region": [
@@ -466,7 +501,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -475,7 +511,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_004_mask.png",
       "params": {
         "donor_quality": 80,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_003.jpg",
         "feathered": false,
         "host_quality": 70,
         "region": [
@@ -487,7 +523,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -496,7 +533,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_005_mask.png",
       "params": {
         "donor_quality": 90,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_004.jpg",
         "feathered": true,
         "host_quality": 80,
         "region": [
@@ -508,7 +545,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -517,7 +555,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_006_mask.png",
       "params": {
         "donor_quality": 95,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_005.jpg",
         "feathered": false,
         "host_quality": 90,
         "region": [
@@ -529,7 +567,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -538,7 +577,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_007_mask.png",
       "params": {
         "donor_quality": 70,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_006.jpg",
         "feathered": true,
         "host_quality": 95,
         "region": [
@@ -550,7 +589,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -559,7 +599,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_008_mask.png",
       "params": {
         "donor_quality": 80,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_007.jpg",
         "feathered": false,
         "host_quality": 70,
         "region": [
@@ -571,7 +611,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_008.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -580,7 +621,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_009_mask.png",
       "params": {
         "donor_quality": 90,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_008.jpg",
         "feathered": true,
         "host_quality": 80,
         "region": [
@@ -592,7 +633,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_009.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -601,7 +643,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_010_mask.png",
       "params": {
         "donor_quality": 95,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_009.jpg",
         "feathered": false,
         "host_quality": 90,
         "region": [
@@ -613,7 +655,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_010.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_011.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -622,7 +665,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_011_mask.png",
       "params": {
         "donor_quality": 70,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_010.jpg",
         "feathered": true,
         "host_quality": 95,
         "region": [
@@ -634,7 +677,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_011.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_012.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -643,7 +687,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_012_mask.png",
       "params": {
         "donor_quality": 80,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_011.jpg",
         "feathered": false,
         "host_quality": 70,
         "region": [
@@ -655,7 +699,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_012.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "splice",
@@ -664,7 +709,7 @@
       "mask": "data/corpus/synthetic/synthetic_splice_013_mask.png",
       "params": {
         "donor_quality": 90,
-        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "donor_source": "data/corpus/real/cam_012.jpg",
         "feathered": true,
         "host_quality": 80,
         "region": [
@@ -676,7 +721,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_splice_013.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -702,7 +748,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -728,7 +775,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -754,7 +802,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -780,7 +829,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -806,7 +856,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -832,7 +883,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -858,7 +910,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -884,7 +937,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -910,7 +964,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_008.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -936,7 +991,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_009.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -962,7 +1018,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_010.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_011.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -988,7 +1045,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_011.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_012.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -1014,7 +1072,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_012.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "copy_move",
@@ -1040,7 +1099,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_copy_move_013.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1057,7 +1117,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1074,7 +1135,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1091,7 +1153,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1108,7 +1171,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1125,7 +1189,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1142,7 +1207,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1159,7 +1225,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1176,7 +1243,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1193,7 +1261,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_008.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_aligned",
@@ -1210,7 +1279,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_aligned_009.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1227,7 +1297,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1244,7 +1315,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1261,7 +1333,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1278,7 +1351,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1295,7 +1369,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1312,7 +1387,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1329,7 +1405,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1346,7 +1423,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1363,7 +1441,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_008.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "double_compress_shifted",
@@ -1380,7 +1459,8 @@
         ]
       },
       "path": "data/corpus/synthetic/synthetic_double_compress_shifted_009.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1398,7 +1478,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1416,7 +1497,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1434,7 +1516,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1452,7 +1535,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1470,7 +1554,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1488,7 +1573,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1506,7 +1592,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1524,7 +1611,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1542,7 +1630,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_008.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_009.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1560,7 +1649,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_009.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_010.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1578,7 +1668,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_010.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_011.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "local_retouch",
@@ -1596,7 +1687,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_local_retouch_011.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_012.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1608,7 +1700,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_000.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/samples/original/landscape_original.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1620,7 +1713,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_001.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_002.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1632,7 +1726,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_002.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_003.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1644,7 +1739,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_003.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_004.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1656,7 +1752,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_004.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_005.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1668,7 +1765,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_005.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_006.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1680,7 +1778,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_006.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_007.jpg",
+      "source_label": "authentic"
     },
     {
       "family": "resize_then_save",
@@ -1692,7 +1791,8 @@
         "seed": 20260828
       },
       "path": "data/corpus/synthetic/synthetic_resize_then_save_007.jpg",
-      "source_image": "data/samples/original/landscape_original.jpg"
+      "source_image": "data/corpus/real/cam_008.jpg",
+      "source_label": "authentic"
     }
   ],
   "generated_at": "2026-08-28T12:00:00Z",

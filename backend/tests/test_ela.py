@@ -3,6 +3,7 @@ Unit tests for Error Level Analysis (ELA) implementation.
 """
 import pytest
 import numpy as np
+from io import BytesIO
 from pathlib import Path
 from PIL import Image
 import cv2
@@ -135,4 +136,16 @@ def test_image_preprocessing(ela_analyzer):
     # Test resizing
     large_image = Image.new('RGB', (3000, 3000), color='white')
     processed = ela_analyzer._preprocess_image(large_image)
-    assert max(processed.size) <= ela_analyzer.max_image_size 
+    assert max(processed.size) <= ela_analyzer.max_image_size
+
+def test_empty_suspicious_mask_does_not_fail():
+    image = Image.new('RGB', (256, 256), color='gray')
+    output = BytesIO()
+    image.save(output, format='JPEG')
+
+    is_tampered, visualization, _ = ELAAnalyzer().detect_tampering(
+        output.getvalue(), edge_threshold=-1.0
+    )
+
+    assert is_tampered
+    assert visualization.shape == (256, 256, 3)

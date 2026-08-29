@@ -1,14 +1,246 @@
 version: 1
-# Verified source entry. The remaining required axes are documented as a
-# shortfall in docs/corpus.md rather than represented by aspirational hashes.
 images:
-  - id: cam_001
+  - id: cam_002
     axis: real_camera
     label: authentic
-    url: "https://upload.wikimedia.org/wikipedia/commons/4/41/Farmers_Market_in_Brazil.jpg"
-    sha256: "4022a484118bad5279bd515457deca80aaf0617091cf1c7aca0a685c573c8f44"
-    bytes: 4120786
+    url: "https://upload.wikimedia.org/wikipedia/commons/5/5d/A320_-_int%C3%A9rieur_%281%29.jpg"
+    sha256: "d1183187b381f76835d30dda483639fe816737d7d4b48c8ca509f9610f3bc89a"
+    bytes: 844660
     license: "CC BY-SA 4.0"
-    attribution: "ThatNerdGirl37, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Farmers_Market_in_Brazil.jpg"
-    camera: "SONY DSC-H300"
-    notes: "JPEG; EXIF Make/Model present. PixelXDimension absent in the source EXIF, so it is not counted as a strict unresized-original proof."
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:A320_-_intérieur_(1).jpg"
+    camera: "OLYMPUS SP800UZ"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Olympus SP800UZ dimensions."
+  - id: cam_003
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/b/b2/A320_-_int%C3%A9rieur_%282%29.jpg"
+    sha256: "a6c3d40a289e339c2642b919cf2e4ca767ee2ac6467f172f44ab5a8a494a62f1"
+    bytes: 769457
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:A320_-_intérieur_(2).jpg"
+    camera: "OLYMPUS SP800UZ"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Olympus SP800UZ dimensions."
+  - id: cam_004
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/f/f6/Domaine_du_Bouxhof_-_corps_de_logis_%28Mittelwihr%2C_France%29.jpg"
+    sha256: "029d6a6648a72d6acad93c362906daf2e7a65a75d3b354f639eb51b1f4dfef4e"
+    bytes: 502802
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Domaine_du_Bouxhof_-_corps_de_logis_(Mittelwihr,_France).jpg"
+    camera: "PENTAX K100D Super"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Pentax K100D Super dimensions."
+  - id: cam_005
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/0/02/Domaine_du_Bouxhof_-_mur_de_cl%C3%B4ture_%28Mittelwihr%2C_France%29.JPG"
+    sha256: "85d85780eecc34140284c0221cac52dcac52b0bea55d0d7e41935b0946802da1"
+    bytes: 584406
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Domaine_du_Bouxhof_-_mur_de_clôture_(Mittelwihr,_France).JPG"
+    camera: "PENTAX K100D Super"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Pentax K100D Super dimensions."
+  - id: cam_006
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/3/3c/Domaine_du_Bouxhof_-_portail_cintr%C3%A9_%28Mittelwihr%2C_France%29.JPG"
+    sha256: "92a245dc7cbfd2273b6dde1bfa02fefd335549ea93af956add21901937351d1e"
+    bytes: 726085
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Domaine_du_Bouxhof_-_portail_cintré_(Mittelwihr,_France).JPG"
+    camera: "PENTAX K100D Super"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Pentax K100D Super dimensions."
+  - id: cam_007
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/e/eb/Casoar_%C3%A0_casque_%28Casuarius_casuarius%29.jpg"
+    sha256: "e8964132c4df373f78f6a797e886e209421892b241e5b70f3330aea89b006b2f"
+    bytes: 6296420
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Casoar_à_casque_(Casuarius_casuarius).jpg"
+    camera: "Google Pixel 3a"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, HDR+ Software tag, plausible Google Pixel 3a dimensions."
+  - id: cam_008
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/a/a1/Ch%C3%A2teau_%28Dieppe%29_%281%29.jpg"
+    sha256: "badaefd738e3c5e15c8e04e77d017ae76c1d17f8ea60480e66f2f8cd977ac380"
+    bytes: 2193717
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Château_(Dieppe)_(1).jpg"
+    camera: "Google Pixel 3a"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, HDR+ Software tag, plausible Google Pixel 3a dimensions."
+  - id: cam_009
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/3/3e/G%C3%A2teau_d%27anniversaire_%2810%29.jpg"
+    sha256: "e0a43e0e233854c07db642b5096c93063aa8c2dfa0181d9f03b8cb499cb60a48"
+    bytes: 3140567
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Gâteau_d'anniversaire_(10).jpg"
+    camera: "samsung SM-G973F"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Samsung SM-G973F dimensions."
+  - id: cam_010
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/5/50/G%C3%A2teau_d%27anniversaire_%286%29.jpg"
+    sha256: "2defb95276b8eb0734c2f08e0be6e0e65a298d9240da7162b9f518ae23d0415d"
+    bytes: 2228976
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Gâteau_d'anniversaire_(6).jpg"
+    camera: "samsung SM-G973F"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, camera firmware Software tag, plausible Samsung SM-G973F dimensions."
+  - id: cam_011
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/a/a3/Aigrette_garzette_%28Egretta_garzetta%29_%2804%29.jpg"
+    sha256: "f214e5bb0efc9a5e2d84a8f7465c8cc554de17a218ef8c98156446dac00e6e74"
+    bytes: 1185064
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Aigrette_garzette_(Egretta_garzetta)_(04).jpg"
+    camera: "SONY DSC-W570"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, no editor Software tag, plausible Sony DSC-W570 dimensions."
+  - id: cam_012
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/0/0e/Aigrette_garzette_%28Egretta_garzetta%29_%2808%29.jpg"
+    sha256: "9ab8c16f340fa4fef4adf26c8a498e5d5b4ed9c76da98b2c6bf3d8b9b939bd7f"
+    bytes: 912198
+    license: "CC BY-SA 4.0"
+    attribution: "Gzen92, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Aigrette_garzette_(Egretta_garzetta)_(08).jpg"
+    camera: "SONY DSC-W570"
+    unresized_evidence: strict
+    notes: "JPEG; EXIF Make/Model present, nested PixelXDimension equals decoded width, no editor Software tag, plausible Sony DSC-W570 dimensions."
+  - id: cam_013
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/4/4b/%22le_petit_tour_p%C3%A9p%C3%A8re_%C3%A0_Nice%22.jpg"
+    sha256: "c4f961e904540bdd5beac966b2512ffb8a78dfb2bbb2e7ea7a1de06d8f1e60ef"
+    bytes: 197670
+    license: "CC BY 2.0"
+    attribution: "Chris de Rham, Flickr, https://www.flickr.com/photos/90365334@N00"
+    camera: "NIKON D70"
+    unresized_evidence: strict
+    notes: "JPEG; decoded 1200x834, EXIF Make/Model present, nested PixelXDimension 1200 equals decoded width; EXIF Software is Adobe Photoshop Elements 3.0 Windows."
+  - id: c2pa_001
+    axis: real_c2pa_signed
+    label: authentic
+    url: "https://raw.githubusercontent.com/contentauth/c2pa-rs/be7f5ea22b385ee1af6c327906ba002747687628/sdk/tests/fixtures/C.jpg"
+    sha256: "a2d14755db55de67a47c04090340d8266e892367be4104a45626d7a6fa6e9ffd"
+    bytes: 132518
+    license: "MIT OR Apache-2.0"
+    attribution: "Adobe, c2pa-rs, https://github.com/contentauth/c2pa-rs/tree/be7f5ea22b385ee1af6c327906ba002747687628/sdk/tests/fixtures"
+    camera: null
+    c2pa_validation: valid
+    notes: "JPEG; c2pa-python 0.37.8 Reader parsed the pinned c2pa-rs fixture with validation_state=Valid."
+  - id: c2pa_002
+    axis: real_c2pa_signed
+    label: authentic
+    url: "https://raw.githubusercontent.com/contentauth/c2pa-rs/be7f5ea22b385ee1af6c327906ba002747687628/sdk/tests/fixtures/XCA.jpg"
+    sha256: "81f20702a2e81611b29aa773f811b59ade6095acd3d089d6ffdae6b591d6d5a5"
+    bytes: 142765
+    license: "MIT OR Apache-2.0"
+    attribution: "Adobe, c2pa-rs, https://github.com/contentauth/c2pa-rs/tree/be7f5ea22b385ee1af6c327906ba002747687628/sdk/tests/fixtures"
+    camera: null
+    c2pa_validation: invalid
+    notes: "JPEG; c2pa-python 0.37.8 Reader parsed the pinned c2pa-rs fixture with validation_state=Invalid and assertion.dataHash.mismatch."
+  - id: ai_dalle_001
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/a/a3/DALL-E_sample.png"
+    sha256: "7de48556fb65e1a4465aed2d0e000eccc48ea8bd03b85b60971b78bca3998f65"
+    bytes: 852287
+    license: "Public domain"
+    attribution: "DALL E artificial intelligence, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL-E_sample.png"
+    camera: null
+    notes: "PNG; Wikimedia metadata identifies DALL-E as the generative source."
+  - id: ai_dalle_002
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/a/aa/DALL-E_radish.jpg"
+    sha256: "395cefb19af8fd8953ab6773b7e015c18cf84814a3d30921e79219fe0202ba43"
+    bytes: 86521
+    license: "Public domain"
+    attribution: "DALL-E, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL-E_radish.jpg"
+    camera: null
+    notes: "JPEG; Wikimedia metadata identifies DALL-E as the generative source."
+  - id: ai_dalle_003
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/1/14/DALL%C2%B7E%27s_self-portrait.jpg"
+    sha256: "aab36ea463aa2ffe992d7ba053f5c7febef0968f0e5c7a19fe4029420071168f"
+    bytes: 384507
+    license: "Public domain"
+    attribution: "DALL·E 3, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL%C2%B7E%27s_self-portrait.jpg"
+    camera: null
+    notes: "JPEG; Wikimedia metadata identifies DALL·E 3 as the generative source."
+  - id: ai_dalle_004
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/4/41/DALL-E_2_artificial_intelligence_digital_image_generated_photo.jpg"
+    sha256: "339489b6afd0dbf98230e00a9bd4f753ad5584040202d3f5e8b6cfef10ce48b1"
+    bytes: 838258
+    license: "Public domain"
+    attribution: "DALL·E 2, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL-E_2_artificial_intelligence_digital_image_generated_photo.jpg"
+    camera: null
+    notes: "JPEG; Wikimedia metadata identifies DALL·E 2 as the generative source."
+  - id: ai_dalle_005
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/e/e6/DALL-E_Generated_Wikipedia_logo.png"
+    sha256: "58e997c5f1ee4357e936d2298f9525e6a07f8a5f6d00742c33f876c5cd17b75c"
+    bytes: 1276706
+    license: "CC BY-SA 4.0"
+    attribution: "Ogidya, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL-E_Generated_Wikipedia_logo.png"
+    camera: null
+    notes: "PNG; Wikimedia file title identifies DALL-E as the generative source."
+  - id: ai_dalle_006
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/c/ce/DALL-E_Flow_a_horse_riding_an_astronaut.png"
+    sha256: "6594a65c1fdae20700e1d59542d0a48b144d78643a37eecf6399705f6214ed5c"
+    bytes: 1489045
+    license: "CC BY-SA 4.0"
+    attribution: "AI Qu, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL-E_Flow_a_horse_riding_an_astronaut.png"
+    camera: null
+    notes: "PNG; Wikimedia file title identifies DALL-E as the generative source."
+  - id: ai_dalle_007
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/c/c2/Artificial_intelligence_DALL-E_generated_images_from_the_prompt_Listenbourg.png"
+    sha256: "39d3b0a440f5cd6af7317305d54b404fb89b8b0f4a466fd892f8b9335b753967"
+    bytes: 2917667
+    license: "Public domain"
+    attribution: "Artificial intelligence DALL-E, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Artificial_intelligence_DALL-E_generated_images_from_the_prompt_Listenbourg.png"
+    camera: null
+    notes: "PNG; Wikimedia metadata identifies DALL-E as the generative source."
+  - id: ai_dalle_008
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/2/2d/DALL-E_2_%22A_photo_of_a_robot_hand_drawing%2C_digital_art%22.jpg"
+    sha256: "4b9239c86e6fdee2ab961775c52267fa6a099ac56386172189dd4041d834e4d7"
+    bytes: 438895
+    license: "Public domain"
+    attribution: "DALL-E, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL-E_2_%22A_photo_of_a_robot_hand_drawing,_digital_art%22.jpg"
+    camera: null
+    notes: "JPEG; Wikimedia metadata identifies DALL-E as the generative source."
+  - id: ai_dalle_009
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/6/6c/DALL_E_Flow.png"
+    sha256: "80ff2dbb0500333a6291ea4a0aea4dd901507f637be8894def5b690fbb9cf01d"
+    bytes: 1135568
+    license: "Public domain"
+    attribution: "AI Qu, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL_E_Flow.png"
+    camera: null
+    notes: "PNG; Wikimedia file title identifies DALL-E as the generative source."

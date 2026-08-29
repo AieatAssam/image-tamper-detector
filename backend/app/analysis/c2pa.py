@@ -140,6 +140,9 @@ def _is_missing_manifest(exc: Exception) -> bool:
 
 
 def _validation_failed(store: dict[str, Any]) -> bool:
+    validation_state = str(store.get("validation_state", "")).lower()
+    if validation_state:
+        return validation_state in {"invalid", "error"}
     text = json.dumps([store.get("validation_status"), store.get("validation_results")], default=str).lower()
     return any(token in text for token in ("fail", "invalid", "error"))
 

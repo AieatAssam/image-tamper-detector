@@ -315,13 +315,14 @@ class ELAAnalyzer:
             )
             
             # Add subtle red tint to suspicious regions instead of full red
-            visualization[final_mask > 0] = cv2.addWeighted(
-                visualization[final_mask > 0],
-                0.7,  # Keep more of the original grayscale
-                np.full_like(visualization[final_mask > 0], [0, 0, 255]),
-                0.3,  # Less red
-                0
-            )
+            if np.any(final_mask > 0):
+                visualization[final_mask > 0] = cv2.addWeighted(
+                    visualization[final_mask > 0],
+                    0.7,  # Keep more of the original grayscale
+                    np.full_like(visualization[final_mask > 0], [0, 0, 255]),
+                    0.3,  # Less red
+                    0
+                )
             
             # Add a thin border around suspicious regions
             kernel = np.ones((2,2), np.uint8)  # Smaller kernel for thinner border

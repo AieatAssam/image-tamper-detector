@@ -1,15 +1,15 @@
 # Working-tree implementation status; no stage commits are created in this run.
-S00: {status: passed, branch: main, commit: null, notes: "pyenv 3.13.13 runtime, baseline artifacts, and plan validation recorded."}
+S00: {status: passed, branch: main, commit: null, notes: "Python 3.14.7 venv rebuilt; pinned runtime/dev dependencies install, import, and pass pip check."}
 S01: {status: passed, branch: main, commit: null, notes: "Pinned backend dependencies and dev requirements."}
 S02: {status: passed, branch: main, commit: null, notes: "Frontend dependency migration completed."}
 S03: {status: passed, branch: main, commit: null, notes: "Upload validation, bounded analysis, CORS, rate limiting, and ELA arithmetic fixed."}
 S04: {status: passed, branch: main, commit: null, notes: "Versioned API, detector protocol, registry, and failure isolation implemented."}
-S05: {status: passed, branch: main, commit: null, notes: "Deterministic synthetic corpus and benchmark contract implemented; real corpus remains intentionally incomplete."}
+S05: {status: failed, branch: main, commit: null, notes: "Synthetic source-balance gate passes; verified real corpus now has 12/12 strict cameras and 2/2 signed-C2PA fixtures, but real-AI remains 9/12."}
 S06: {status: passed, branch: main, commit: null, notes: "JPEG-family detectors implemented and registered."}
 S07: {status: passed, branch: main, commit: null, notes: "Copy-move detector implemented and registered."}
-S08: {status: passed, branch: main, commit: null, notes: "CFA, spectral, and noise-residual semantics implemented."}
+S08: {status: failed, branch: main, commit: null, notes: "Strict real_camera evidence is now 12/12 and CFA consumes nested PixelXDimension correctly; real_ai remains 9/12, so the real camera-vs-AI acceptance is still short."}
 S09: {status: passed, branch: main, commit: null, notes: "EXIF and C2PA detectors implemented with no-manifest semantics."}
-S10: {status: passed, branch: main, commit: null, notes: "NumPy calibration and weighted-logit fusion fitted to the deterministic corpus."}
+S10: {status: failed, branch: main, commit: null, notes: "Source-local calibration fits 123 rows with Hanley-McNeil within-source guards and positive heldout-skill Spearman 0.2445; below-chance detectors have zero weight, but fused heldout AUC 0.5375 remains below the best single detector 0.6000."}
 S11: {status: passed, branch: main, commit: null, notes: "Frontend uses v1 API with upload, progress, errors, history, and evidence overlay."}
 S12: {status: passed, branch: main, commit: null, notes: "Optional pinned ONNX learned detector passes absent-model and installed-model checks."}
 S13: {status: passed, branch: main, commit: null, notes: "CI, non-root Docker image, healthcheck, logging, and truthful docs verified."}

@@ -89,6 +89,7 @@ class ExifConsistencyDetector:
             evidence.append((0.9, "EXIF pixel dimensions disagree with decoded dimensions"))
 
         raw = max((item[0] for item in evidence), default=0.0)
+        metrics["raw_score"] = raw
         score = to_probability(raw, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
         flagged = score >= 0.5
         if evidence:

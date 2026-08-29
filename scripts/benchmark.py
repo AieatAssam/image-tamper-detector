@@ -17,14 +17,23 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from backend.app.analysis.base import DetectorState, ImageContext  # noqa: E402
 from backend.app.analysis.fusion import fuse  # noqa: E402
-from backend.app.analysis.registry import get as get_detectors, run_all  # noqa: E402
+from backend.app.analysis.registry import get as get_detectors, get_all, run_all  # noqa: E402
 
-GENERATED_AT = "2026-08-28T12:00:00Z"
+DURATION_BUCKET_MS = 500
 VALIDATED_BY = {
     "ela": {"synthetic_splice", "synthetic_recompress"},
     "prnu": {"real_camera", "real_ai"},
     "entropy": {"real_camera", "real_ai"},
+    "qtable": {"synthetic_recompress", "real_camera"},
+    "double_jpeg": {"synthetic_recompress"},
+    "jpeg_ghosts": {"synthetic_splice"},
+    "copy_move": {"synthetic_copymove"},
+    "cfa": {"real_camera", "real_ai"},
+    "spectral": {"real_camera", "real_ai"},
+    "exif": {"synthetic_recompress", "real_camera"},
+    "c2pa": {"real_c2pa_signed", "real_camera"},
 }
+SYNTHETIC_INVALID_DETECTORS = frozenset({"cfa", "spectral", "prnu"})
 
 
 def _sha(path: Path) -> str:
@@ -78,10 +87,10 @@ def _real() -> tuple[list[dict], Path | None, bool]:
     manifest = _read_manifest(manifest_path)
     entries = []
     for item in manifest.get("images", []):
-        suffix = Path(item["url"].split("?", 1)[0]).suffix or ".jpg"
+        suffix = (Path(item["url"].split("?", 1)[0]).suffix or ".jpg").lower()
         image = real_dir / f"{item['id']}{suffix}"
         if image.is_file():
-            entries.append({**item, "path": image, "mask_path": None, "corpus": "real", "axis": item["axis"], "label": "ai_generated" if item["label"] == "ai_generated" else "authentic", "family": item["axis"]})
+            entries.append({**item, "path": image, "mask_path": None, "corpus": "real", "axis": item["axis"], "label": "ai_generated" if item["label"] == "ai_generated" else "authentic", "family": item["axis"], "source_image": str(image.relative_to(ROOT))})
     return entries, manifest_path, True
 
 
@@ -101,6 +110,8 @@ def _tier(corpus: str, axis: str, family: str, detector_id: str) -> str:
     validated = VALIDATED_BY.get(detector_id, set())
     if family == "splice":
         return "A" if "synthetic_splice" in validated else "B"
+    if family == "copy_move":
+        return "A" if "synthetic_copymove" in validated else "B"
     if family in {"authentic_recompress", "double_compress_aligned", "double_compress_shifted"}:
         return "A" if "synthetic_recompress" in validated else "B"
     return "B"
@@ -125,8 +136,33 @@ def _auc(scores: list[float], labels: list[bool]) -> float | None:
     return (sum(rank for rank, label in zip(ranks, labels) if label) - positives * (positives + 1) / 2) / (positives * negatives)
 
 
+def _within_source_auc(results: list[dict], source_by_image: dict[tuple[str, str], str]) -> float | None:
+    """Return AUC using only positive/negative pairs from the same source image."""
+    grouped: dict[str, tuple[list[float], list[float]]] = {}
+    for row in results:
+        if row["state"] != DetectorState.APPLICABLE.value or row["score"] is None:
+            continue
+        source = source_by_image.get((row["corpus"], row["image_id"]), row["image_id"])
+        positives, negatives = grouped.setdefault(source, ([], []))
+        (positives if row["label"] in {"manipulated", "ai_generated"} else negatives).append(float(row["score"]))
+
+    wins = ties = pairs = 0
+    for positives, negatives in grouped.values():
+        if not positives or not negatives:
+            continue
+        pairs += len(positives) * len(negatives)
+        for positive in positives:
+            for negative in negatives:
+                if positive > negative:
+                    wins += 1
+                elif positive == negative:
+                    ties += 1
+    return (wins + ties / 2.0) / pairs if pairs else None
+
+
 def _metrics(results: list[dict]) -> dict[str, Any]:
     applicable = [r for r in results if r["state"] == DetectorState.APPLICABLE.value and r["score"] is not None]
+    durations = [float(r["duration_ms"]) for r in results if r["state"] == DetectorState.APPLICABLE.value]
     labels = [r["label"] in {"manipulated", "ai_generated"} for r in applicable]
     predicted = [bool(r["flagged"]) for r in applicable]
     tp = sum(p and y for p, y in zip(predicted, labels)); fp = sum(p and not y for p, y in zip(predicted, labels))
@@ -134,7 +170,17 @@ def _metrics(results: list[dict]) -> dict[str, Any]:
     precision = tp / (tp + fp) if tp + fp else 0.0
     recall = tp / (tp + fn) if tp + fn else 0.0
     f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
-    return {"n": len(results), "n_applicable": len(applicable), "n_not_applicable": sum(r["state"] == DetectorState.NOT_APPLICABLE.value for r in results), "n_error": sum(r["state"] == DetectorState.ERROR.value for r in results), "auc": _auc([float(r["score"]) for r in applicable], labels), "tpr": tp / (tp + fn) if tp + fn else 0.0, "fpr": fp / (fp + tn) if fp + tn else 0.0, "precision": precision, "recall": recall, "f1": f1, "mean_duration_ms": 0.0}
+    return {"n": len(results), "n_applicable": len(applicable), "n_not_applicable": sum(r["state"] == DetectorState.NOT_APPLICABLE.value for r in results), "n_error": sum(r["state"] == DetectorState.ERROR.value for r in results), "auc": _auc([float(r["score"]) for r in applicable], labels), "tpr": tp / (tp + fn) if tp + fn else 0.0, "fpr": fp / (fp + tn) if fp + tn else 0.0, "precision": precision, "recall": recall, "f1": f1, "mean_duration_ms": sum(durations) / len(durations) if durations else 0.0}
+
+
+def _stable_duration_bucket(results: list[dict]) -> int:
+    durations = [r["duration_ms"] for r in results if r["state"] == DetectorState.APPLICABLE.value]
+    if not durations:
+        return 0
+    # ponytail: coarse buckets trade precision for reproducible committed metrics;
+    # use the raw per-result timings for profiling if finer ranking matters.
+    mean = sum(durations) / len(durations)
+    return max(DURATION_BUCKET_MS, ((int(mean) + DURATION_BUCKET_MS - 1) // DURATION_BUCKET_MS) * DURATION_BUCKET_MS)
 
 
 def _iou(result: Any, mask_path: Path | None) -> float | None:
@@ -157,38 +203,53 @@ def run(corpus: str, detector_ids: list[str] | None) -> dict:
     real, manifest_path, real_present = _real() if corpus in {"real", "all"} else ([], None, False)
     external = _external() if corpus == "all" else []
     entries = synthetic + real + external
-    detectors = list(get_detectors(detector_ids).values())
+    selected_ids = sorted(get_all()) if detector_ids is None else detector_ids
+    detectors = list(get_detectors(selected_ids).values())
     by_detector: dict[str, dict] = {detector.id: {"metric_sets": [], "results": []} for detector in detectors}
     family_scores: dict[str, dict[str, list[float]]] = {d.id: {} for d in detectors}
     family_ious: dict[str, dict[str, list[float]]] = {d.id: {} for d in detectors}
     axis_scores: dict[str, dict[str, list[float]]] = {d.id: {} for d in detectors}
     fused_by_family: dict[str, list[bool]] = {}
+    source_by_image: dict[tuple[str, str], str] = {}
     for entry in entries:
+        source_by_image[(entry["corpus"], entry["id"])] = entry.get(
+            "source_image", f"{entry['corpus']}:{entry['id']}"
+        )
         try:
-            results = run_all(ImageContext(entry["path"].read_bytes()), detector_ids)
+            results = run_all(ImageContext(entry["path"].read_bytes()), selected_ids)
         except Exception as exc:
             results = []
             for detector in detectors:
                 by_detector[detector.id]["results"].append({"image_id": entry["id"], "state": "error", "score": None, "flagged": None, "metrics": {}, "duration_ms": 0, "reason": "benchmark execution failed", "error": str(exc), "corpus": entry["corpus"], "label": entry["label"], "family": entry["family"], "tier": _tier(entry["corpus"], entry["axis"], entry["family"], detector.id)})
         for result in results:
-            row = {"image_id": entry["id"], "state": result.state.value, "score": result.score, "flagged": result.flagged, "metrics": result.metrics, "duration_ms": result.duration_ms, "reason": result.reason, "error": result.error, "corpus": entry["corpus"], "label": entry["label"], "family": entry["family"], "tier": _tier(entry["corpus"], entry["axis"], entry["family"], result.detector_id)}
+            duration_ms = max(1, result.duration_ms) if result.state is DetectorState.APPLICABLE else 0
+            row = {"image_id": entry["id"], "state": result.state.value, "score": result.score, "flagged": result.flagged, "metrics": result.metrics, "duration_ms": duration_ms, "reason": result.reason, "error": result.error, "corpus": entry["corpus"], "label": entry["label"], "family": entry["family"], "tier": _tier(entry["corpus"], entry["axis"], entry["family"], result.detector_id)}
             by_detector[result.detector_id]["results"].append(row)
             if result.score is not None:
                 family_scores[result.detector_id].setdefault(entry["family"], []).append(float(result.score))
                 if entry["corpus"] == "real": axis_scores[result.detector_id].setdefault(entry["axis"], []).append(float(result.score))
                 iou = _iou(result, entry.get("mask_path"))
                 if iou is not None: family_ious[result.detector_id].setdefault(entry["family"], []).append(iou)
-        fused = fuse(results)
+        fusion_results = [
+            result for result in results
+            if not (entry["corpus"] == "synthetic" and result.detector_id in SYNTHETIC_INVALID_DETECTORS)
+        ]
+        fused = fuse(fusion_results)
         fused_by_family.setdefault(entry["family"], []).append(fused["verdict"] in {"likely_manipulated", "manipulated"})
     for detector in detectors:
         rows = by_detector[detector.id]["results"]
+        stable_duration = _stable_duration_bucket(rows)
+        for row in rows:
+            if row["state"] == DetectorState.APPLICABLE.value:
+                row["duration_ms"] = stable_duration
+        by_detector[detector.id]["within_source_auc"] = _within_source_auc(rows, source_by_image)
         by_detector[detector.id]["metric_sets"] = [{**_metrics([r for r in rows if r["corpus"] == name]), "corpus": name, "tier": "A" if all(r["tier"] == "A" for r in rows if r["corpus"] == name) else "B"} for name in ("synthetic", "real", "external") if any(r["corpus"] == name for r in rows)]
     try:
         calibration = json.loads((ROOT / "backend/app/analysis/calibration.json").read_text())
         heldout_auc = calibration.get("heldout", {}).get("auc")
     except Exception:
         heldout_auc = None
-    output = {"generated_at": GENERATED_AT, "corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "real_corpus_present": bool(real_present and real)}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
+    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "real_corpus_present": bool(real_present and real)}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
     if real_present:
         output["per_axis_mean_score"] = {did: {axis: sum(vals) / len(vals) for axis, vals in axes.items()} for did, axes in axis_scores.items()}
     return output

@@ -69,6 +69,19 @@ def test_failed_validation_is_high_evidence_when_manifest_exists():
     assert result["issues"][0]["severity"] == "high"
 
 
+def test_valid_state_is_not_failed_by_failure_details():
+    store = {
+        "active_manifest": "claim-1",
+        "manifests": {"claim-1": {"claim_generator": "camera"}},
+        "validation_state": "Valid",
+        "validation_results": {"activeManifest": {"failure": [{"code": "signingCredential.untrusted"}]}},
+    }
+    with patch("backend.app.analysis.c2pa.Reader", return_value=_reader_for(store)):
+        result = C2PAAnalyzer().analyze_image(b"image bytes")
+    assert result["flagged"] is False
+    assert result["score"] == 0.05
+
+
 def test_detector_run_accepts_image_context_bytes():
     output = BytesIO()
     Image.new("RGB", (64, 64), "white").save(output, format="PNG")

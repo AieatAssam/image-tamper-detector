@@ -2,117 +2,247 @@
   "detectors": {
     "c2pa": {
       "clipped": false,
-      "heldout_auc": 0.26,
+      "heldout_auc": null,
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 0.0,
-      "weight": 0.01
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "heldout_auc unavailable: no applicable observations",
+      "within_source_auc": null
     },
     "cfa": {
       "clipped": false,
-      "heldout_auc": 0.63,
+      "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.006401467717333853,
-      "threshold": 0.9827103150585264,
-      "weight": 0.01
+      "scale": 0.007491030836490276,
+      "threshold": 0.99814603050007,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "within_source_auc unavailable for Hanley-McNeil guard",
+      "within_source_auc": null
     },
     "copy_move": {
       "clipped": false,
-      "heldout_auc": 0.475,
+      "heldout_auc": 0.5,
       "higher_is_worse": true,
-      "scale": 1e-06,
-      "threshold": 1.0,
-      "weight": 0.01
+      "scale": 3.5,
+      "threshold": 3.0,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5714285714285714,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 4,
+        "n_pos": 6,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.19142081783095682
+      },
+      "weight_reason": "within_source_auc=0.571429 <= 0.5 + SE=0.191421",
+      "within_source_auc": 0.5714285714285714
     },
     "double_jpeg": {
       "clipped": false,
-      "heldout_auc": 0.41,
+      "heldout_auc": 0.5,
       "higher_is_worse": true,
-      "scale": 0.07146605535671402,
-      "threshold": 0.9515306952975929,
-      "weight": 0.01
+      "scale": 0.11412588176636196,
+      "threshold": -1.3624616854532179,
+      "weight": 0.10168831208961808,
+      "weight_guard": {
+        "auc": 0.6628352490421456,
+        "drop": false,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.05113887579022002
+      },
+      "within_source_auc": 0.6628352490421456
     },
     "ela": {
       "clipped": false,
-      "heldout_auc": 0.26,
+      "heldout_auc": null,
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 0.0,
-      "weight": 0.01
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "heldout_auc unavailable: no applicable observations",
+      "within_source_auc": null
     },
     "entropy": {
       "clipped": false,
-      "heldout_auc": 0.475,
+      "heldout_auc": 0.525,
       "higher_is_worse": false,
-      "scale": 0.048075358072916664,
-      "threshold": 0.09584554036458333,
-      "weight": 0.01
+      "scale": 0.0776812235514323,
+      "threshold": 0.08929697672526042,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5019157088122606,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.05522163012626147
+      },
+      "weight_reason": "within_source_auc=0.501916 <= 0.5 + SE=0.055222",
+      "within_source_auc": 0.5019157088122606
     },
     "exif": {
       "clipped": false,
-      "heldout_auc": 0.26,
+      "heldout_auc": 0.525,
       "higher_is_worse": true,
-      "scale": 1.0,
+      "scale": 2.220446049250313e-16,
       "threshold": 0.0,
-      "weight": 0.01
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.05522779130530093
+      },
+      "weight_reason": "within_source_auc=0.500000 <= 0.5 + SE=0.055228",
+      "within_source_auc": 0.5
     },
     "jpeg_ghosts": {
       "clipped": false,
-      "heldout_auc": 0.415,
+      "heldout_auc": 0.56875,
       "higher_is_worse": true,
-      "scale": 0.5,
+      "scale": 0.75,
       "threshold": 2.0,
-      "weight": 0.01
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5517241379310345,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.05471502276154712
+      },
+      "weight_reason": "within_source_auc=0.551724 <= 0.5 + SE=0.054715",
+      "within_source_auc": 0.5517241379310345
     },
     "learned": {
       "clipped": false,
-      "heldout_auc": 0.26,
+      "heldout_auc": null,
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 0.0,
-      "weight": 0.01
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "heldout_auc unavailable: no applicable observations",
+      "within_source_auc": null
     },
     "prnu": {
       "clipped": false,
-      "heldout_auc": 0.595,
+      "heldout_auc": 0.45,
       "higher_is_worse": true,
-      "scale": 14.006889343261719,
-      "threshold": 262.027587890625,
-      "weight": 0.01
+      "scale": 209.07632446289062,
+      "threshold": 179.62547302246094,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5019157088122606,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.05522163012626147
+      },
+      "weight_reason": "within_source_auc=0.501916 <= 0.5 + SE=0.055222",
+      "within_source_auc": 0.5019157088122606
     },
     "qtable": {
       "clipped": false,
-      "heldout_auc": 0.26,
+      "heldout_auc": 0.475,
       "higher_is_worse": false,
-      "scale": 1e-06,
+      "scale": 149.0,
       "threshold": 0.0,
-      "weight": 0.01
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.49616858237547895,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.055237153557150045
+      },
+      "weight_reason": "within_source_auc=0.496169 <= 0.5 + SE=0.055237",
+      "within_source_auc": 0.49616858237547895
     },
     "spectral": {
-      "clipped": true,
-      "heldout_auc": 0.82,
+      "clipped": false,
+      "heldout_auc": 0.6,
       "higher_is_worse": true,
-      "scale": 0.31383082270622253,
-      "threshold": 2.9826955795288086,
-      "weight": 0.26632211646725884,
-      "weight_unclipped": 0.3
+      "scale": 0.22228527069091797,
+      "threshold": 3.159034252166748,
+      "weight": 0.06260148097931306,
+      "weight_guard": {
+        "auc": 0.5593869731800766,
+        "drop": false,
+        "metric": "within_source_auc",
+        "n_neg": 51,
+        "n_pos": 60,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.054577720720401623
+      },
+      "within_source_auc": 0.5593869731800766
     }
   },
   "fitted_on": {
     "corpora": [
-      "all"
+      "real",
+      "synthetic"
     ],
-    "corpus_revision": "3f17dd94bb78e199e204ce11edff19e1f943fde0a46d2bf5270b99cd903d3a4b",
-    "n_images": 100
+    "corpus_revision": "9c12902572bbb8edbe4b4d3c1e2d695fdfe4c6932eed97438bec5ee78f4c3651",
+    "n_images": 123
   },
   "fusion": {
-    "intercept": 0.09810273595298795,
+    "intercept": -0.06345633523979295,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-28T12:00:00Z",
+  "generated_at": "2026-08-29T08:51:18Z",
   "heldout": {
-    "auc": 0.855,
-    "n": 30,
+    "auc": 0.5375,
+    "n": 44,
     "seed": 20260828,
     "split_by": "source_image"
   },

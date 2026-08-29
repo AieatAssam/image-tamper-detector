@@ -17,7 +17,7 @@ from backend.app.analysis.base import (
     to_probability,
 )
 from backend.app.analysis.adapters import _settings
-from backend.app.analysis.exif import image_was_resized
+from backend.app.analysis.exif import _first, _metadata, _number
 
 
 class CfaDetector:
@@ -32,11 +32,16 @@ class CfaDetector:
         "Foveon, monochrome, and multi-shot sensors do not have this pattern.",
     ]
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
-        if image_was_resized(ctx):
-            return False, "CFA is not applicable after image resizing"
-        if not ctx.exif and not _plausible_sensor_dimensions(ctx.width, ctx.height):
-            return False, "CFA requires EXIF dimensions or plausible sensor dimensions"
-        return True, "full-resolution dimensions are suitable for CFA analysis"
+        ctx.pil_image
+        if ctx.format != "JPEG":
+            return False, "CFA requires a strict real-camera JPEG"
+        metadata = _metadata(ctx)
+        if _first(metadata, 0x010F) is None or _first(metadata, 0x0110) is None:
+            return False, "CFA requires EXIF camera Make/Model and strict dimensions"
+        capture_width = _number(_first(metadata, 0xA002))
+        if capture_width is None or capture_width != ctx.width:
+            return False, "CFA is not applicable without strict matching PixelXDimension evidence"
+        return True, "strict real-camera dimensions match the decoded JPEG"
 
     def run(self, ctx: ImageContext) -> DetectorResult:
         started = perf_counter()
@@ -130,13 +135,6 @@ def _phase_measure(image: np.ndarray, phase: int) -> tuple[float, np.ndarray]:
     ratio_map = cv2.resize(ratio_map, (width, height), interpolation=cv2.INTER_LINEAR)
     finite = np.nan_to_num(ratio_map, nan=1.0, posinf=1.0, neginf=0.0)
     return ratio, finite
-
-
-def _plausible_sensor_dimensions(width: int, height: int) -> bool:
-    if min(width, height) < 128 or width * height < 65_536:
-        return False
-    ratio = max(width, height) / min(width, height)
-    return ratio <= 4.0
 
 
 def _duration(started: float) -> int:

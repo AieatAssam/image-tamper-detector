@@ -1,11 +1,31 @@
-numpy==2.5.2
-opencv-python-headless==4.14.0.94
-pillow==12.3.0
-scipy==1.18.1
-scikit-image==0.26.0
-PyWavelets==1.9.0
+# Resolved 2026-08-28 against PyPI. See plan/reference/versions.lock.yaml
+# for wheel-tag evidence of Python 3.14 compatibility.
+# Target: Python 3.14
+
+# --- web ---
+# Imported by backend/app/main.py and backend/app/api/endpoints.py.
 fastapi==0.141.1
+# Server process launched by scripts/start-docker.sh.
 uvicorn[standard]==0.52.4
-python-multipart==0.0.32
+# Models declared in backend/app/api/endpoints.py.
 pydantic==2.13.5
+# FastAPI multipart upload support used by backend/app/api/endpoints.py.
+python-multipart==0.0.32
+
+# --- image analysis ---
+# Imported by backend/app/analysis/base.py, backend/app/analysis/*.py, and scripts/*.py.
+numpy==2.5.2
+# Imported by backend/app/api/endpoints.py and backend/app/analysis/*.py.
+opencv-python-headless==4.14.0.94
+# Imported by backend/app/main.py, backend/app/api/endpoints.py, and backend/app/analysis/*.py.
+pillow==12.3.0
+# Imported by backend/app/analysis/prnu.py and scripts/capture_baseline.py.
+scipy==1.18.1
+# Imported by backend/app/analysis/entropy.py and scripts/capture_baseline.py.
+scikit-image==0.26.0
+# Imported as pywt by backend/app/analysis/prnu.py.
+PyWavelets==1.9.0
+
+# --- provenance ---
+# Imported by backend/app/analysis/c2pa.py.
 c2pa-python==0.37.8

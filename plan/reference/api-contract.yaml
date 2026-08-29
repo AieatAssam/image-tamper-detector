@@ -217,7 +217,6 @@ benchmark_output_schema:
   json_dump_options: "sort_keys=True, indent=2"
   skeleton: |
     {
-      "generated_at": "2026-08-28T12:00:00Z",
       "corpus": {
         "synthetic_revision": "<sha256 of data/corpus/synthetic/index.json>",
         "real_manifest_revision": "<sha256 of data/corpus/MANIFEST.yaml>",
@@ -226,6 +225,7 @@ benchmark_output_schema:
       },
       "detectors": {
         "<detector_id>": {
+          "within_source_auc": 0.72,
           "metric_sets": [
             {
               "corpus": "synthetic" | "real" | "external",
@@ -255,8 +255,12 @@ benchmark_output_schema:
     - "`auc` is null when n_applicable < 10 or when only one class is present. Every consumer must treat null as 'skip this comparison', never as 0.0."
     - "`per_family_*` are keyed by the `family` field of data/corpus/synthetic/index.json entries."
     - "`per_axis_mean_score` is keyed by the `axis` field of data/corpus/MANIFEST.yaml entries, and is absent entirely when the real corpus is not present."
+    - "`within_source_auc` is the detector ROC AUC computed from applicable results in source-held-constant comparisons; S10 fits and gates on it instead of pooled metric-set `auc`. It is null when no valid within-source comparison exists, and null means skip the comparison."
     - "`fused.family_verdicts` is written from S10 onward. Before S10 the fusion is provisional, so benchmark.py writes `fused: null` and S10's acceptance is the first to read it."
     - "S10 and S12 both read `fused.heldout_auc`. There is exactly ONE such key path -- do not also write a top-level `fused_family_verdicts`."
+    - "Benchmark JSON intentionally omits `generated_at`; it is a deterministic evidence artifact, not a timestamp source."
+    - "`mean_duration_ms` is a deterministic reporting bucket: benchmark.py rounds each detector's benchmark-wide mean of applicable timings up to its 500 ms bucket and emits 0 when no applicable result exists. It is not a wall-clock measurement and MUST NOT be used as a performance gate."
+    - "S05 byte-identical benchmark comparisons apply to this deterministic payload. S06 and S07 performance caps are separate standalone wall-clock assertions around the applicable detector run on the largest sample; they must not read `mean_duration_ms`."
 
 # ==============================================================================
 # CORPUS INDEX SCHEMA
@@ -279,6 +283,7 @@ corpus_index_schema:
                     "double_compress_aligned" | "double_compress_shifted" |
                     "local_retouch" | "resize_then_save",
           "source_image": "data/samples/original/landscape_original.jpg",
+          "source_label": "authentic" | "known_forgery" | "ai_generated",
           "params": { "quality": 85, "region": [120, 340, 96, 96] }
         }
       ]
@@ -309,8 +314,10 @@ calibration_schema:
           "scale": 0.11,
           "weight": 0.83,
           "higher_is_worse": true,
+          "within_source_auc": 0.72,
           "heldout_auc": 0.74,
-          "clipped": false
+          "clipped": false,
+          "weight_reason": null
         }
       },
       "fusion": { "method": "weighted_logit", "intercept": -1.2 },

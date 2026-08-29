@@ -13,5 +13,6 @@
     "seed": 20260828
   },
   "seed": 20260828,
-  "source_image": "data/samples/original/landscape_original.jpg"
+  "source_image": "data/corpus/real/cam_009.jpg",
+  "source_label": "authentic"
 }
