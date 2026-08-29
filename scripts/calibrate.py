@@ -138,19 +138,23 @@ def _manifest() -> dict:
 
 def _real_entries() -> list[dict]:
     real_dir = ROOT / "data/corpus/real"
-    if not real_dir.is_dir():
-        return []
     rows = []
     for item in _manifest().get("images", []):
-        suffix = (Path(urlparse(item["url"]).path).suffix or ".jpg").lower()
-        path = real_dir / f"{item['id']}{suffix}"
+        if item.get("path"):
+            path = Path(item["path"])
+            path = path if path.is_absolute() else ROOT / path
+        else:
+            if not real_dir.is_dir():
+                continue
+            suffix = (Path(urlparse(item["url"]).path).suffix or ".jpg").lower()
+            path = real_dir / f"{item['id']}{suffix}"
         if path.is_file():
             rows.append({
                 "id": item["id"],
                 "path": path,
                 "label": item["label"] != "authentic",
                 "family": item["axis"],
-                "source_image": item.get("source_image", str(path.relative_to(ROOT))),
+                "source_image": item.get("source_group", item.get("source_image", str(path.relative_to(ROOT)))),
                 "corpus": "real",
             })
     return rows
@@ -488,6 +492,7 @@ def main() -> int:
         "legacy": {"prnu": {"variance_threshold": 0.001}, "entropy": {"matching_threshold": 0.35}},
         "fitted_on": {"corpus_revision": _revision(rows), "n_images": len(rows), "corpora": corpora},
         "detectors": configs,
+        "weight_skill_spearman": weight_skill_spearman,
         "fusion": {"method": "weighted_logit", "intercept": float(intercept)},
         "heldout": {"split_by": "source_image", "n": len(fused_scores), "auc": within_source_auc(fused_within_source), "seed": args.seed},
     }

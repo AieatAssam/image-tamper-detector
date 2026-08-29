@@ -33,6 +33,8 @@ VALIDATED_BY = {
     "exif": {"synthetic_recompress", "real_camera"},
     "c2pa": {"real_c2pa_signed", "real_camera"},
 }
+for _detector_id in set(VALIDATED_BY) - {"c2pa"}:
+    VALIDATED_BY[_detector_id].add("imd2020")
 SYNTHETIC_INVALID_DETECTORS = frozenset({"cfa", "spectral", "prnu"})
 
 
@@ -82,16 +84,35 @@ def _synthetic() -> tuple[list[dict], Path | None]:
 def _real() -> tuple[list[dict], Path | None, bool]:
     manifest_path = ROOT / "data/corpus/MANIFEST.yaml"
     real_dir = ROOT / "data/corpus/real"
-    if not manifest_path.is_file() or not real_dir.is_dir():
-        return [], manifest_path if manifest_path.is_file() else None, False
+    if not manifest_path.is_file():
+        return [], None, False
     manifest = _read_manifest(manifest_path)
     entries = []
     for item in manifest.get("images", []):
-        suffix = (Path(item["url"].split("?", 1)[0]).suffix or ".jpg").lower()
-        image = real_dir / f"{item['id']}{suffix}"
+        if item.get("path"):
+            image = Path(item["path"])
+            image = image if image.is_absolute() else ROOT / image
+        else:
+            if not real_dir.is_dir():
+                continue
+            suffix = (Path(item["url"].split("?", 1)[0]).suffix or ".jpg").lower()
+            image = real_dir / f"{item['id']}{suffix}"
         if image.is_file():
-            entries.append({**item, "path": image, "mask_path": None, "corpus": "real", "axis": item["axis"], "label": "ai_generated" if item["label"] == "ai_generated" else "authentic", "family": item["axis"], "source_image": str(image.relative_to(ROOT))})
-    return entries, manifest_path, True
+            mask = item.get("mask") or item.get("mask_path")
+            mask_path = None if not mask else Path(mask)
+            if mask_path is not None and not mask_path.is_absolute():
+                mask_path = ROOT / mask_path
+            entries.append({
+                **item,
+                "path": image,
+                "mask_path": mask_path,
+                "corpus": "real",
+                "axis": item["axis"],
+                "label": item["label"],
+                "family": item.get("family", item["axis"]),
+                "source_image": item.get("source_group", item.get("source_image", str(image.relative_to(ROOT)))),
+            })
+    return entries, manifest_path, bool(entries)
 
 
 def _external() -> list[dict]:
@@ -249,7 +270,7 @@ def run(corpus: str, detector_ids: list[str] | None) -> dict:
         heldout_auc = calibration.get("heldout", {}).get("auc")
     except Exception:
         heldout_auc = None
-    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "real_corpus_present": bool(real_present and real)}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
+    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real)}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
     if real_present:
         output["per_axis_mean_score"] = {did: {axis: sum(vals) / len(vals) for axis, vals in axes.items()} for did, axes in axis_scores.items()}
     return output

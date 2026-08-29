@@ -9,6 +9,9 @@ Run:
 The fit reads every available synthetic entry and every checksum-verified real
 entry. `fitted_on.corpora` records the corpus names actually present, so an
 unavailable real corpus is not represented as if it supplied observations.
+The calibration artifact also records the computed `weight_skill_spearman` at
+the top level. The R6b fit includes the source-directory-stratified IMD2020
+sample: 200 manipulated pairs and their 200 `_orig.jpg` counterparts.
 
 Thresholds are selected from the training groups with Youden's J statistic.
 Scales are half the interquartile range. Each applicable raw statistic is
@@ -50,7 +53,11 @@ for the `authentic_recompress` and `resize_then_save` false-positive traps.
 
 The committed numbers are valid for images resembling the corpus. The corpus
 is small, partly synthetic, and not representative of the open web. The
-manifest currently has 12 strict real-camera images, 12 real-AI images, and
-two C2PA fixtures. Synthetic images cannot validate CFA, spectral, or PRNU
+manifest currently has 12 strict real-camera images, 12 real-AI images, two
+C2PA fixtures, and 400 source-balanced IMD2020 rows. Synthetic images cannot validate CFA, spectral, or PRNU
 sensor-provenance detectors. The `double_jpeg` aggregate was sign-corrected
-after its corpus measurement showed the raw direction was inverted.
+after its corpus measurement showed the raw direction was inverted. The
+current calibration reports a fused held-out AUC of 0.6884 on 526 rows across
+227 source groups; it remains below the best single held-out detector
+(double_jpeg, 0.7385), so S10 remains failed. No AUC floor was introduced and
+no weight was tuned to improve fusion.

@@ -6,6 +6,7 @@ frontend/dist
 
 # S05 corpus bytes are reproducible; keep the reviewable indexes/sidecars.
 data/corpus/real/*
+data/corpus/imd2020/
 data/corpus/synthetic/*.jpg
 data/corpus/synthetic/*.jpeg
 data/corpus/synthetic/*.png

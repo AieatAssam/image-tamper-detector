@@ -44,6 +44,9 @@ def _extension(url: str) -> str:
 
 
 def _path(entry: dict) -> Path:
+    if entry.get("path"):
+        path = Path(entry["path"])
+        return path if path.is_absolute() else ROOT / path
     return REAL / f"{entry['id']}{_extension(entry['url'])}"
 
 
@@ -62,17 +65,19 @@ def _exif_value(exif, tag: int):
 
 def _verify(entry: dict, path: Path) -> None:
     if not path.is_file():
-        raise RuntimeError(f"missing real corpus file: {path}")
+        raise RuntimeError(f"missing corpus file: {path}")
     actual = _sha256(path)
     if actual != entry["sha256"]:
         raise RuntimeError(f"checksum mismatch for {entry['id']}: expected {entry['sha256']}, got {actual}")
-    if path.stat().st_size != int(entry["bytes"]):
-        raise RuntimeError(f"byte count mismatch for {entry['id']}: expected {entry['bytes']}, got {path.stat().st_size}")
-    license_name = entry.get("license", "")
-    if not ALLOWED_LICENSE.fullmatch(license_name):
-        raise RuntimeError(f"unsupported license for {entry['id']}: {license_name!r}")
-    if any(key.startswith("utm_") for key in parse_qs(urlparse(entry["url"]).query)):
-        raise RuntimeError(f"tracking query string in URL for {entry['id']}")
+    expected_size = entry.get("size", entry.get("bytes"))
+    if expected_size is not None and path.stat().st_size != int(expected_size):
+        raise RuntimeError(f"byte count mismatch for {entry['id']}: expected {expected_size}, got {path.stat().st_size}")
+    if entry.get("url"):
+        license_name = entry.get("license", "")
+        if not ALLOWED_LICENSE.fullmatch(license_name):
+            raise RuntimeError(f"unsupported license for {entry['id']}: {license_name!r}")
+        if any(key.startswith("utm_") for key in parse_qs(urlparse(entry["url"]).query)):
+            raise RuntimeError(f"tracking query string in URL for {entry['id']}")
     axis = entry.get("axis")
     if axis == "real_camera":
         with Image.open(path) as image:
@@ -129,6 +134,8 @@ def main() -> int:
                 continue
             if args.check:
                 raise RuntimeError(f"missing real corpus file: {path}")
+            if entry.get("path"):
+                raise RuntimeError(f"missing local corpus file: {path}")
             delay = 0.5 - (time.monotonic() - last_request)
             if delay > 0:
                 time.sleep(delay)

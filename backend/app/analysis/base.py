@@ -87,7 +87,8 @@ class ImageContext:
 
     @property
     def format(self) -> str:
-        return (self._format or self.pil_image.format or "").upper()
+        self.pil_image
+        return (self._format or "").upper()
 
     @property
     def width(self) -> int:

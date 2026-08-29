@@ -4,12 +4,12 @@ S01: {status: passed, branch: main, commit: null, notes: "Pinned backend depende
 S02: {status: passed, branch: main, commit: null, notes: "Frontend dependency migration completed."}
 S03: {status: passed, branch: main, commit: null, notes: "Upload validation, bounded analysis, CORS, rate limiting, and ELA arithmetic fixed."}
 S04: {status: passed, branch: main, commit: null, notes: "Versioned API, detector protocol, registry, and failure isolation implemented."}
-S05: {status: passed, branch: main, commit: null, notes: "Synthetic source-balance gate passes; verified real corpus now has 12/12 strict cameras, 12/12 real-AI images, and 2/2 signed-C2PA fixtures."}
+S05: {status: passed, branch: main, commit: null, notes: "Synthetic path and prior real manifest remain verified; R6b adds 400 source-directory-stratified IMD2020 rows (200 manipulated pairs plus originals), with hashes and ignored local paths only."}
 S06: {status: passed, branch: main, commit: null, notes: "JPEG-family detectors implemented and registered."}
 S07: {status: passed, branch: main, commit: null, notes: "Copy-move detector implemented and registered."}
 S08: {status: passed, branch: main, commit: null, notes: "Strict real_camera and real_ai evidence are now 12/12; CFA consumes nested PixelXDimension correctly."}
 S09: {status: passed, branch: main, commit: null, notes: "EXIF and C2PA detectors implemented with no-manifest semantics."}
-S10: {status: failed, branch: main, commit: null, notes: "Source-local calibration fits 126 rows with Hanley-McNeil within-source guards and positive heldout-skill Spearman 0.6274; below-chance detectors have zero weight, but fused heldout AUC 0.5889 remains below the best single detector 0.7333. Full backend tests pass."}
+S10: {status: failed, branch: main, commit: null, notes: "Source-local calibration now covers 526 rows across 227 source groups with Hanley-McNeil within-source guards and positive heldout-skill Spearman 0.8946; fused heldout AUC 0.6884 remains below the best single detector 0.7385, so the relative fusion gate remains honestly failed. Full backend tests and synthetic-only CI boundary remain intact."}
 S11: {status: passed, branch: main, commit: null, notes: "Frontend uses v1 API with upload, progress, errors, history, and evidence overlay."}
 S12: {status: passed, branch: main, commit: null, notes: "Optional pinned ONNX learned detector passes absent-model and installed-model checks."}
 S13: {status: passed, branch: main, commit: null, notes: "CI, non-root Docker image, healthcheck, logging, and truthful docs verified."}

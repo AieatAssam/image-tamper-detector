@@ -5,6 +5,28 @@ S05 has two distinct corpus roles:
 - `data/corpus/synthetic/` measures processing-history cues: authentic recompression, splices, copy-move, double JPEG compression, local retouching, and resized authentic content. Manipulation families may use the four existing files under `data/samples/`, but both negative families (`authentic_recompress` and `resize_then_save`) derive only from the genuinely authentic `landscape_original.jpg`. Each index entry and sidecar records `source_label` (`authentic`, `known_forgery`, or `ai_generated`) so parent provenance cannot be confused with the family-specific `label`. Source EXIF is preserved or a neutral source description is added to each JPEG. `index.json` and JSON sidecars are reviewable; image and mask bytes are reproducible and ignored by Git.
 - `data/corpus/MANIFEST.yaml` defines optional real-image downloads. `scripts/fetch_corpus.py` verifies both SHA-256 and byte count, and refuses mismatches.
 
+IMD2020 is an additional local-only corpus candidate from Novozamsky, Mahdian,
+and Saic, “IMD2020: A Large-Scale Annotated Dataset Tailored for Detecting
+Manipulated Images,” IEEE WACV Workshops 2020. The archive is available at
+`https://staff.utia.cas.cz/novozada/db/IMD2020.zip`; it is downloaded only to
+the gitignored `data/corpus/imd2020/` directory. The verified archive is
+`592836398` bytes with SHA-256
+`a1497d7cc21a20ee412c0758f1450ee87e35bf3da9aac114f044e8dedaec382f` and
+contains `2010` manipulated images, `2010` masks, and `414` corresponding real
+counterparts across `414` source groups. The publication does not state an
+explicit redistribution license, so this repository commits no IMD2020 image
+bytes. Run `.venv/bin/python scripts/fetch_imd2020.py --check` to verify the
+local archive and all image/mask triples.
+
+The archive's real-life split does not include machine-readable manipulation
+type metadata: its source directories are opaque IDs and its files are image
+and mask files only. The fixed-seed sampler therefore stratifies by source
+directory, not by an invented operation taxonomy. With seed `20260828`, it
+selects 200 source directories, one manipulated image per source, its mask,
+and the source's `_orig.jpg` counterpart. The manifest records 400 rows with
+`axis: imd2020`, `source_group`, `split`, SHA-256, and byte size; the image and
+mask paths remain under the gitignored local archive directory.
+
 The synthetic corpus cannot validate sensor provenance. A generator can faithfully synthesise PROCESSING HISTORY (splices, recompression, copy-move, quality changes) but CANNOT synthesise SENSOR PROVENANCE. Re-splicing one Unsplash JPEG creates no genuine Bayer interpolation structure and no genuine sensor noise. Therefore cfa_periodicity, spectral_peaks and the noise-residual detector MUST be validated against real images, never against generated splices.
 
 For synthetic benchmark fusion, those three provenance detectors are omitted from the fused verdict because their synthetic scores are not valid evidence. Their calibrated weights remain available to the runtime ensemble for genuine uploaded images; this keeps validation scope separate from ensemble availability.

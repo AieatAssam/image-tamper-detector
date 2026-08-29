@@ -181,10 +181,32 @@ decisions:
       usable here. The chosen substitute is Apache-2.0, ships ONNX artifacts,
       and is fully specified in plan/reference/detector-catalog.yaml.
   - id: D7
-    decision: "External labelled corpora (CASIA v2, IMD2020, Columbia) are Tier B only"
+    decision: "External labelled corpora are Tier B when acquisition needs auth or an interactive step"
     rationale: >
-      All are auth-walled (Kaggle login) or require registration. A stage an
-      agent cannot execute offline is exactly the guesswork this plan forbids.
+      The governing principle is EXECUTABILITY, not whether a corpus is
+      external: a stage an agent cannot run unattended is the guesswork this
+      plan forbids. CASIA v2 (Kaggle login) and COVERAGE (interactive OneDrive)
+      fail that test and stay Tier B. A corpus a script can fetch and checksum
+      unattended may be Tier A, subject to D7b.
+    amendment_2026_08_29: >
+      The original wording named IMD2020 as auth-walled. That was WRONG and was
+      never verified. IMD2020 serves direct HTTP with no authentication from
+      https://staff.utia.cas.cz/novozada/db/ -- probed 2026-08-29, HTTP 200 on
+      every archive. It is therefore eligible for Tier A. See
+      plan/audit/FINDINGS-R6-2026-08-29.md K1.
+  - id: D7b
+    decision: "A corpus with no establishable license may be used locally but never redistributed"
+    rationale: >
+      IMD2020 publishes no explicit license and its manipulated images were
+      collected from the open internet. Downloading for local evaluation is
+      normal research use; redistributing the bytes is not something this repo
+      can authorise.
+    rule: >
+      Fetch into a gitignored directory, verified as gitignored BEFORE the first
+      download. Commit only the manifest -- URL, sha256, size, split, label,
+      mask path, citation. Never commit image bytes. If a source's terms cannot
+      be established at all, do not use it: unclear provenance is its own kind
+      of fabricated data.
   - id: D8
     decision: "Detector fusion replaces `is_tampered = any([...])`"
     rationale: >

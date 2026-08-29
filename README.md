@@ -29,7 +29,10 @@ The response contains a three-valued result for each detector (`applicable`, `no
 
 ELA is meaningful only for JPEG input. The noise-residual detector is not camera attribution: real PRNU attribution requires a reference fingerprint from the same camera. C2PA absence is not evidence of tampering. The optional learned model is face-deepfake-specific and is not a general splice, document, or receipt detector.
 
-The committed calibration reports a held-out AUC of 0.855 on 30 deterministic synthetic holdout images. That is a small, partly synthetic corpus: the result is valid only for images resembling it and is not representative of the open web. See [`docs/corpus.md`](docs/corpus.md) and [`docs/calibration.md`](docs/calibration.md).
+The committed calibration reports a held-out AUC of 0.6884 on the current
+526-entry, partly synthetic corpus, including a source-balanced IMD2020
+sample. That is still small and is not representative of the open web. See
+[`docs/corpus.md`](docs/corpus.md) and [`docs/calibration.md`](docs/calibration.md).
 
 ## Corpus and optional model
 
@@ -39,6 +42,18 @@ Regenerate the deterministic synthetic corpus with:
 .venv/bin/python scripts/make_corpus.py --seed 20260828 --out data/corpus/synthetic
 .venv/bin/python scripts/benchmark.py --out /tmp/benchmark.json --corpus synthetic
 ```
+
+The optional local IMD2020 archive contains real-life manipulated images with
+binary masks and corresponding real images. Cite Novozamsky, Mahdian, and
+Saic, “IMD2020: A Large-Scale Annotated Dataset Tailored for Detecting
+Manipulated Images,” IEEE WACV Workshops 2020. It is downloaded to the
+gitignored `data/corpus/imd2020/` directory with
+`.venv/bin/python scripts/fetch_imd2020.py --download`; image bytes are never
+committed because the publication provides no explicit redistribution license.
+The real-life archive has no machine-readable manipulation-type mapping, so
+the sample is stratified by its verified source directories instead. The
+current reproducible sample uses 200 manipulated pairs (400 rows), one pair
+per source directory, with a per-source cap of 2 and seed `20260828`.
 
 The optional ONNX learned detector is documented in [`docs/learned-detector.md`](docs/learned-detector.md). It is not installed or enabled by default.
 

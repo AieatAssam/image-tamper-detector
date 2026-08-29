@@ -277,3 +277,3603 @@ images:
     generator: "xAI Aurora"
     camera: null
     notes: "JPEG; Commons description identifies xAI Aurora as the generator."
+  - id: "imd2020_1a07yi_c8swtoq_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a07yi/c8swtoq_0.jpg"
+    sha256: 31df007ca5c14b6e9d84df9445b34ae5d5f831d75ecd3ee3f6474451982ad9e5
+    size: 232407
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a07yi/c8swtoq_0_mask.png"
+    source_group: "imd2020/1a07yi"
+    split: train
+  - id: "imd2020_1a07yi_c8swtoq_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a07yi/1a07yi_orig.jpg"
+    sha256: ddc6e32555735885ce8c6304ab2ea5bbe06c3f7a6a538e9912e3aabfa0748c2b
+    size: 236724
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a07yi"
+    split: train
+  - id: "imd2020_1a16mu_c8t64te_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a16mu/c8t64te_0.jpg"
+    sha256: 093b69b29081b8f7238fd2371f74834241437ce2236addcbd525cf625bf0918c
+    size: 250699
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a16mu/c8t64te_0_mask.png"
+    source_group: "imd2020/1a16mu"
+    split: train
+  - id: "imd2020_1a16mu_c8t64te_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a16mu/1a16mu_orig.jpg"
+    sha256: 4b8d58562d66d10eb95c932adcdd2ec2fafae34429d47bb6ce026c36d856ac73
+    size: 74182
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a16mu"
+    split: train
+  - id: "imd2020_1a1ogs_c8tf5mq_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a1ogs/c8tf5mq_0.png"
+    sha256: f909e127b4121cfae875ff06aabc0a7871f153aed77c89afd95bea4034076167
+    size: 304382
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a1ogs/c8tf5mq_0_mask.png"
+    source_group: "imd2020/1a1ogs"
+    split: train
+  - id: "imd2020_1a1ogs_c8tf5mq_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a1ogs/1a1ogs_orig.jpg"
+    sha256: 16af6bf3411693d9ae3a39d784fde7572853ba18657375e1070f7867fd0bdf8c
+    size: 50822
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a1ogs"
+    split: train
+  - id: "imd2020_1a3oag_c8u0rrz_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a3oag/c8u0rrz_0.jpg"
+    sha256: 53be38bea859187d90c632a3b5eafc5f1464dd3ea03574bf46ed046ce042f8eb
+    size: 173292
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a3oag/c8u0rrz_0_mask.png"
+    source_group: "imd2020/1a3oag"
+    split: train
+  - id: "imd2020_1a3oag_c8u0rrz_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a3oag/1a3oag_orig.jpg"
+    sha256: 6b55d2e3982fdae4357b6e17e21aa1776233144840977deae1fbc403240accf3
+    size: 209840
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a3oag"
+    split: train
+  - id: "imd2020_1a41rr_c8ty2bs_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a41rr/c8ty2bs_0.jpg"
+    sha256: 5aa357e98cb6cd14c05633e727e6b1902af5ad0e790737ecef56bf87bf354614
+    size: 124092
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a41rr/c8ty2bs_0_mask.png"
+    source_group: "imd2020/1a41rr"
+    split: train
+  - id: "imd2020_1a41rr_c8ty2bs_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a41rr/1a41rr_orig.jpg"
+    sha256: 5bc94ef04bd90603d5eb87fe3680b58298896f07d1796331ea03044da968bbf8
+    size: 543408
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a41rr"
+    split: train
+  - id: "imd2020_1a4dqp_c8u4gpd_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a4dqp/c8u4gpd_0.jpg"
+    sha256: a77eaf3254b3c781e0b34bcabae2861966678fb403b4e6da4e0397b280b61af3
+    size: 50059
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a4dqp/c8u4gpd_0_mask.png"
+    source_group: "imd2020/1a4dqp"
+    split: heldout
+  - id: "imd2020_1a4dqp_c8u4gpd_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a4dqp/1a4dqp_orig.jpg"
+    sha256: 157c5f41daabb741e0223ce3d2d6cd6180572c1377281b5c623865204d36e813
+    size: 101571
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a4dqp"
+    split: heldout
+  - id: "imd2020_1a4zdz_c8uaap3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a4zdz/c8uaap3_0.jpg"
+    sha256: d89219c7766726ab276bcc2759bb5518542eb01b4c2aae3f7c62398de24a011d
+    size: 209658
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a4zdz/c8uaap3_0_mask.png"
+    source_group: "imd2020/1a4zdz"
+    split: train
+  - id: "imd2020_1a4zdz_c8uaap3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a4zdz/1a4zdz_orig.jpg"
+    sha256: aaa60dbb8ec00fe16ad9374b51edda766cf5276bb2d2cc35f4618d8aea9c731a
+    size: 171751
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a4zdz"
+    split: train
+  - id: "imd2020_1a5h1p_c8uc2z3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a5h1p/c8uc2z3_0.jpg"
+    sha256: 02d57910c063715091cf75c16182e24c1332e996f1c3ec8f2a176f9cc40a8e88
+    size: 163714
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a5h1p/c8uc2z3_0_mask.png"
+    source_group: "imd2020/1a5h1p"
+    split: heldout
+  - id: "imd2020_1a5h1p_c8uc2z3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a5h1p/1a5h1p_orig.jpg"
+    sha256: 155cdb222fd4aa0885249e936be142828969440c0b174f4ee9cc1231a27049b2
+    size: 108153
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a5h1p"
+    split: heldout
+  - id: "imd2020_1a5x44_c8uiddx_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a5x44/c8uiddx_0.png"
+    sha256: c17025c95f09cb4df191e712bd7eddc834e43c55a40f9f8fdb88d835592bb3e9
+    size: 450551
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a5x44/c8uiddx_0_mask.png"
+    source_group: "imd2020/1a5x44"
+    split: train
+  - id: "imd2020_1a5x44_c8uiddx_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a5x44/1a5x44_orig.jpg"
+    sha256: 7ce88d272a197c2137e4e86ed5c33387424597a7de8a1a5c71222580701fb4a1
+    size: 101853
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a5x44"
+    split: train
+  - id: "imd2020_1a69n6_c8uka8j_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a69n6/c8uka8j_0.jpg"
+    sha256: 7618b2b1965ef95b23cf2af7f12a3873da357a818a6c6e6ba52076609b93e193
+    size: 218449
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a69n6/c8uka8j_0_mask.png"
+    source_group: "imd2020/1a69n6"
+    split: heldout
+  - id: "imd2020_1a69n6_c8uka8j_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a69n6/1a69n6_orig.jpg"
+    sha256: 618430ac961f2e092d808d1f96c3c7f531c72c589bc6f0f119c84e31b30a3559
+    size: 83908
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a69n6"
+    split: heldout
+  - id: "imd2020_1a6upj_c8uopdm_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a6upj/c8uopdm_0.jpg"
+    sha256: 8bc8344c05b59553a3354da75f0241243eb1a228b49cca797e1262cb376d46d9
+    size: 68946
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a6upj/c8uopdm_0_mask.png"
+    source_group: "imd2020/1a6upj"
+    split: train
+  - id: "imd2020_1a6upj_c8uopdm_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a6upj/1a6upj_orig.jpg"
+    sha256: b93f527f94cf3c17044477fe65a49a646d4152be8bdf80da282d6795dedb456b
+    size: 214589
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a6upj"
+    split: train
+  - id: "imd2020_1a84zh_c8v26qj_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a84zh/c8v26qj_0.png"
+    sha256: a53e3162797fce79c2d0c8d1214b2bd7498b4849e64a28ba98639f9d74f1fbd6
+    size: 386168
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a84zh/c8v26qj_0_mask.png"
+    source_group: "imd2020/1a84zh"
+    split: train
+  - id: "imd2020_1a84zh_c8v26qj_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a84zh/1a84zh_orig.jpg"
+    sha256: b774051822f712d57d3073f0e74c191091968af3ca94292f63b273a432c6e13d
+    size: 48007
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a84zh"
+    split: train
+  - id: "imd2020_1a8jd2_c8v2xno_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a8jd2/c8v2xno_0.jpg"
+    sha256: d6fcf5c2f78dcdec84e4cb455de159328906a25dc07d444979ea8a7b7198e358
+    size: 74005
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a8jd2/c8v2xno_0_mask.png"
+    source_group: "imd2020/1a8jd2"
+    split: heldout
+  - id: "imd2020_1a8jd2_c8v2xno_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a8jd2/1a8jd2_orig.jpg"
+    sha256: 92360a4783757e618d77e8fd1fcec1266fd070c3251a54664d5c48fdd8b6406f
+    size: 21115
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a8jd2"
+    split: heldout
+  - id: "imd2020_1a9l4s_c8vf42i_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a9l4s/c8vf42i_0.jpg"
+    sha256: 757e46b0782392ff5a25fc8bdad04037af9efe9e5d57c194642de18d6bb00104
+    size: 222545
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a9l4s/c8vf42i_0_mask.png"
+    source_group: "imd2020/1a9l4s"
+    split: train
+  - id: "imd2020_1a9l4s_c8vf42i_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a9l4s/1a9l4s_orig.jpg"
+    sha256: 75eae73be4b217f27dfeade385a27d5949f103c302f906f4a643a42b3669c47c
+    size: 172138
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a9l4s"
+    split: train
+  - id: "imd2020_1a9tss_c8vm7al_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a9tss/c8vm7al_0.jpg"
+    sha256: f797b48fa8740e6dbe77a3d48b6c076cb0faa17cb77da8f03b937e31cd0f3b38
+    size: 205354
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1a9tss/c8vm7al_0_mask.png"
+    source_group: "imd2020/1a9tss"
+    split: train
+  - id: "imd2020_1a9tss_c8vm7al_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1a9tss/1a9tss_orig.jpg"
+    sha256: aca83ae1cd6268dae0de7d97d79188b406a8835f793de8b5b8f147abdad04a81
+    size: 123764
+    label: authentic
+    mask: null
+    source_group: "imd2020/1a9tss"
+    split: train
+  - id: "imd2020_1aa6sn_c8vgphr_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aa6sn/c8vgphr_0.jpg"
+    sha256: 24153412df61817fc8668ae5fcb4bed5de2be8719ee431df3806a714e1d7f9d3
+    size: 155481
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aa6sn/c8vgphr_0_mask.png"
+    source_group: "imd2020/1aa6sn"
+    split: heldout
+  - id: "imd2020_1aa6sn_c8vgphr_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aa6sn/1aa6sn_orig.jpg"
+    sha256: d0b5824853b54e3b2b7ab4784c48b2561e210c12c862bfe303f3939fb72e9546
+    size: 120471
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aa6sn"
+    split: heldout
+  - id: "imd2020_1aa8xl_c8vpmfd_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aa8xl/c8vpmfd_0.jpg"
+    sha256: 74885e4a0cc3af1debfbef64a724f688879c304d7fd55b62ca42d1424a136162
+    size: 331854
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aa8xl/c8vpmfd_0_mask.png"
+    source_group: "imd2020/1aa8xl"
+    split: train
+  - id: "imd2020_1aa8xl_c8vpmfd_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aa8xl/1aa8xl_orig.jpg"
+    sha256: 27aa02a468cee8da39ef6e8f5746b57c5c327df3e6f6e33bcfed9aa61d974f6d
+    size: 254937
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aa8xl"
+    split: train
+  - id: "imd2020_1aafqb_c8vkb96_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aafqb/c8vkb96_0.jpg"
+    sha256: 84471133b9b56ed8200ae9ed8a4a9ecb4c65acb2d4c945cad4e47647a0519caf
+    size: 105764
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aafqb/c8vkb96_0_mask.png"
+    source_group: "imd2020/1aafqb"
+    split: train
+  - id: "imd2020_1aafqb_c8vkb96_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aafqb/1aafqb_orig.jpg"
+    sha256: d91fae35c9eccaf10d0882e1924db243c531e6e977fe8d54f9efd03c63ffcd5b
+    size: 187089
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aafqb"
+    split: train
+  - id: "imd2020_1ac1g7_c8w2mlr_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ac1g7/c8w2mlr_0.jpg"
+    sha256: fc394da8089ee69b23e071590c08fe7be53fec351826c2700413701ef26a9d59
+    size: 212699
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ac1g7/c8w2mlr_0_mask.png"
+    source_group: "imd2020/1ac1g7"
+    split: train
+  - id: "imd2020_1ac1g7_c8w2mlr_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ac1g7/1ac1g7_orig.jpg"
+    sha256: 111703cf39922eae2b52a3bdbc7e1ee8f19756737235b318edc83b8021b60a62
+    size: 219136
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ac1g7"
+    split: train
+  - id: "imd2020_1acw36_c8wantc_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1acw36/c8wantc_0.jpg"
+    sha256: 1fc972c4bb62893ce0642ec582c3878ba8a6d3a6ecad46438cfda14149aa372b
+    size: 267124
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1acw36/c8wantc_0_mask.png"
+    source_group: "imd2020/1acw36"
+    split: train
+  - id: "imd2020_1acw36_c8wantc_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1acw36/1acw36_orig.jpg"
+    sha256: 220d0e3a3e91af9770018af8425058bebc8d5b573a8847e14025febda68773fe
+    size: 229412
+    label: authentic
+    mask: null
+    source_group: "imd2020/1acw36"
+    split: train
+  - id: "imd2020_1aczjh_c8w9n2q_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aczjh/c8w9n2q_0.png"
+    sha256: b63fba30e93ead042c2d9f31744b557e1ca334ddf9a4416e2f35cfda25c2d49c
+    size: 470195
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aczjh/c8w9n2q_0_mask.png"
+    source_group: "imd2020/1aczjh"
+    split: train
+  - id: "imd2020_1aczjh_c8w9n2q_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aczjh/1aczjh_orig.jpg"
+    sha256: 9de4d91aea71066ad1f78e7ef6c5177b8d36551c8ce150a034435487e8e5cd57
+    size: 237678
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aczjh"
+    split: train
+  - id: "imd2020_1ad1a0_c8wclzm_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ad1a0/c8wclzm_0.jpg"
+    sha256: 5c1b954de4029eb7db22461b45032a4830108ef8be15840810d95d177356de4c
+    size: 93967
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ad1a0/c8wclzm_0_mask.png"
+    source_group: "imd2020/1ad1a0"
+    split: train
+  - id: "imd2020_1ad1a0_c8wclzm_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ad1a0/1ad1a0_orig.jpg"
+    sha256: c3380599832b4a14edcb8da51e4a429a15efdf6a8be0a6cefbc6743c63ba7f90
+    size: 74978
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ad1a0"
+    split: train
+  - id: "imd2020_1aeqsl_c8wrglm_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aeqsl/c8wrglm_0.jpg"
+    sha256: 7cf0e611fd795b8ba909a5fd8eb196adfa6702d6d4af75af7bc7750dacd24cc5
+    size: 128610
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aeqsl/c8wrglm_0_mask.png"
+    source_group: "imd2020/1aeqsl"
+    split: heldout
+  - id: "imd2020_1aeqsl_c8wrglm_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aeqsl/1aeqsl_orig.jpg"
+    sha256: bbb7a830dbb3f130eb4201ff341e83209a7cf0cd3baad1748be6f71521740c9f
+    size: 42070
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aeqsl"
+    split: heldout
+  - id: "imd2020_1aeur2_c8wte77_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aeur2/c8wte77_0.jpg"
+    sha256: 9be71158bcc03220ffb3508fc5e1159b88a3fb54f23d80b303a02427c3a59752
+    size: 137104
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aeur2/c8wte77_0_mask.png"
+    source_group: "imd2020/1aeur2"
+    split: train
+  - id: "imd2020_1aeur2_c8wte77_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aeur2/1aeur2_orig.jpg"
+    sha256: 5cf50bbbdc6add7631853e2a5208621e9ad7df66a1275b015f94773e275dd672
+    size: 482142
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aeur2"
+    split: train
+  - id: "imd2020_1af2jv_c8wu4jn_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1af2jv/c8wu4jn_0.jpg"
+    sha256: 4153629fa19f103772359740ed1e5f896f14e10992693b8eb916fb314d723283
+    size: 143640
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1af2jv/c8wu4jn_0_mask.png"
+    source_group: "imd2020/1af2jv"
+    split: train
+  - id: "imd2020_1af2jv_c8wu4jn_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1af2jv/1af2jv_orig.jpg"
+    sha256: 89c0929c8dc8571d453b7bfc2fdc5f3019547ccb32fb52097000a5f15e8d6cb5
+    size: 131409
+    label: authentic
+    mask: null
+    source_group: "imd2020/1af2jv"
+    split: train
+  - id: "imd2020_1af7t4_c8wz8qw_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1af7t4/c8wz8qw_0.jpg"
+    sha256: 8365b83d0e0ebfdf4d9131ab1d7c549af7d1c8ab5bf88eccb4c3bb66749bc950
+    size: 300691
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1af7t4/c8wz8qw_0_mask.png"
+    source_group: "imd2020/1af7t4"
+    split: heldout
+  - id: "imd2020_1af7t4_c8wz8qw_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1af7t4/1af7t4_orig.jpg"
+    sha256: e10adc541f4f85a905cfb7a8014c7e5d8c37d9594d4c77a12d5140594cc22716
+    size: 599770
+    label: authentic
+    mask: null
+    source_group: "imd2020/1af7t4"
+    split: heldout
+  - id: "imd2020_1afc31_c8wyxuh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afc31/c8wyxuh_0.jpg"
+    sha256: f1cfe94be6f770b0661dcef552eeea31130311f2bd76df07e52e0590d1c4b204
+    size: 159971
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1afc31/c8wyxuh_0_mask.png"
+    source_group: "imd2020/1afc31"
+    split: train
+  - id: "imd2020_1afc31_c8wyxuh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afc31/1afc31_orig.jpg"
+    sha256: 21716ed8e3edc4e1dbedb884e1f54fe4a355019cc1e0fbddbced134c47c7671f
+    size: 90108
+    label: authentic
+    mask: null
+    source_group: "imd2020/1afc31"
+    split: train
+  - id: "imd2020_1afcns_c8wxqdn_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afcns/c8wxqdn_0.jpg"
+    sha256: 31f1c02912ca0d166de4d10337eb037a0b4bbbf8667c50821cf08c72e977bb48
+    size: 209535
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1afcns/c8wxqdn_0_mask.png"
+    source_group: "imd2020/1afcns"
+    split: heldout
+  - id: "imd2020_1afcns_c8wxqdn_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afcns/1afcns_orig.jpg"
+    sha256: 22ab96c212497375d2afa3a2e063efc369af1b2090bfd3fd31afda25325f98a7
+    size: 528795
+    label: authentic
+    mask: null
+    source_group: "imd2020/1afcns"
+    split: heldout
+  - id: "imd2020_1afv6o_c8x3rcx_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afv6o/c8x3rcx_0.jpg"
+    sha256: 5b60e2a33adfa228aa7c465f349b65f65dfab7c9bf75f70f8eef23a8c11a4357
+    size: 423350
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1afv6o/c8x3rcx_0_mask.png"
+    source_group: "imd2020/1afv6o"
+    split: train
+  - id: "imd2020_1afv6o_c8x3rcx_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afv6o/1afv6o_orig.jpg"
+    sha256: 53ec64ced57e93523474775275078f3520d73149a6b31122bdceb8bdc650fc25
+    size: 274001
+    label: authentic
+    mask: null
+    source_group: "imd2020/1afv6o"
+    split: train
+  - id: "imd2020_1afvdd_c8x2s20_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afvdd/c8x2s20_0.jpg"
+    sha256: 0614a02e41cee8faadb442e987040063c0929a40dfd8794f972ff6da6d26c682
+    size: 154462
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1afvdd/c8x2s20_0_mask.png"
+    source_group: "imd2020/1afvdd"
+    split: heldout
+  - id: "imd2020_1afvdd_c8x2s20_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1afvdd/1afvdd_orig.jpg"
+    sha256: 9f53c9818521edee0a1e99613e19c0ef0b295c7c2a00677b928d1b94405ac02c
+    size: 447713
+    label: authentic
+    mask: null
+    source_group: "imd2020/1afvdd"
+    split: heldout
+  - id: "imd2020_1agrmz_c8xd6bv_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1agrmz/c8xd6bv_0.jpg"
+    sha256: b39070ff194dd09a499be425434a139b56d922492cf32945048c13c63ce9b1d4
+    size: 92247
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1agrmz/c8xd6bv_0_mask.png"
+    source_group: "imd2020/1agrmz"
+    split: heldout
+  - id: "imd2020_1agrmz_c8xd6bv_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1agrmz/1agrmz_orig.jpg"
+    sha256: ff6e0bb252b273b3a23c421a0464aeba58b0df9c9bb6f37632c1c8e0611439d6
+    size: 73390
+    label: authentic
+    mask: null
+    source_group: "imd2020/1agrmz"
+    split: heldout
+  - id: "imd2020_1agt1r_c8xbjz3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1agt1r/c8xbjz3_0.jpg"
+    sha256: 77180396da18ceea49e1df3b6ec624ce58676eaf9fe6af2ccd7e81670221f4b6
+    size: 156605
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1agt1r/c8xbjz3_0_mask.png"
+    source_group: "imd2020/1agt1r"
+    split: train
+  - id: "imd2020_1agt1r_c8xbjz3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1agt1r/1agt1r_orig.jpg"
+    sha256: 35e753b91041eaa451fe9ad8d9698a6e605b0167a3ec8d224543e9af0775943d
+    size: 85657
+    label: authentic
+    mask: null
+    source_group: "imd2020/1agt1r"
+    split: train
+  - id: "imd2020_1ah0n7_c8xfpsi_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ah0n7/c8xfpsi_0.png"
+    sha256: 4854c7e63f270a85e9fe7ccf21bf0a4b7fad5170191e56ea0c5f377610f3fd21
+    size: 228933
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ah0n7/c8xfpsi_0_mask.png"
+    source_group: "imd2020/1ah0n7"
+    split: train
+  - id: "imd2020_1ah0n7_c8xfpsi_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ah0n7/1ah0n7_orig.jpg"
+    sha256: 78209619b4d86f9216b8f7cf889dbdab992aa6c62999eeffb6f5a7e4c85d2223
+    size: 53706
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ah0n7"
+    split: train
+  - id: "imd2020_1ahawd_c8xhzdr_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ahawd/c8xhzdr_0.jpg"
+    sha256: 9e44ed8bce56ed2e5b937379e028762058a7fa518489d97be693f44c62ef7429
+    size: 133503
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ahawd/c8xhzdr_0_mask.png"
+    source_group: "imd2020/1ahawd"
+    split: train
+  - id: "imd2020_1ahawd_c8xhzdr_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ahawd/1ahawd_orig.jpg"
+    sha256: 34b748fdba25af50f32f4b42bb271add42f5b7e2e3867ea578a29fab5eea1f54
+    size: 66637
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ahawd"
+    split: train
+  - id: "imd2020_1ahtfm_c8xkcsl_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ahtfm/c8xkcsl_0.jpg"
+    sha256: ef86fe30f604d802d072ee8ea0c3744a957d2ecbe051fb9eb9a88498ace7c9e4
+    size: 109993
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ahtfm/c8xkcsl_0_mask.png"
+    source_group: "imd2020/1ahtfm"
+    split: train
+  - id: "imd2020_1ahtfm_c8xkcsl_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ahtfm/1ahtfm_orig.jpg"
+    sha256: ed9ca4675e29833c8c14666e1f846098bb4d40f5f250e8cf2059be617bb24f72
+    size: 437524
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ahtfm"
+    split: train
+  - id: "imd2020_1aidqf_c8xujpn_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aidqf/c8xujpn_0.jpg"
+    sha256: 93979a802ad6b2e609318cb420501c4a356a368e8ff5b6476c02f81b23b659cd
+    size: 61275
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aidqf/c8xujpn_0_mask.png"
+    source_group: "imd2020/1aidqf"
+    split: heldout
+  - id: "imd2020_1aidqf_c8xujpn_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aidqf/1aidqf_orig.jpg"
+    sha256: 70aab4a81ed5232127f079567f7a8ea53765d5f6455b219d88df9a693d02370a
+    size: 247906
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aidqf"
+    split: heldout
+  - id: "imd2020_1ajtpd_c8y2vvo_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ajtpd/c8y2vvo_0.jpg"
+    sha256: e13cf66ca9253e93024b5fc3342c97abfd1951bcd3b0ad60727ee2a9befb8857
+    size: 93456
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ajtpd/c8y2vvo_0_mask.png"
+    source_group: "imd2020/1ajtpd"
+    split: train
+  - id: "imd2020_1ajtpd_c8y2vvo_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ajtpd/1ajtpd_orig.jpg"
+    sha256: ad0116285b4d47ff12a6d0e873ecff626b7e6ffaa62c08cb1db2f39ad1515e84
+    size: 191795
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ajtpd"
+    split: train
+  - id: "imd2020_1al0z1_c8yea0e_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1al0z1/c8yea0e_0.jpg"
+    sha256: 0cf0ada35064f8d50e28535038ab7b45297d1140603c8c4fba48e3b1c5c5ae40
+    size: 242902
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1al0z1/c8yea0e_0_mask.png"
+    source_group: "imd2020/1al0z1"
+    split: train
+  - id: "imd2020_1al0z1_c8yea0e_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1al0z1/1al0z1_orig.jpg"
+    sha256: d0cf861dccbc26ae0986705683834daf8a088f149e9cb3c03b01b799a4755e52
+    size: 149216
+    label: authentic
+    mask: null
+    source_group: "imd2020/1al0z1"
+    split: train
+  - id: "imd2020_1al8bl_c8yfhte_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1al8bl/c8yfhte_0.jpg"
+    sha256: 67e84ccb02b9cd721206a85316452956f08807e238c8319b1c3812bc3b4b2827
+    size: 244464
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1al8bl/c8yfhte_0_mask.png"
+    source_group: "imd2020/1al8bl"
+    split: train
+  - id: "imd2020_1al8bl_c8yfhte_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1al8bl/1al8bl_orig.jpg"
+    sha256: f48b8277f4b0ef03e4afc403330dbf13030da32c0e089abf19099a544907a61c
+    size: 122878
+    label: authentic
+    mask: null
+    source_group: "imd2020/1al8bl"
+    split: train
+  - id: "imd2020_1al8oy_c8yjs3y_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1al8oy/c8yjs3y_0.jpg"
+    sha256: 41eabefc5154fa971febf5815385015ec698d53b0c7c89b8ea13458b28be35fc
+    size: 34514
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1al8oy/c8yjs3y_0_mask.png"
+    source_group: "imd2020/1al8oy"
+    split: train
+  - id: "imd2020_1al8oy_c8yjs3y_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1al8oy/1al8oy_orig.jpg"
+    sha256: d282eea083e17a9b3b01d1339cdc34620d12e3661d1b802d0b4673a9c99b9a92
+    size: 70553
+    label: authentic
+    mask: null
+    source_group: "imd2020/1al8oy"
+    split: train
+  - id: "imd2020_1alcdm_c8ypb15_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1alcdm/c8ypb15_0.jpg"
+    sha256: c4be789123466248387b8855b882690e632e16bc721b1b4dd4449bee123aebdc
+    size: 122864
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1alcdm/c8ypb15_0_mask.png"
+    source_group: "imd2020/1alcdm"
+    split: train
+  - id: "imd2020_1alcdm_c8ypb15_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1alcdm/1alcdm_orig.jpg"
+    sha256: 9cb569badd243f63df0877056ea04d97e9055e29afc8728258971dad66ce55cf
+    size: 161579
+    label: authentic
+    mask: null
+    source_group: "imd2020/1alcdm"
+    split: train
+  - id: "imd2020_1am7zp_c8yqawk_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1am7zp/c8yqawk_0.png"
+    sha256: 3276f44be6a7a159cec7e959a9c98ed9e93027b6b48b67c00497a832c9766f1b
+    size: 640923
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1am7zp/c8yqawk_0_mask.png"
+    source_group: "imd2020/1am7zp"
+    split: train
+  - id: "imd2020_1am7zp_c8yqawk_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1am7zp/1am7zp_orig.jpg"
+    sha256: ff3fe76cc63fab98d8481d6ce8208b8b66258de54b5d099427026eb6c2d1849a
+    size: 76032
+    label: authentic
+    mask: null
+    source_group: "imd2020/1am7zp"
+    split: train
+  - id: "imd2020_1amtqf_c8yvmji_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1amtqf/c8yvmji_0.jpg"
+    sha256: 65fdce294a547f4e90c7f0ee933fbe3d8b4a4f093778d8411fc97b7e26f31eb3
+    size: 374406
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1amtqf/c8yvmji_0_mask.png"
+    source_group: "imd2020/1amtqf"
+    split: heldout
+  - id: "imd2020_1amtqf_c8yvmji_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1amtqf/1amtqf_orig.jpg"
+    sha256: f31e9d9ad2abed905e00651876eef269591cb6db73e258640b06de8cf88fafbe
+    size: 388035
+    label: authentic
+    mask: null
+    source_group: "imd2020/1amtqf"
+    split: heldout
+  - id: "imd2020_1anhg4_c8z1ubs_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1anhg4/c8z1ubs_0.jpg"
+    sha256: 80a3bec876821d0f22e4e5e0d65ce0a87d5729d7562f502d72a4a6e7836a5adc
+    size: 439780
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1anhg4/c8z1ubs_0_mask.png"
+    source_group: "imd2020/1anhg4"
+    split: train
+  - id: "imd2020_1anhg4_c8z1ubs_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1anhg4/1anhg4_orig.jpg"
+    sha256: 06385c3b44189c30c48d519a699520a005a524d516efc1d498807da4a5583aae
+    size: 186136
+    label: authentic
+    mask: null
+    source_group: "imd2020/1anhg4"
+    split: train
+  - id: "imd2020_1anq2a_c8z3l9n_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1anq2a/c8z3l9n_0.jpg"
+    sha256: 527265be22815c9e69bc2f6c3ea8bbde8b8fc1e3ec087c80a85979865ec92028
+    size: 129898
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1anq2a/c8z3l9n_0_mask.png"
+    source_group: "imd2020/1anq2a"
+    split: heldout
+  - id: "imd2020_1anq2a_c8z3l9n_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1anq2a/1anq2a_orig.jpg"
+    sha256: a1d81956dd0c0590c217f40156bf9e895b1b4bde1476337b501165e69c993fe2
+    size: 70599
+    label: authentic
+    mask: null
+    source_group: "imd2020/1anq2a"
+    split: heldout
+  - id: "imd2020_1aohro_c8zexo2_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aohro/c8zexo2_0.jpg"
+    sha256: 888589d92b3b6a04913d0e704eb6a461c59d01be8ae58ed6973a14958cfb697e
+    size: 247757
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aohro/c8zexo2_0_mask.png"
+    source_group: "imd2020/1aohro"
+    split: train
+  - id: "imd2020_1aohro_c8zexo2_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aohro/1aohro_orig.jpg"
+    sha256: e7c987c6227528e89d65878c6676b2c77498ec268845605f65e983ae75bad870
+    size: 341112
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aohro"
+    split: train
+  - id: "imd2020_1aoxnt_c8zjp3h_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aoxnt/c8zjp3h_0.jpg"
+    sha256: 09c6435a63bfd7e88083c23f4f750cdc2985d77556f1f0df26e0c5361e12bae0
+    size: 165247
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aoxnt/c8zjp3h_0_mask.png"
+    source_group: "imd2020/1aoxnt"
+    split: train
+  - id: "imd2020_1aoxnt_c8zjp3h_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aoxnt/1aoxnt_orig.jpg"
+    sha256: 03a5583c1e977bac6b0b7e88942331e211d2bed0c364efc6854385cd3c6659d7
+    size: 51878
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aoxnt"
+    split: train
+  - id: "imd2020_1apbp2_c8zkjgp_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1apbp2/c8zkjgp_0.jpg"
+    sha256: 19d822c39fb07e9e422a42c75e1ce045e68c021d7027d72741aff153a96a768c
+    size: 63437
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1apbp2/c8zkjgp_0_mask.png"
+    source_group: "imd2020/1apbp2"
+    split: train
+  - id: "imd2020_1apbp2_c8zkjgp_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1apbp2/1apbp2_orig.jpg"
+    sha256: 833402d7882b10bdcee22f6d015986ee0ec4030ec0ea30547a21853801ccfc93
+    size: 39144
+    label: authentic
+    mask: null
+    source_group: "imd2020/1apbp2"
+    split: train
+  - id: "imd2020_1aq0f0_c8zp10g_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aq0f0/c8zp10g_0.jpg"
+    sha256: a93f0fb729a549fd16329ce51f90986d267e4582fb47a0bc07cfc1227de915b9
+    size: 248077
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aq0f0/c8zp10g_0_mask.png"
+    source_group: "imd2020/1aq0f0"
+    split: train
+  - id: "imd2020_1aq0f0_c8zp10g_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aq0f0/1aq0f0_orig.jpg"
+    sha256: ffbecea25319217baebc063d8757d875b5ecd91e4a10df127c58b7ed56b055c9
+    size: 118406
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aq0f0"
+    split: train
+  - id: "imd2020_1aq6ym_c8zsg4j_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aq6ym/c8zsg4j_0.jpg"
+    sha256: 8f284919559acaee4ea549eea122452d906c4ba295272fdb89e8b56973aca669
+    size: 162808
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aq6ym/c8zsg4j_0_mask.png"
+    source_group: "imd2020/1aq6ym"
+    split: train
+  - id: "imd2020_1aq6ym_c8zsg4j_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aq6ym/1aq6ym_orig.jpg"
+    sha256: 4d7442e981b9cd9777373f0081fed3151e4694bd53d3c31169b1481ca5ecf882
+    size: 111516
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aq6ym"
+    split: train
+  - id: "imd2020_1aqi3j_c8zu1fj_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aqi3j/c8zu1fj_0.jpg"
+    sha256: c25b0cb77eb3ec563a556c2d10356d4b9db02f4da8932179c6c59087a2ec6961
+    size: 240695
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aqi3j/c8zu1fj_0_mask.png"
+    source_group: "imd2020/1aqi3j"
+    split: train
+  - id: "imd2020_1aqi3j_c8zu1fj_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aqi3j/1aqi3j_orig.jpg"
+    sha256: 56b6afe3168c6d9e16d13f94f35289341be192beced16e3dc508c5ab7b488297
+    size: 134234
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aqi3j"
+    split: train
+  - id: "imd2020_1as2hj_c908yxz_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1as2hj/c908yxz_0.jpg"
+    sha256: 212c380f13cf728c73509af8e9e9be83f6ebb179d1d03780ea2496d506c8da63
+    size: 201317
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1as2hj/c908yxz_0_mask.png"
+    source_group: "imd2020/1as2hj"
+    split: train
+  - id: "imd2020_1as2hj_c908yxz_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1as2hj/1as2hj_orig.jpg"
+    sha256: c80899bfc26e5760e1ca4c4998655453f1f073330863cb93c07f0bac5454298f
+    size: 196675
+    label: authentic
+    mask: null
+    source_group: "imd2020/1as2hj"
+    split: train
+  - id: "imd2020_1as3ai_c90c2o3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1as3ai/c90c2o3_0.jpg"
+    sha256: 14ed7f5aeb8ff044bc496e4ba7411e75d52caca0b454576db2012889512bc053
+    size: 581297
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1as3ai/c90c2o3_0_mask.png"
+    source_group: "imd2020/1as3ai"
+    split: train
+  - id: "imd2020_1as3ai_c90c2o3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1as3ai/1as3ai_orig.jpg"
+    sha256: a65d65842c1b15c2e45844964d0eec506f8ce6ad5df1312a0ebfa02867eeea0b
+    size: 533771
+    label: authentic
+    mask: null
+    source_group: "imd2020/1as3ai"
+    split: train
+  - id: "imd2020_1as9ik_c90nr8m_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1as9ik/c90nr8m_0.jpg"
+    sha256: d8aa0543882dbadd6efc2db9ff7975723be616d1d7fc6c83066758fb17838713
+    size: 198276
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1as9ik/c90nr8m_0_mask.png"
+    source_group: "imd2020/1as9ik"
+    split: heldout
+  - id: "imd2020_1as9ik_c90nr8m_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1as9ik/1as9ik_orig.jpg"
+    sha256: 2a6d2313fdc24968e9d0e3fe8b9f24ff17c80d7438c0b324e7cf7a71a7fb1f79
+    size: 108968
+    label: authentic
+    mask: null
+    source_group: "imd2020/1as9ik"
+    split: heldout
+  - id: "imd2020_1asnfa_c90dujh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1asnfa/c90dujh_0.jpg"
+    sha256: 92ff7ecb6c1d7b8b510864275ed9bb771e4b649a2588f0595d556f57f12a8003
+    size: 211701
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1asnfa/c90dujh_0_mask.png"
+    source_group: "imd2020/1asnfa"
+    split: train
+  - id: "imd2020_1asnfa_c90dujh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1asnfa/1asnfa_orig.jpg"
+    sha256: ea0b9881c702c44a3b5b5955ff01400f77b1ece5923490b55f4ce95d7d9a7e44
+    size: 54688
+    label: authentic
+    mask: null
+    source_group: "imd2020/1asnfa"
+    split: train
+  - id: "imd2020_1at8em_c90o4ei_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1at8em/c90o4ei_0.jpg"
+    sha256: 0189229b12c631adfd78718ecb970dd3164567898ff109b546f194cabf582ba5
+    size: 175536
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1at8em/c90o4ei_0_mask.png"
+    source_group: "imd2020/1at8em"
+    split: heldout
+  - id: "imd2020_1at8em_c90o4ei_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1at8em/1at8em_orig.jpg"
+    sha256: 82b6d6e5ad33651df4b9e7b0898e902a56bb273780c42b995266ec20daebfb35
+    size: 117067
+    label: authentic
+    mask: null
+    source_group: "imd2020/1at8em"
+    split: heldout
+  - id: "imd2020_1atc54_c90k1ai_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1atc54/c90k1ai_0.jpg"
+    sha256: e4d4b8720eae586cb34954e6591c6dd3350b641fd6f3499cccb3feb8581da017
+    size: 233873
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1atc54/c90k1ai_0_mask.png"
+    source_group: "imd2020/1atc54"
+    split: heldout
+  - id: "imd2020_1atc54_c90k1ai_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1atc54/1atc54_orig.jpg"
+    sha256: 7418be7880ed5ed1031337c1319369b1310e99a51b4ad69e5d24dee8a12f61f8
+    size: 250114
+    label: authentic
+    mask: null
+    source_group: "imd2020/1atc54"
+    split: heldout
+  - id: "imd2020_1atm1o_c90ra8t_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1atm1o/c90ra8t_0.jpg"
+    sha256: 4f3eb2d0793c0cf079dc1335505d35cb020bb35adb76add427ff064e519d0149
+    size: 161788
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1atm1o/c90ra8t_0_mask.png"
+    source_group: "imd2020/1atm1o"
+    split: train
+  - id: "imd2020_1atm1o_c90ra8t_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1atm1o/1atm1o_orig.jpg"
+    sha256: 9658ffee86e6edaf79d30ca1f4207cba47b9bc296e2065f5248001916f17cae6
+    size: 121066
+    label: authentic
+    mask: null
+    source_group: "imd2020/1atm1o"
+    split: train
+  - id: "imd2020_1aty89_c90pv3g_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aty89/c90pv3g_0.png"
+    sha256: e9d7441f0ae6ee098b8b4d22c5d43d8060776bb0046babd695b91cec1f634071
+    size: 342559
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aty89/c90pv3g_0_mask.png"
+    source_group: "imd2020/1aty89"
+    split: train
+  - id: "imd2020_1aty89_c90pv3g_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aty89/1aty89_orig.jpg"
+    sha256: fba1eb8dc88bdb95220ae6149771e54fdc73cc94687ca04cd162f6d1f7c13047
+    size: 34284
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aty89"
+    split: train
+  - id: "imd2020_1aut4s_c911e7z_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aut4s/c911e7z_0.jpg"
+    sha256: 42515015b7d3b120927223d872453bd7013de23b42da74e88f45d8b2e07bf892
+    size: 159078
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aut4s/c911e7z_0_mask.png"
+    source_group: "imd2020/1aut4s"
+    split: train
+  - id: "imd2020_1aut4s_c911e7z_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aut4s/1aut4s_orig.jpg"
+    sha256: 94f8c02f5cbe21cb3607ad4930c582957a1d2bb3a2e0615ffe26b1a0b0b157bc
+    size: 67905
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aut4s"
+    split: train
+  - id: "imd2020_1avax4_c9163k4_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1avax4/c9163k4_0.jpg"
+    sha256: 259b9d676450ba1eb400c8760e20808d99bb3e3a9a4d8f92ddc7626802965917
+    size: 135653
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1avax4/c9163k4_0_mask.png"
+    source_group: "imd2020/1avax4"
+    split: train
+  - id: "imd2020_1avax4_c9163k4_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1avax4/1avax4_orig.jpg"
+    sha256: d28f0cfbd6c4ec8adf1f209824ae06810e755b27af38e794cb5e3fd7515ab8ca
+    size: 56439
+    label: authentic
+    mask: null
+    source_group: "imd2020/1avax4"
+    split: train
+  - id: "imd2020_1awo2u_c91g223_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1awo2u/c91g223_0.jpg"
+    sha256: 8188ca137607b13bff017b1ac68f79e9cc3ef41fff7175c353f2277422ba54b2
+    size: 701355
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1awo2u/c91g223_0_mask.png"
+    source_group: "imd2020/1awo2u"
+    split: heldout
+  - id: "imd2020_1awo2u_c91g223_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1awo2u/1awo2u_orig.jpg"
+    sha256: db3682d1d27ab249761604f2ea7464c7cbb83e3a430931a9c765432ff13f93fa
+    size: 227796
+    label: authentic
+    mask: null
+    source_group: "imd2020/1awo2u"
+    split: heldout
+  - id: "imd2020_1awq0s_c91gqec_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1awq0s/c91gqec_0.jpg"
+    sha256: 213303b583637ed149102c7904ea5b6c284b5a351b0f94c24d4a9da139fb4d59
+    size: 186678
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1awq0s/c91gqec_0_mask.png"
+    source_group: "imd2020/1awq0s"
+    split: heldout
+  - id: "imd2020_1awq0s_c91gqec_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1awq0s/1awq0s_orig.jpg"
+    sha256: d1853d3166bcef5fc45db706c25889530de7281fb6711613c2488194f969b385
+    size: 249716
+    label: authentic
+    mask: null
+    source_group: "imd2020/1awq0s"
+    split: heldout
+  - id: "imd2020_1aws4w_c91h0oh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aws4w/c91h0oh_0.png"
+    sha256: 094c2018e41d85208948ed722c54f6c82b123ff05897e00aecd7727d7d724cf4
+    size: 504501
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aws4w/c91h0oh_0_mask.png"
+    source_group: "imd2020/1aws4w"
+    split: train
+  - id: "imd2020_1aws4w_c91h0oh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aws4w/1aws4w_orig.jpg"
+    sha256: f91354e7bd52f4b856e2df311951b0b758627a2584a140b263a01ac16af07591
+    size: 65667
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aws4w"
+    split: train
+  - id: "imd2020_1awxvm_c91o1ca_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1awxvm/c91o1ca_0.jpg"
+    sha256: add61fd67b4123d5c4c04c4ee39f6ac6d66d9f2f806c97c08a2dcf79e2d65047
+    size: 98060
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1awxvm/c91o1ca_0_mask.png"
+    source_group: "imd2020/1awxvm"
+    split: heldout
+  - id: "imd2020_1awxvm_c91o1ca_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1awxvm/1awxvm_orig.jpg"
+    sha256: df8ae54d4660dc46e43c927c9e3ad7338421100842e472c0b24cfe88818e0313
+    size: 105869
+    label: authentic
+    mask: null
+    source_group: "imd2020/1awxvm"
+    split: heldout
+  - id: "imd2020_1ax6zq_c91o8wl_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ax6zq/c91o8wl_0.jpg"
+    sha256: 9b41168f860f88f285f28b2a2d579109b72ab6f398969067575baec940930977
+    size: 116585
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ax6zq/c91o8wl_0_mask.png"
+    source_group: "imd2020/1ax6zq"
+    split: train
+  - id: "imd2020_1ax6zq_c91o8wl_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ax6zq/1ax6zq_orig.jpg"
+    sha256: 2fa1aad2d5e3cf195753bc414a99e1df150eb863a52c7ccce2982c1ae03431c3
+    size: 143667
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ax6zq"
+    split: train
+  - id: "imd2020_1axap9_c91tgga_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1axap9/c91tgga_0.jpg"
+    sha256: 5640ed90158f0b3aa37e79d401ac9e0111554954bb6147a66e391fb38629d23b
+    size: 315747
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1axap9/c91tgga_0_mask.png"
+    source_group: "imd2020/1axap9"
+    split: train
+  - id: "imd2020_1axap9_c91tgga_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1axap9/1axap9_orig.jpg"
+    sha256: c1674be8c75d4e17b78065618b2ed48ffa167fafd92ed9cacb00af47a63427e7
+    size: 275073
+    label: authentic
+    mask: null
+    source_group: "imd2020/1axap9"
+    split: train
+  - id: "imd2020_1axr5s_c91s2tg_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1axr5s/c91s2tg_0.jpg"
+    sha256: 6c436941ec9bd1e5d1804b8a06b4bbffd3100684f8c5389ec138d173173fce12
+    size: 556064
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1axr5s/c91s2tg_0_mask.png"
+    source_group: "imd2020/1axr5s"
+    split: train
+  - id: "imd2020_1axr5s_c91s2tg_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1axr5s/1axr5s_orig.jpg"
+    sha256: b66bcb7076d7226acfd32bca53babf922ec5529f75ad59435903bad82d9893bd
+    size: 444732
+    label: authentic
+    mask: null
+    source_group: "imd2020/1axr5s"
+    split: train
+  - id: "imd2020_1ay6i0_c91x9y7_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ay6i0/c91x9y7_0.jpg"
+    sha256: 5f507e4556b7079f9ef95f5695a4211bb56b2458a0758bac744e35eac3fceba7
+    size: 276258
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ay6i0/c91x9y7_0_mask.png"
+    source_group: "imd2020/1ay6i0"
+    split: train
+  - id: "imd2020_1ay6i0_c91x9y7_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ay6i0/1ay6i0_orig.jpg"
+    sha256: e811de693ca1d3c9116dee72afe0db0cdf5d998929324bc61693c2a43453c1be
+    size: 299048
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ay6i0"
+    split: train
+  - id: "imd2020_1ayilh_c91z2wh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ayilh/c91z2wh_0.jpg"
+    sha256: e8032f771f39b05664983b5f04d09b4e11879dd9136aea63bbcb735816c24a42
+    size: 211598
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ayilh/c91z2wh_0_mask.png"
+    source_group: "imd2020/1ayilh"
+    split: heldout
+  - id: "imd2020_1ayilh_c91z2wh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ayilh/1ayilh_orig.jpg"
+    sha256: 88349935cb37e0add2b76bdefca4b63f268ad83beb4a91b12d5d9c07311efffe
+    size: 742835
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ayilh"
+    split: heldout
+  - id: "imd2020_1az3z4_c928z82_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1az3z4/c928z82_0.jpg"
+    sha256: 3f0ec631cffdd37b998f6ce32d055a13c11b0a950ff6dfdf327037019d99cf21
+    size: 316726
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1az3z4/c928z82_0_mask.png"
+    source_group: "imd2020/1az3z4"
+    split: heldout
+  - id: "imd2020_1az3z4_c928z82_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1az3z4/1az3z4_orig.jpg"
+    sha256: 7467f06b4fa902a0f9ce602ce8d6164bd332dc5d6a7287626f21f4a958bc66ae
+    size: 528320
+    label: authentic
+    mask: null
+    source_group: "imd2020/1az3z4"
+    split: heldout
+  - id: "imd2020_1azcvv_c926it4_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azcvv/c926it4_0.jpg"
+    sha256: 1fafbc9b7159c410504f27eb03cf42384bbcba41c22b1fb28075815e1aca90b6
+    size: 439842
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1azcvv/c926it4_0_mask.png"
+    source_group: "imd2020/1azcvv"
+    split: train
+  - id: "imd2020_1azcvv_c926it4_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azcvv/1azcvv_orig.jpg"
+    sha256: 5a98a7d93130ff7a109045da297efd9f6c14cbe757b1ef103772230b849c7049
+    size: 270082
+    label: authentic
+    mask: null
+    source_group: "imd2020/1azcvv"
+    split: train
+  - id: "imd2020_1azhe4_c92m6qm_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azhe4/c92m6qm_0.png"
+    sha256: a5599609aa35aaddb18d4b9d7e4c43b264473faf1ef2142b41497e50dfec1140
+    size: 262627
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1azhe4/c92m6qm_0_mask.png"
+    source_group: "imd2020/1azhe4"
+    split: train
+  - id: "imd2020_1azhe4_c92m6qm_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azhe4/1azhe4_orig.jpg"
+    sha256: ec43cec994393569b78df748fe895ebacc2df2da4ffac5911ad2176fa5150988
+    size: 467350
+    label: authentic
+    mask: null
+    source_group: "imd2020/1azhe4"
+    split: train
+  - id: "imd2020_1aziip_c92ai3g_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aziip/c92ai3g_0.png"
+    sha256: 15d74aeff624c054e9964c9e962ce6a2eae3dbb0b5cb3368b0e02fc55500695c
+    size: 493272
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1aziip/c92ai3g_0_mask.png"
+    source_group: "imd2020/1aziip"
+    split: train
+  - id: "imd2020_1aziip_c92ai3g_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1aziip/1aziip_orig.jpg"
+    sha256: da2bd390ad0481f7aee998bbae3f00cb996b87d7f62f34ad2cc5883db4345da5
+    size: 43536
+    label: authentic
+    mask: null
+    source_group: "imd2020/1aziip"
+    split: train
+  - id: "imd2020_1azovt_c92dxhr_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azovt/c92dxhr_0.jpg"
+    sha256: 71b17620e552a21999d9d128fab20be96f4f3ff34cfcb616b1d38b592261e463
+    size: 78409
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1azovt/c92dxhr_0_mask.png"
+    source_group: "imd2020/1azovt"
+    split: train
+  - id: "imd2020_1azovt_c92dxhr_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azovt/1azovt_orig.jpg"
+    sha256: c81b472ead7241d421f2972eaad27ac8f07185e986e075bca1412f9440a27945
+    size: 191679
+    label: authentic
+    mask: null
+    source_group: "imd2020/1azovt"
+    split: train
+  - id: "imd2020_1azru8_c92a3eh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azru8/c92a3eh_0.jpg"
+    sha256: 1fee6fdc22f37824005966f2a648498b4666cc2483f42caf168c31f26af4a92e
+    size: 358513
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1azru8/c92a3eh_0_mask.png"
+    source_group: "imd2020/1azru8"
+    split: heldout
+  - id: "imd2020_1azru8_c92a3eh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azru8/1azru8_orig.jpg"
+    sha256: f2d76af82add4cd74781b829eeeb2c65e87f668d65db25f1c579ec8a422ee902
+    size: 93579
+    label: authentic
+    mask: null
+    source_group: "imd2020/1azru8"
+    split: heldout
+  - id: "imd2020_1azvyy_c92dgp0_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azvyy/c92dgp0_0.jpg"
+    sha256: 589251fe039f4eaaf7ba2beaa63a1bfd7f15a4ec517cf7f98182f2a69fcaaea9
+    size: 44696
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1azvyy/c92dgp0_0_mask.png"
+    source_group: "imd2020/1azvyy"
+    split: train
+  - id: "imd2020_1azvyy_c92dgp0_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1azvyy/1azvyy_orig.jpg"
+    sha256: b880b75b53fb1155991d3ea2d8a7cd0f3932c22450ceba18945353fe18117e85
+    size: 118091
+    label: authentic
+    mask: null
+    source_group: "imd2020/1azvyy"
+    split: train
+  - id: "imd2020_1b0kjn_c92hrf9_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b0kjn/c92hrf9_0.jpg"
+    sha256: 6f94947d46455af6fce315cd70aa7f93c123a5d01442b230601ebdae67ab396c
+    size: 164563
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b0kjn/c92hrf9_0_mask.png"
+    source_group: "imd2020/1b0kjn"
+    split: train
+  - id: "imd2020_1b0kjn_c92hrf9_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b0kjn/1b0kjn_orig.jpg"
+    sha256: 8fd913ca05be712c7458a9bdac7b0a8987364047ea10ff0fef0b64c91c208d92
+    size: 160917
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b0kjn"
+    split: train
+  - id: "imd2020_1b18vd_c92qres_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b18vd/c92qres_0.jpg"
+    sha256: 26168e26fe6e134fd98992d66d63a06d94e58719e260cde585369d0b717760e4
+    size: 65111
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b18vd/c92qres_0_mask.png"
+    source_group: "imd2020/1b18vd"
+    split: train
+  - id: "imd2020_1b18vd_c92qres_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b18vd/1b18vd_orig.jpg"
+    sha256: cef3d318b57f07fab2e7faff7520704c15c7059edf075b0d673506f03e940465
+    size: 94010
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b18vd"
+    split: train
+  - id: "imd2020_1b1epd_c92q4n1_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b1epd/c92q4n1_0.jpg"
+    sha256: 15015931e0b21755bf133972a4506d31fe0c234a4bc14d7579f213fb9aa66bc2
+    size: 734446
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b1epd/c92q4n1_0_mask.png"
+    source_group: "imd2020/1b1epd"
+    split: heldout
+  - id: "imd2020_1b1epd_c92q4n1_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b1epd/1b1epd_orig.jpg"
+    sha256: bba743bdcc46539f1f01cd97d8454fbcb81db3fb4ac73799481ce76c17ccd2e8
+    size: 84635
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b1epd"
+    split: heldout
+  - id: "imd2020_1b1pdg_c92s1zk_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b1pdg/c92s1zk_0.jpg"
+    sha256: 6a8296b32ce0602cfc155069159b260d30b2161d05b9cac71bee73334004f0f5
+    size: 174671
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b1pdg/c92s1zk_0_mask.png"
+    source_group: "imd2020/1b1pdg"
+    split: heldout
+  - id: "imd2020_1b1pdg_c92s1zk_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b1pdg/1b1pdg_orig.jpg"
+    sha256: ddfe92f8deceb12cd966e430b04e9d8a193ab4d70ba6f31e76b4f5fca26187a1
+    size: 49066
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b1pdg"
+    split: heldout
+  - id: "imd2020_1b1vqv_c92wjsi_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b1vqv/c92wjsi_0.jpg"
+    sha256: 896df63ddc5638feace21fa281a07f3b54e4b4ef00a31373b5efa9a59346118f
+    size: 182368
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b1vqv/c92wjsi_0_mask.png"
+    source_group: "imd2020/1b1vqv"
+    split: train
+  - id: "imd2020_1b1vqv_c92wjsi_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b1vqv/1b1vqv_orig.jpg"
+    sha256: a2efb4d34ad72862090cc1fd27c8a9b93c2dddc6e79c289e5899e333579f3c1d
+    size: 126629
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b1vqv"
+    split: train
+  - id: "imd2020_1b26rs_c92zvkq_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b26rs/c92zvkq_0.jpg"
+    sha256: 197854a6f50f19f60f500cf48cd4f696f61dc088ba4c19aa19014f89e2a126e4
+    size: 162693
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b26rs/c92zvkq_0_mask.png"
+    source_group: "imd2020/1b26rs"
+    split: heldout
+  - id: "imd2020_1b26rs_c92zvkq_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b26rs/1b26rs_orig.jpg"
+    sha256: 56a92623200d02242ac097148be9d4bef0888996be68945c217fe8419bc1daac
+    size: 320641
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b26rs"
+    split: heldout
+  - id: "imd2020_1b29hp_c930hby_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b29hp/c930hby_0.png"
+    sha256: 2db081b02e753906929905be248925386d5ea47a010c186dcdf5e842890eaf23
+    size: 638624
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b29hp/c930hby_0_mask.png"
+    source_group: "imd2020/1b29hp"
+    split: train
+  - id: "imd2020_1b29hp_c930hby_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b29hp/1b29hp_orig.jpg"
+    sha256: a401147bd9dd9710b511e30d7caf2bdec4221fcf0a87a241046fe02431b90f2e
+    size: 64390
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b29hp"
+    split: train
+  - id: "imd2020_1b2ynb_c9350xa_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b2ynb/c9350xa_0.jpg"
+    sha256: b95dd5d6c6bb206d89d5505ae2a26bea7f90661ae8309c5c45e94bb8a85b495f
+    size: 46069
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b2ynb/c9350xa_0_mask.png"
+    source_group: "imd2020/1b2ynb"
+    split: heldout
+  - id: "imd2020_1b2ynb_c9350xa_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b2ynb/1b2ynb_orig.jpg"
+    sha256: 6610940b7eb4891e52b31040eea696e994ed9987ee43587b0dc8a2d5c2072e70
+    size: 69456
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b2ynb"
+    split: heldout
+  - id: "imd2020_1b3t1x_c93czl5_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b3t1x/c93czl5_0.jpg"
+    sha256: e1f7fd4e9f23aef3966af42b29d2b8f7ba1f285b4140d16a13f716f733df7eaf
+    size: 174212
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b3t1x/c93czl5_0_mask.png"
+    source_group: "imd2020/1b3t1x"
+    split: train
+  - id: "imd2020_1b3t1x_c93czl5_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b3t1x/1b3t1x_orig.jpg"
+    sha256: bade0ea1fdb1e4d847b0125b8c1116f2c726fc834b729696f200e65492c76487
+    size: 74467
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b3t1x"
+    split: train
+  - id: "imd2020_1b40l4_c93ewwm_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b40l4/c93ewwm_0.jpg"
+    sha256: a5b2cc24bc7a49c09668d312ae00df83c2d7be16432763d435cfc9dafa3914da
+    size: 154035
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b40l4/c93ewwm_0_mask.png"
+    source_group: "imd2020/1b40l4"
+    split: train
+  - id: "imd2020_1b40l4_c93ewwm_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b40l4/1b40l4_orig.jpg"
+    sha256: fc6d1da895c14c159a4f7b6bca66d23bd231377810a83f2527feea8d08e8cd7d
+    size: 98716
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b40l4"
+    split: train
+  - id: "imd2020_1b4a9x_c93mz9d_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b4a9x/c93mz9d_0.jpg"
+    sha256: 537decb46ba93dc0907663a93b8483a516205d28d31a42834dfd7e7de33c9a62
+    size: 155324
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b4a9x/c93mz9d_0_mask.png"
+    source_group: "imd2020/1b4a9x"
+    split: train
+  - id: "imd2020_1b4a9x_c93mz9d_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b4a9x/1b4a9x_orig.jpg"
+    sha256: a3aa5eea92339eef119ccc88a8f2904ae0c6993c4e41dc2ae9e055f4c285899a
+    size: 32937
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b4a9x"
+    split: train
+  - id: "imd2020_1b4knn_c93kbyf_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b4knn/c93kbyf_0.jpg"
+    sha256: bdc95737b7b58ee4c8851b2c8146416f554595b4eab9c1a89d04d3361593c1f5
+    size: 112407
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b4knn/c93kbyf_0_mask.png"
+    source_group: "imd2020/1b4knn"
+    split: train
+  - id: "imd2020_1b4knn_c93kbyf_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b4knn/1b4knn_orig.jpg"
+    sha256: ff0c15b88724414d4cd346ecdb0df1e7150842a30b9c35685be195d4fba52027
+    size: 59595
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b4knn"
+    split: train
+  - id: "imd2020_1b506d_c93p653_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b506d/c93p653_0.jpg"
+    sha256: b8918b22c84e996d9abbc0def6287e9b2a61ea53b3651cd4e724ca0f8fd91d32
+    size: 150279
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b506d/c93p653_0_mask.png"
+    source_group: "imd2020/1b506d"
+    split: train
+  - id: "imd2020_1b506d_c93p653_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b506d/1b506d_orig.jpg"
+    sha256: 99dd0ee43a7ec600fa2788cd3631c9c371769f172b1762637d7039b51c9881c1
+    size: 156058
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b506d"
+    split: train
+  - id: "imd2020_1b61h7_c9418yh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b61h7/c9418yh_0.jpg"
+    sha256: 5374480901a45a012ac20977e1ee276c54664ebf998878a65b58f181cd4d39ca
+    size: 315822
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b61h7/c9418yh_0_mask.png"
+    source_group: "imd2020/1b61h7"
+    split: train
+  - id: "imd2020_1b61h7_c9418yh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b61h7/1b61h7_orig.jpg"
+    sha256: edbd4ff5869d37a33346ea59d8cef916c3b110c76d54c719f012fe2a34db90af
+    size: 315019
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b61h7"
+    split: train
+  - id: "imd2020_1b68xn_c93zetz_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b68xn/c93zetz_0.jpg"
+    sha256: a65b6a8daec6d76e414a0abcb3771f7973b88b613adff661dcc1116a33bfbcba
+    size: 309488
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b68xn/c93zetz_0_mask.png"
+    source_group: "imd2020/1b68xn"
+    split: train
+  - id: "imd2020_1b68xn_c93zetz_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b68xn/1b68xn_orig.jpg"
+    sha256: e1969a87030ab147fda2841f4265c4d49e6f98ab158f1daddbb097969b4fbf7d
+    size: 201445
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b68xn"
+    split: train
+  - id: "imd2020_1b6yyc_c949yvb_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b6yyc/c949yvb_0.jpg"
+    sha256: 3ed879cb62e8a53ad6594e203d1491420e5e5d612677bfb3db504179af9c2b60
+    size: 576176
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b6yyc/c949yvb_0_mask.png"
+    source_group: "imd2020/1b6yyc"
+    split: train
+  - id: "imd2020_1b6yyc_c949yvb_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b6yyc/1b6yyc_orig.jpg"
+    sha256: 155682240b720e64879127a3628d39302ac7258407951603181f0d00a5fe1b84
+    size: 576894
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b6yyc"
+    split: train
+  - id: "imd2020_1b78na_c94fzwl_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b78na/c94fzwl_0.jpg"
+    sha256: d1332c392d5141fc2fed016605d2859d350b0fabb6cff81ee98fc6e9fb30e4aa
+    size: 217233
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b78na/c94fzwl_0_mask.png"
+    source_group: "imd2020/1b78na"
+    split: heldout
+  - id: "imd2020_1b78na_c94fzwl_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b78na/1b78na_orig.jpg"
+    sha256: 89bab8dca40166f7a420989a8bd56a1b5f258e17f14050b31e01d6a5abc97e33
+    size: 196469
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b78na"
+    split: heldout
+  - id: "imd2020_1b7c47_c94a4qa_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b7c47/c94a4qa_0.jpg"
+    sha256: 079c791a71d7814002c67ccfa4f567c5b1cc7d0c933f264612dc379ab79028f7
+    size: 360306
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b7c47/c94a4qa_0_mask.png"
+    source_group: "imd2020/1b7c47"
+    split: train
+  - id: "imd2020_1b7c47_c94a4qa_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b7c47/1b7c47_orig.jpg"
+    sha256: 2557e42c8ebe6c9303507ac18de4aab00c560e7599660ece1a1cbaf237ab3d3a
+    size: 554253
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b7c47"
+    split: train
+  - id: "imd2020_1b7ua0_c94frqx_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b7ua0/c94frqx_0.jpg"
+    sha256: c3883fd4098dd6161250718ae5254c7782b72f61466b3359f6f9b105378b461f
+    size: 219753
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b7ua0/c94frqx_0_mask.png"
+    source_group: "imd2020/1b7ua0"
+    split: heldout
+  - id: "imd2020_1b7ua0_c94frqx_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b7ua0/1b7ua0_orig.jpg"
+    sha256: f9988e094e67e1fbbcc4a72418c2af8efb6da0e17cd112386956c0a01d7f229c
+    size: 321740
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b7ua0"
+    split: heldout
+  - id: "imd2020_1b8r7b_c94odrd_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b8r7b/c94odrd_0.jpg"
+    sha256: 2f2d36eab7e380085456b345ee74a1e280e37d7da8c6f1645d4dc87ec79661eb
+    size: 249680
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b8r7b/c94odrd_0_mask.png"
+    source_group: "imd2020/1b8r7b"
+    split: train
+  - id: "imd2020_1b8r7b_c94odrd_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b8r7b/1b8r7b_orig.jpg"
+    sha256: b66bcb7076d7226acfd32bca53babf922ec5529f75ad59435903bad82d9893bd
+    size: 444732
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b8r7b"
+    split: train
+  - id: "imd2020_1b921i_c94s183_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b921i/c94s183_0.jpg"
+    sha256: 44bf0d60f21922c2d98a025a2c201b496891ecc48e78f0212ca3afbaf153ec51
+    size: 27063
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b921i/c94s183_0_mask.png"
+    source_group: "imd2020/1b921i"
+    split: train
+  - id: "imd2020_1b921i_c94s183_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b921i/1b921i_orig.jpg"
+    sha256: 5f4f938e5ab09e7e4c4ba6a8f0d8b168f0140b8428a4d8f2a527619e69f6ee94
+    size: 111041
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b921i"
+    split: train
+  - id: "imd2020_1b9l65_c94ygpb_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9l65/c94ygpb_0.jpg"
+    sha256: dc51546f2b6cec48ae6444011ea689e8eb74799ce06ce52828eebe1de18a63d9
+    size: 22239
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b9l65/c94ygpb_0_mask.png"
+    source_group: "imd2020/1b9l65"
+    split: heldout
+  - id: "imd2020_1b9l65_c94ygpb_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9l65/1b9l65_orig.jpg"
+    sha256: ea77c073d87d648dbe74637d2968f806b29df22027bbbdf2d40a8d751aff977a
+    size: 80609
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b9l65"
+    split: heldout
+  - id: "imd2020_1b9lyb_c94zspt_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9lyb/c94zspt_0.jpg"
+    sha256: 5479f48c8168a26e9719d0bf1b0bd7bf5996188d2b1fbe4f61146b8ad936dfce
+    size: 107828
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b9lyb/c94zspt_0_mask.png"
+    source_group: "imd2020/1b9lyb"
+    split: train
+  - id: "imd2020_1b9lyb_c94zspt_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9lyb/1b9lyb_orig.jpg"
+    sha256: e83d95fbe88592ee81f105742038470394d73a3fe094dcceb8221916492adfbb
+    size: 214351
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b9lyb"
+    split: train
+  - id: "imd2020_1b9qko_c951j7v_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9qko/c951j7v_0.jpg"
+    sha256: fa464f8efee183307ac185430663224fa7e47ad38e313439527bbfd23eccb1c7
+    size: 115458
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b9qko/c951j7v_0_mask.png"
+    source_group: "imd2020/1b9qko"
+    split: train
+  - id: "imd2020_1b9qko_c951j7v_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9qko/1b9qko_orig.jpg"
+    sha256: 92c3edf9c90f5e24cfe6000675ec725e01e96ae580f554c7dfb69a8b4c6b328b
+    size: 168577
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b9qko"
+    split: train
+  - id: "imd2020_1b9voq_c952g1p_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9voq/c952g1p_0.jpg"
+    sha256: c05043eaf2ccf7c1726119f9ba4c0878a28e29c0da2a26100f5d723b482a34e0
+    size: 61700
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1b9voq/c952g1p_0_mask.png"
+    source_group: "imd2020/1b9voq"
+    split: train
+  - id: "imd2020_1b9voq_c952g1p_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1b9voq/1b9voq_orig.jpg"
+    sha256: 879d96c210949ea5fad758c2f1e6aae8a90b4ee00251e00292b7eebd10a3ae10
+    size: 63666
+    label: authentic
+    mask: null
+    source_group: "imd2020/1b9voq"
+    split: train
+  - id: "imd2020_1bafx4_c956l7o_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bafx4/c956l7o_0.png"
+    sha256: 247a147e8f67a4f0c6ed2221b75d3b6e175a9609775e0cb7ae816ce5db965eca
+    size: 563858
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bafx4/c956l7o_0_mask.png"
+    source_group: "imd2020/1bafx4"
+    split: train
+  - id: "imd2020_1bafx4_c956l7o_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bafx4/1bafx4_orig.jpg"
+    sha256: 1d71f31e5baf4639cf609569901d69a2163205067b727d7ccd422b248678e39b
+    size: 69102
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bafx4"
+    split: train
+  - id: "imd2020_1bajww_c956yew_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bajww/c956yew_0.jpg"
+    sha256: c8b0e02ad7943dd5d0d03e9d7227c2f4014e6d7a0fef1ef567c08e181ac79250
+    size: 271709
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bajww/c956yew_0_mask.png"
+    source_group: "imd2020/1bajww"
+    split: train
+  - id: "imd2020_1bajww_c956yew_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bajww/1bajww_orig.jpg"
+    sha256: b03e8750edd4c4f09ffecdd67ac6e78d279f4abc44f052a2312fa17443f5d85e
+    size: 772094
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bajww"
+    split: train
+  - id: "imd2020_1batnk_c957wve_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1batnk/c957wve_0.jpg"
+    sha256: cf97ed413d5596df45045ad79bbe244e2116feb0835dc1428ad3d9e34ad3a955
+    size: 430628
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1batnk/c957wve_0_mask.png"
+    source_group: "imd2020/1batnk"
+    split: train
+  - id: "imd2020_1batnk_c957wve_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1batnk/1batnk_orig.jpg"
+    sha256: f13d2dc2aa632a9ff06fc6b6ebbe79a485702687e5393a84e5827871c6c41790
+    size: 69956
+    label: authentic
+    mask: null
+    source_group: "imd2020/1batnk"
+    split: train
+  - id: "imd2020_1bawri_c95biez_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bawri/c95biez_0.jpg"
+    sha256: 80e0d15873f8aa28bcad0fbcae7c2423188de25d35987fc1dd0b34ddf79f509d
+    size: 211208
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bawri/c95biez_0_mask.png"
+    source_group: "imd2020/1bawri"
+    split: train
+  - id: "imd2020_1bawri_c95biez_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bawri/1bawri_orig.jpg"
+    sha256: 298cd728cfa38b4a95591d1f14909ebb6dced3f00b4dc7072e7464b7f7067813
+    size: 138085
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bawri"
+    split: train
+  - id: "imd2020_1bax4h_c95gz0y_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bax4h/c95gz0y_0.jpg"
+    sha256: fe4c22909be791dc41edb9df16650933475308df9d69659e6a9d9eac8e4166fc
+    size: 114354
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bax4h/c95gz0y_0_mask.png"
+    source_group: "imd2020/1bax4h"
+    split: train
+  - id: "imd2020_1bax4h_c95gz0y_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bax4h/1bax4h_orig.jpg"
+    sha256: 6951dcd8fa231754313ccd91fc4965f4b156aa254e8a6d8b18491d5aec1d7d47
+    size: 646257
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bax4h"
+    split: train
+  - id: "imd2020_1bbmcy_c95hyjq_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbmcy/c95hyjq_0.png"
+    sha256: 17d15bf948b26320d7d92a8626dc4d7d5aee6c963ce7030a7b09c3f420655ece
+    size: 609349
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bbmcy/c95hyjq_0_mask.png"
+    source_group: "imd2020/1bbmcy"
+    split: train
+  - id: "imd2020_1bbmcy_c95hyjq_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbmcy/1bbmcy_orig.jpg"
+    sha256: e7132350a9683f2b2bcdf3d78b487abdff1489341b9b1e62fcc24f8a46b31bf3
+    size: 578577
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bbmcy"
+    split: train
+  - id: "imd2020_1bbpcg_c95ftu6_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbpcg/c95ftu6_0.png"
+    sha256: 8a06b49998e3a40b9055ffa7a323044527882840e21381931bc7a34c40e2be09
+    size: 664527
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bbpcg/c95ftu6_0_mask.png"
+    source_group: "imd2020/1bbpcg"
+    split: train
+  - id: "imd2020_1bbpcg_c95ftu6_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbpcg/1bbpcg_orig.jpg"
+    sha256: 8e2e8b5b23e50497d4c05b58e27f0091209e48ed8087998775ad2628226f218a
+    size: 109672
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bbpcg"
+    split: train
+  - id: "imd2020_1bbszb_c95nmhg_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbszb/c95nmhg_0.jpg"
+    sha256: edcd9425f59850953de8ee0f3923b729ce45dc273e9e020cea370d19979f4253
+    size: 44545
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bbszb/c95nmhg_0_mask.png"
+    source_group: "imd2020/1bbszb"
+    split: train
+  - id: "imd2020_1bbszb_c95nmhg_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbszb/1bbszb_orig.jpg"
+    sha256: 55d34f8692b3bea681114fb183faf8bf524f9b64ebcf1d9e31babb37aeb82785
+    size: 70311
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bbszb"
+    split: train
+  - id: "imd2020_1bbuj9_c95o67f_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbuj9/c95o67f_0.jpg"
+    sha256: 5fd3281e7e0785d28198cd205d90a894d1f1e1f87d0fb2c885f227dff4498f5c
+    size: 66448
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bbuj9/c95o67f_0_mask.png"
+    source_group: "imd2020/1bbuj9"
+    split: heldout
+  - id: "imd2020_1bbuj9_c95o67f_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bbuj9/1bbuj9_orig.jpg"
+    sha256: a9b409fae9981ab2d17b224801ecf2d0934ddd170ab9af85aff6527deaf68416
+    size: 43296
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bbuj9"
+    split: heldout
+  - id: "imd2020_1bcy4k_c95t0d9_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bcy4k/c95t0d9_0.jpg"
+    sha256: ae4151483fddc3be1491252d749c8eddc237d40ad1e3c6640efa4d213b5a278f
+    size: 314096
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bcy4k/c95t0d9_0_mask.png"
+    source_group: "imd2020/1bcy4k"
+    split: train
+  - id: "imd2020_1bcy4k_c95t0d9_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bcy4k/1bcy4k_orig.jpg"
+    sha256: 6889bda39d37eb58314aa74264483ad6a1d372160470b0aeabee990180c77b65
+    size: 214041
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bcy4k"
+    split: train
+  - id: "imd2020_1bczrg_c95uyty_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bczrg/c95uyty_0.jpg"
+    sha256: 4448a23c9f6255f049d75b4586e2d11e4bdc5c298e14578efab79b5be49dc97c
+    size: 62967
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bczrg/c95uyty_0_mask.png"
+    source_group: "imd2020/1bczrg"
+    split: train
+  - id: "imd2020_1bczrg_c95uyty_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bczrg/1bczrg_orig.jpg"
+    sha256: d0a6c97ec7ab694ffc84ddfa1677515671e4a2dca29e7751e9411def6d76ea59
+    size: 110310
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bczrg"
+    split: train
+  - id: "imd2020_1bd4lv_c95utnm_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bd4lv/c95utnm_0.jpg"
+    sha256: 32b69a05723a48a341987e65ca3e7fb316a5e20f27f10533586e9e83e502287b
+    size: 88201
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bd4lv/c95utnm_0_mask.png"
+    source_group: "imd2020/1bd4lv"
+    split: heldout
+  - id: "imd2020_1bd4lv_c95utnm_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bd4lv/1bd4lv_orig.jpg"
+    sha256: 9b496a8183a62095627ca0851a27fbe9fc1d42b1a753fc67ad0398be3458ff73
+    size: 43756
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bd4lv"
+    split: heldout
+  - id: "imd2020_1bek0p_c966md3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bek0p/c966md3_0.jpg"
+    sha256: e1402ccfcd7500f837526727de817bbedeede47f1f060984e1066c1fbee32b45
+    size: 257447
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bek0p/c966md3_0_mask.png"
+    source_group: "imd2020/1bek0p"
+    split: train
+  - id: "imd2020_1bek0p_c966md3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bek0p/1bek0p_orig.jpg"
+    sha256: e42ed63193d4d37019f2fb79f7fda725e26f7529c3ec310962e7796bb4bf63fb
+    size: 86731
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bek0p"
+    split: train
+  - id: "imd2020_1bfbnf_c96d5la_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bfbnf/c96d5la_0.jpg"
+    sha256: 6a5c6d04281b6b5c2d273073132520bb03f812dc9809c31d157da1a4e03db15a
+    size: 196213
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bfbnf/c96d5la_0_mask.png"
+    source_group: "imd2020/1bfbnf"
+    split: train
+  - id: "imd2020_1bfbnf_c96d5la_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bfbnf/1bfbnf_orig.jpg"
+    sha256: cc271107f7e19c2d268e8bfdc8e275d3a33f1938e72eb9acbc8bd3aab71bd897
+    size: 132373
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bfbnf"
+    split: train
+  - id: "imd2020_1bh7u3_c96qatb_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bh7u3/c96qatb_0.jpg"
+    sha256: bf173ec30a7c2062399ab1c1bc40fb2ff22ffbe8804316b3c48626b56b89a32f
+    size: 169370
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bh7u3/c96qatb_0_mask.png"
+    source_group: "imd2020/1bh7u3"
+    split: train
+  - id: "imd2020_1bh7u3_c96qatb_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bh7u3/1bh7u3_orig.jpg"
+    sha256: 03ccfd8bb03e567aa30331d9175af2455971eec2a2bf3403129c0026056ba5a2
+    size: 687452
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bh7u3"
+    split: train
+  - id: "imd2020_1bigvi_c970wej_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bigvi/c970wej_0.jpg"
+    sha256: 71c8b59c527e38d0d793062a900db74d949472e4dc039f5add6fa86d198952e3
+    size: 166142
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bigvi/c970wej_0_mask.png"
+    source_group: "imd2020/1bigvi"
+    split: heldout
+  - id: "imd2020_1bigvi_c970wej_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bigvi/1bigvi_orig.jpg"
+    sha256: 8151e1e4f1c2656973b7476b930e70c3dc1bbd66173472c824f5f9da71eb3c6b
+    size: 605780
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bigvi"
+    split: heldout
+  - id: "imd2020_1bircs_c970ssc_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bircs/c970ssc_0.jpg"
+    sha256: 32bf55a9c81c336d7ff23f4f6f56f4e8c5f45e5472c9ad2565806cfc3ed85e4c
+    size: 73098
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bircs/c970ssc_0_mask.png"
+    source_group: "imd2020/1bircs"
+    split: heldout
+  - id: "imd2020_1bircs_c970ssc_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bircs/1bircs_orig.jpg"
+    sha256: 54133b52258a8baeb50c3df6d417a5def0e4b4458384633712d9e65f889ef43a
+    size: 167142
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bircs"
+    split: heldout
+  - id: "imd2020_1bj1te_c979ed6_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bj1te/c979ed6_0.jpg"
+    sha256: d0ff34f948492c80d817c9b6d9f65227057cf6a328478e7c6c619301f30d2a18
+    size: 108725
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bj1te/c979ed6_0_mask.png"
+    source_group: "imd2020/1bj1te"
+    split: train
+  - id: "imd2020_1bj1te_c979ed6_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bj1te/1bj1te_orig.jpg"
+    sha256: b197c080ba3b3e5474e59aed8074dcad4aa62ce3070e4b43b6c58f7609bd30b4
+    size: 72675
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bj1te"
+    split: train
+  - id: "imd2020_1bjy9b_c97ofea_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bjy9b/c97ofea_0.jpg"
+    sha256: 72a3c5b26657b79c41d34ac30b1568e44e34117744c11cfc588c841985dc531f
+    size: 83597
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bjy9b/c97ofea_0_mask.png"
+    source_group: "imd2020/1bjy9b"
+    split: train
+  - id: "imd2020_1bjy9b_c97ofea_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bjy9b/1bjy9b_orig.jpg"
+    sha256: 2ef0450f2dbbfda837612ec07b9e3524780a2e2820d2cb430325b1cbe7e5bcfc
+    size: 81917
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bjy9b"
+    split: train
+  - id: "imd2020_1bk4a1_c97ffgf_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bk4a1/c97ffgf_0.jpg"
+    sha256: d21d1fd5c467f127a6b08f98cc156a466db158020f63c11f33a3874c7ba52d16
+    size: 139545
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bk4a1/c97ffgf_0_mask.png"
+    source_group: "imd2020/1bk4a1"
+    split: train
+  - id: "imd2020_1bk4a1_c97ffgf_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bk4a1/1bk4a1_orig.jpg"
+    sha256: ee04f86a06946f80af16d84b70eb7a96f64eb4176e27e4c5a4bdda08ed653b62
+    size: 86051
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bk4a1"
+    split: train
+  - id: "imd2020_1bkkyo_c97nhib_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bkkyo/c97nhib_0.png"
+    sha256: d505c0da3699104531b3d0fce5b969ea92d854ae7a785cd10e8c2434904eb100
+    size: 213207
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bkkyo/c97nhib_0_mask.png"
+    source_group: "imd2020/1bkkyo"
+    split: train
+  - id: "imd2020_1bkkyo_c97nhib_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bkkyo/1bkkyo_orig.jpg"
+    sha256: 99f4dac87bb840c3a0e7e01df76aca7cb86ef4035c019727c6c93f02faf14517
+    size: 164674
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bkkyo"
+    split: train
+  - id: "imd2020_1bl2e5_c97ot02_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bl2e5/c97ot02_0.jpg"
+    sha256: 1f2bb6d17e1af26620c880d11ede46d41bd6f88dde50eac528cc6795f731b595
+    size: 40582
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bl2e5/c97ot02_0_mask.png"
+    source_group: "imd2020/1bl2e5"
+    split: heldout
+  - id: "imd2020_1bl2e5_c97ot02_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bl2e5/1bl2e5_orig.jpg"
+    sha256: 726e6ebbf1e5971317f04337c4ce266a808a1c74f657bb265ccf5ee857a6b58b
+    size: 76004
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bl2e5"
+    split: heldout
+  - id: "imd2020_1bl55t_c986who_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bl55t/c986who_0.jpg"
+    sha256: 3aaa45817ad75e9688eeb6e6bb96ca3512e3bd6e912aadb948f044fa21d6c2c1
+    size: 85492
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bl55t/c986who_0_mask.png"
+    source_group: "imd2020/1bl55t"
+    split: train
+  - id: "imd2020_1bl55t_c986who_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bl55t/1bl55t_orig.jpg"
+    sha256: 9f024719122a80b12dca24e514cb598832681055b9fbfe04754c1148378dd2fa
+    size: 69931
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bl55t"
+    split: train
+  - id: "imd2020_1bluhu_c97vf7q_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bluhu/c97vf7q_0.jpg"
+    sha256: b5c672024d71ca7575d371ff8df9f42258628e0c441731ced922ecb7c422b71a
+    size: 194346
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bluhu/c97vf7q_0_mask.png"
+    source_group: "imd2020/1bluhu"
+    split: train
+  - id: "imd2020_1bluhu_c97vf7q_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bluhu/1bluhu_orig.jpg"
+    sha256: 2b31efd875252fe8aebf85b6b01c0f1ed4681fff508087b34e22c581b605cdc9
+    size: 125631
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bluhu"
+    split: train
+  - id: "imd2020_1bmqiu_c986lv8_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bmqiu/c986lv8_0.jpg"
+    sha256: 05ae98ffb5c083efc02f5bc0b199e815f474c3e3b57c919a6532f5924040d82f
+    size: 63252
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bmqiu/c986lv8_0_mask.png"
+    source_group: "imd2020/1bmqiu"
+    split: heldout
+  - id: "imd2020_1bmqiu_c986lv8_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bmqiu/1bmqiu_orig.jpg"
+    sha256: aa659460fc244ce8a33dd7e18addb9c4241b600d496c98e0dbb5138ca60c9e2c
+    size: 197864
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bmqiu"
+    split: heldout
+  - id: "imd2020_1bnjhf_c98el2l_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bnjhf/c98el2l_0.jpg"
+    sha256: 7fa728ee304dc0726cb58646ad16d81d51b5bb1229689cc1d602d0d9484082a4
+    size: 124177
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bnjhf/c98el2l_0_mask.png"
+    source_group: "imd2020/1bnjhf"
+    split: train
+  - id: "imd2020_1bnjhf_c98el2l_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bnjhf/1bnjhf_orig.jpg"
+    sha256: 61072e24584e18b83838ec5ca9df64105ab52c94a8a86b20b1de5ff7b25376f1
+    size: 68293
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bnjhf"
+    split: train
+  - id: "imd2020_1bnwrt_c98s7f2_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bnwrt/c98s7f2_0.jpg"
+    sha256: aa121d73e045f96b5bf3c71546118b45c5121fdecf18fcae4a1969039ed2e9e6
+    size: 90734
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bnwrt/c98s7f2_0_mask.png"
+    source_group: "imd2020/1bnwrt"
+    split: train
+  - id: "imd2020_1bnwrt_c98s7f2_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bnwrt/1bnwrt_orig.jpg"
+    sha256: d298b1551338a605ca149417ef5ca95309f414aa5dcdcceb710246e061e55ba5
+    size: 121624
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bnwrt"
+    split: train
+  - id: "imd2020_1boa89_c98lw0x_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1boa89/c98lw0x_0.jpg"
+    sha256: a3e6e2555decbedd495ccdf13a3bb8a52f254c0709a2c98fa7895b9aaabfd225
+    size: 126320
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1boa89/c98lw0x_0_mask.png"
+    source_group: "imd2020/1boa89"
+    split: train
+  - id: "imd2020_1boa89_c98lw0x_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1boa89/1boa89_orig.jpg"
+    sha256: 2e582c3d47708cae9e63ea01fcc75bde95a0ca00f62f09cbb0ed6d1abdc1aab5
+    size: 114887
+    label: authentic
+    mask: null
+    source_group: "imd2020/1boa89"
+    split: train
+  - id: "imd2020_1boevu_c98ovsv_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1boevu/c98ovsv_0.jpg"
+    sha256: 8db644f19ed95b213177c5cd30e2f7872be12af6c628aacbc9f58d39f0ed52fd
+    size: 55581
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1boevu/c98ovsv_0_mask.png"
+    source_group: "imd2020/1boevu"
+    split: train
+  - id: "imd2020_1boevu_c98ovsv_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1boevu/1boevu_orig.jpg"
+    sha256: 81d823c5852b5fe2f7adca196fe7a933aefe58441059c5125f6554a9309d3a72
+    size: 46262
+    label: authentic
+    mask: null
+    source_group: "imd2020/1boevu"
+    split: train
+  - id: "imd2020_1bojj1_c98wx7s_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bojj1/c98wx7s_0.jpg"
+    sha256: 3c72a99bc0813f48203abcc697448131d1672932c0a7e6f3d03690790d38612a
+    size: 110541
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bojj1/c98wx7s_0_mask.png"
+    source_group: "imd2020/1bojj1"
+    split: train
+  - id: "imd2020_1bojj1_c98wx7s_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bojj1/1bojj1_orig.jpg"
+    sha256: 378ac71f3ed1b23d1f170263fd1d46cf6b7c6828933fd19720623de0a1790864
+    size: 39051
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bojj1"
+    split: train
+  - id: "imd2020_1bp14r_c98qgm4_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bp14r/c98qgm4_0.jpg"
+    sha256: e1ed79bec0a8636950ae07d09ff036c7843d699729dd1208d15e807046fbbd6b
+    size: 138618
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bp14r/c98qgm4_0_mask.png"
+    source_group: "imd2020/1bp14r"
+    split: train
+  - id: "imd2020_1bp14r_c98qgm4_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bp14r/1bp14r_orig.jpg"
+    sha256: fcbc9aac1d7b575a4100cb72b311846cdb18565d66992c30786f0ee5ac893e7d
+    size: 84937
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bp14r"
+    split: train
+  - id: "imd2020_1bq750_c994oht_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bq750/c994oht_0.jpg"
+    sha256: 411891385127c59e2e3d9fef5a79bd25d1ce96e0d3c04f02cf75a40b9eabfdc3
+    size: 305420
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bq750/c994oht_0_mask.png"
+    source_group: "imd2020/1bq750"
+    split: train
+  - id: "imd2020_1bq750_c994oht_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bq750/1bq750_orig.jpg"
+    sha256: ff74f34c0c30cf365e1d2337c664c8e327714bd60c40cb13bba146ffbd074ee4
+    size: 475018
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bq750"
+    split: train
+  - id: "imd2020_1bqaw1_c992737_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bqaw1/c992737_0.jpg"
+    sha256: 93f67f22ac0a7e7b50a897152dabe68878ee947fa52b16d1fd337e81e8c08670
+    size: 117848
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bqaw1/c992737_0_mask.png"
+    source_group: "imd2020/1bqaw1"
+    split: train
+  - id: "imd2020_1bqaw1_c992737_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bqaw1/1bqaw1_orig.jpg"
+    sha256: b641a38a71272e0133de09877f8a74854a6f7f4814cf4b11c731d368dc234400
+    size: 32028
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bqaw1"
+    split: train
+  - id: "imd2020_1bqcx4_c9929g3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bqcx4/c9929g3_0.jpg"
+    sha256: c3933f0f9b286c3be52498fd03633ff7c9f073b295148008c43e0464f8e26c41
+    size: 19478
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bqcx4/c9929g3_0_mask.png"
+    source_group: "imd2020/1bqcx4"
+    split: train
+  - id: "imd2020_1bqcx4_c9929g3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bqcx4/1bqcx4_orig.jpg"
+    sha256: 608460260e8188c338f1923991d6514f95e4d77e5440290588a32d834e9a5253
+    size: 43248
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bqcx4"
+    split: train
+  - id: "imd2020_1bqic5_c9948nw_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bqic5/c9948nw_0.jpg"
+    sha256: af191490205033b09cacf2f18a6a3d0af48d59cbb6877020487a4cd9368e3d95
+    size: 57202
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bqic5/c9948nw_0_mask.png"
+    source_group: "imd2020/1bqic5"
+    split: heldout
+  - id: "imd2020_1bqic5_c9948nw_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bqic5/1bqic5_orig.jpg"
+    sha256: dbf5ca3f2114c79586d38779fc3d156d71cdfb88d5f4e1a9ce72e645d0d739a8
+    size: 52463
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bqic5"
+    split: heldout
+  - id: "imd2020_1brd95_c99bz7g_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1brd95/c99bz7g_0.png"
+    sha256: a5fff1b65daa95f6d1eebb4b0d3dbf8f7c5438b8763e9ceb61b33679b5b617fe
+    size: 698018
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1brd95/c99bz7g_0_mask.png"
+    source_group: "imd2020/1brd95"
+    split: train
+  - id: "imd2020_1brd95_c99bz7g_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1brd95/1brd95_orig.jpg"
+    sha256: 674fad8fd8281489859a5fbee18b0bb4ab543f6998e406877e09b99a2c38810d
+    size: 191226
+    label: authentic
+    mask: null
+    source_group: "imd2020/1brd95"
+    split: train
+  - id: "imd2020_1bri83_c99hbe0_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bri83/c99hbe0_0.jpg"
+    sha256: 2411febcb67ed7c5d16d57dceb9ea3b01ffab76f06e8cf7c68f2d233ee13aad7
+    size: 193657
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bri83/c99hbe0_0_mask.png"
+    source_group: "imd2020/1bri83"
+    split: train
+  - id: "imd2020_1bri83_c99hbe0_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bri83/1bri83_orig.jpg"
+    sha256: 1c1afa4cf56b199dc66b1c46f1a5691f36d5a03e6405b2894faf74646e67dc98
+    size: 138558
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bri83"
+    split: train
+  - id: "imd2020_1brscw_c99ll0f_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1brscw/c99ll0f_0.png"
+    sha256: ac44b7a559f2a7d5dd1dfb46e7ff74e1933c9ffba636a4e67ead84e16365f780
+    size: 589512
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1brscw/c99ll0f_0_mask.png"
+    source_group: "imd2020/1brscw"
+    split: train
+  - id: "imd2020_1brscw_c99ll0f_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1brscw/1brscw_orig.jpg"
+    sha256: 8e2e8b5b23e50497d4c05b58e27f0091209e48ed8087998775ad2628226f218a
+    size: 109672
+    label: authentic
+    mask: null
+    source_group: "imd2020/1brscw"
+    split: train
+  - id: "imd2020_1bs5ew_c99k5bh_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bs5ew/c99k5bh_0.jpg"
+    sha256: a144c18dfc9e4f76bb5e6903ef8e98c06bf7482f505a49904a50093f0985228b
+    size: 574909
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bs5ew/c99k5bh_0_mask.png"
+    source_group: "imd2020/1bs5ew"
+    split: heldout
+  - id: "imd2020_1bs5ew_c99k5bh_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bs5ew/1bs5ew_orig.jpg"
+    sha256: 96ca3de834869432b31e308795b2645777ffaafd92ff999d4d38608244bf9a8c
+    size: 774634
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bs5ew"
+    split: heldout
+  - id: "imd2020_1bsc5v_c99msoi_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bsc5v/c99msoi_0.jpg"
+    sha256: 93025f03f3c9bf1c0f945cdb97a47fafca363646de3a6143f3f738967f2b2af7
+    size: 57887
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bsc5v/c99msoi_0_mask.png"
+    source_group: "imd2020/1bsc5v"
+    split: train
+  - id: "imd2020_1bsc5v_c99msoi_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bsc5v/1bsc5v_orig.jpg"
+    sha256: df35a4a8283ead5bae81438221ca0079c6f5e613060042522182e1f0e4f3b378
+    size: 53481
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bsc5v"
+    split: train
+  - id: "imd2020_1bsw3w_c99v20p_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bsw3w/c99v20p_0.jpg"
+    sha256: 4ea30504b22b1c228f464af8b07ddea41ae9785ec6b28a3af243fba75a4f09c8
+    size: 236459
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bsw3w/c99v20p_0_mask.png"
+    source_group: "imd2020/1bsw3w"
+    split: train
+  - id: "imd2020_1bsw3w_c99v20p_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bsw3w/1bsw3w_orig.jpg"
+    sha256: fce8cb5b89c3da730d04d1026797823eae15f20cf0bc3fe396e5c4e9cded1afc
+    size: 285184
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bsw3w"
+    split: train
+  - id: "imd2020_1bt7f3_c9a0d39_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bt7f3/c9a0d39_0.jpg"
+    sha256: ba60c77fe03c80689576c1898c2bbe9be2cbd38c808b32688c51b7e9b3659102
+    size: 581852
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bt7f3/c9a0d39_0_mask.png"
+    source_group: "imd2020/1bt7f3"
+    split: heldout
+  - id: "imd2020_1bt7f3_c9a0d39_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bt7f3/1bt7f3_orig.jpg"
+    sha256: 3425ed9fa4533d3dcc4b8afbdade4bbbe0d0023d332e2287a51227d0026b6ac4
+    size: 117073
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bt7f3"
+    split: heldout
+  - id: "imd2020_1btpfr_c9a13b5_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1btpfr/c9a13b5_0.jpg"
+    sha256: 590bc28a0283ac08d260b635b405b9e2f5c6fa6e6eeeb896db2436bbfa4e85b2
+    size: 700564
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1btpfr/c9a13b5_0_mask.png"
+    source_group: "imd2020/1btpfr"
+    split: heldout
+  - id: "imd2020_1btpfr_c9a13b5_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1btpfr/1btpfr_orig.jpg"
+    sha256: 7f98dfcec0abdc555ae48c94bb29c25f3c8986389f91c1a960ad737e34de1f55
+    size: 252629
+    label: authentic
+    mask: null
+    source_group: "imd2020/1btpfr"
+    split: heldout
+  - id: "imd2020_1btup8_c9a5zop_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1btup8/c9a5zop_0.jpg"
+    sha256: a76f8296201f38f51ca6afc53223bf65e248801671774bf27b15bf5a253033c3
+    size: 667615
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1btup8/c9a5zop_0_mask.png"
+    source_group: "imd2020/1btup8"
+    split: heldout
+  - id: "imd2020_1btup8_c9a5zop_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1btup8/1btup8_orig.jpg"
+    sha256: 451e0c7dc400db4389b15b7a2c6e50519d6f21540ac511fd0cea640c810da0d9
+    size: 378033
+    label: authentic
+    mask: null
+    source_group: "imd2020/1btup8"
+    split: heldout
+  - id: "imd2020_1bur91_c9aati3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bur91/c9aati3_0.jpg"
+    sha256: 6d09fe56336d040006cc5996bfb055c49f1624861e1e81d9d63435bd0708d9a7
+    size: 71494
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bur91/c9aati3_0_mask.png"
+    source_group: "imd2020/1bur91"
+    split: heldout
+  - id: "imd2020_1bur91_c9aati3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bur91/1bur91_orig.jpg"
+    sha256: 72372b1e46cb42f08b9077b643d6f9aa82dc7493aca79c0d8e9a4e69286ec46c
+    size: 106212
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bur91"
+    split: heldout
+  - id: "imd2020_1buvhq_c9abglu_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1buvhq/c9abglu_0.jpg"
+    sha256: 96849a3c2b3741e64d50b5ee8939170dfa9e543ca8a6ac12b9804f2587d24870
+    size: 157807
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1buvhq/c9abglu_0_mask.png"
+    source_group: "imd2020/1buvhq"
+    split: heldout
+  - id: "imd2020_1buvhq_c9abglu_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1buvhq/1buvhq_orig.jpg"
+    sha256: 4b436a80510718483b31164b56d35de48d6d8a55d264d085f50cf4464fe54dae
+    size: 76754
+    label: authentic
+    mask: null
+    source_group: "imd2020/1buvhq"
+    split: heldout
+  - id: "imd2020_1bv5l3_c9agnet_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bv5l3/c9agnet_0.jpg"
+    sha256: 05f1e0dcaf16b03044d76aca735dd5be8030252806873baa39faa51ba11a85fa
+    size: 306880
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bv5l3/c9agnet_0_mask.png"
+    source_group: "imd2020/1bv5l3"
+    split: heldout
+  - id: "imd2020_1bv5l3_c9agnet_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bv5l3/1bv5l3_orig.jpg"
+    sha256: c97d0806f821dca5b92b31fe84dd321d714b46f6d8f6386314fbc7e5a13b9d43
+    size: 204837
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bv5l3"
+    split: heldout
+  - id: "imd2020_1bvscz_c9ane75_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bvscz/c9ane75_0.jpg"
+    sha256: 1ed3ccfcf16c6ba5dacc9c5127251f490021b7618a1722326f38bc33189fbea3
+    size: 336022
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bvscz/c9ane75_0_mask.png"
+    source_group: "imd2020/1bvscz"
+    split: heldout
+  - id: "imd2020_1bvscz_c9ane75_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bvscz/1bvscz_orig.jpg"
+    sha256: 729aa46915c69f5be799af1ac10c199f1402b1ddc793e2dd9a90f3a37c38caf7
+    size: 88332
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bvscz"
+    split: heldout
+  - id: "imd2020_1bws7y_c9au1qa_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bws7y/c9au1qa_0.jpg"
+    sha256: ef5176c8d2ece2b85e9162c0ea43f36ae22f7b02ca6be55b87a553ec6a8deb4e
+    size: 229248
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bws7y/c9au1qa_0_mask.png"
+    source_group: "imd2020/1bws7y"
+    split: train
+  - id: "imd2020_1bws7y_c9au1qa_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bws7y/1bws7y_orig.jpg"
+    sha256: 711849935cbfe9080fe2f949536395bc5f96916041e642424fe6698fb276dddd
+    size: 77423
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bws7y"
+    split: train
+  - id: "imd2020_1bx64j_c9b6d4b_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bx64j/c9b6d4b_0.jpg"
+    sha256: 2bb812d16a6f8e9bd442febacdb74b0c34ccf233ca2b05b96a0feb0cab6f1869
+    size: 78522
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bx64j/c9b6d4b_0_mask.png"
+    source_group: "imd2020/1bx64j"
+    split: train
+  - id: "imd2020_1bx64j_c9b6d4b_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bx64j/1bx64j_orig.jpg"
+    sha256: d2f23cbaa7fdc36846b45ae4faed505007ddb25e2dc1678c49c18e77b4e01cf9
+    size: 180043
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bx64j"
+    split: train
+  - id: "imd2020_1bx6fj_c9axqrl_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bx6fj/c9axqrl_0.jpg"
+    sha256: 887776f6cd32053bc25c29e03e515426364fe6738c7eb246b8831f4c4968e905
+    size: 103970
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bx6fj/c9axqrl_0_mask.png"
+    source_group: "imd2020/1bx6fj"
+    split: train
+  - id: "imd2020_1bx6fj_c9axqrl_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bx6fj/1bx6fj_orig.jpg"
+    sha256: 0f577cacd70febfc2d119807e3133d87ec8407bcf5624247621eda6290a9bce5
+    size: 208247
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bx6fj"
+    split: train
+  - id: "imd2020_1bz432_c9bldbp_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bz432/c9bldbp_0.png"
+    sha256: dad9708c729079f27b5034d33d2834c03115fccbd63ef84b544225a044477f08
+    size: 737564
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bz432/c9bldbp_0_mask.png"
+    source_group: "imd2020/1bz432"
+    split: train
+  - id: "imd2020_1bz432_c9bldbp_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bz432/1bz432_orig.jpg"
+    sha256: e2fd9148b4d51594db369078c6a7c95ea44372af1089b539fcbc160e7a87dcc7
+    size: 59846
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bz432"
+    split: train
+  - id: "imd2020_1bza2v_c9bldch_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bza2v/c9bldch_0.jpg"
+    sha256: 64950b61e29024d8fe32ae3f624b055d14dc497a5c088cf6d3f74e0a716ed25a
+    size: 194859
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bza2v/c9bldch_0_mask.png"
+    source_group: "imd2020/1bza2v"
+    split: train
+  - id: "imd2020_1bza2v_c9bldch_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bza2v/1bza2v_orig.jpg"
+    sha256: 3c76e94989bd56f5f8ef072024ef0b55c94f5bf77bf5cd54a7d7663786defd96
+    size: 191923
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bza2v"
+    split: train
+  - id: "imd2020_1bzitw_c9bl9ay_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bzitw/c9bl9ay_0.jpg"
+    sha256: 9e6e1bf624678b4129c1ed768a178822bece910dc80b4b3d388de40e3c8eda6c
+    size: 96488
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bzitw/c9bl9ay_0_mask.png"
+    source_group: "imd2020/1bzitw"
+    split: train
+  - id: "imd2020_1bzitw_c9bl9ay_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bzitw/1bzitw_orig.jpg"
+    sha256: b0063f3a7954eebe6eb895efb6fccf7cebbc1a5d1005ba5ed8c8038ff344b6d6
+    size: 28669
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bzitw"
+    split: train
+  - id: "imd2020_1bzmio_c9bn0uy_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bzmio/c9bn0uy_0.jpg"
+    sha256: 7cf7826a82a3b0761843f54647c09c1320fd026a45918b0db10d25cce7d94519
+    size: 19429
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bzmio/c9bn0uy_0_mask.png"
+    source_group: "imd2020/1bzmio"
+    split: heldout
+  - id: "imd2020_1bzmio_c9bn0uy_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bzmio/1bzmio_orig.jpg"
+    sha256: 2df07e9f17e3ef38e7a6cc67cca20462bcdc228aa4c50436a2f6d9d23756eb07
+    size: 81529
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bzmio"
+    split: heldout
+  - id: "imd2020_1bzno4_c9bse2z_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bzno4/c9bse2z_0.jpg"
+    sha256: 262b0def009caff9c00016f378c9bb48ef898cb879b8becd22cdcb7d28e5c606
+    size: 198562
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1bzno4/c9bse2z_0_mask.png"
+    source_group: "imd2020/1bzno4"
+    split: heldout
+  - id: "imd2020_1bzno4_c9bse2z_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1bzno4/1bzno4_orig.jpg"
+    sha256: edc59129a5259326099fef2f313167e00265bcd5cc992146fc24c6dd5fe6afab
+    size: 203459
+    label: authentic
+    mask: null
+    source_group: "imd2020/1bzno4"
+    split: heldout
+  - id: "imd2020_1c03j4_c9bugf8_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c03j4/c9bugf8_0.jpg"
+    sha256: 3f1ab3d1bf8e4c981a879f27f013d6809d5f3611033d01aa381212374bc9e381
+    size: 148714
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c03j4/c9bugf8_0_mask.png"
+    source_group: "imd2020/1c03j4"
+    split: heldout
+  - id: "imd2020_1c03j4_c9bugf8_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c03j4/1c03j4_orig.jpg"
+    sha256: d358df047ba5d05ca186d4890e3afdbc387de8908b42ef3c97a46e4d6f3946a9
+    size: 69970
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c03j4"
+    split: heldout
+  - id: "imd2020_1c055r_c9bt9ta_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c055r/c9bt9ta_0.jpg"
+    sha256: 227602fa1d459299ba37b65942e764acd250250b61f2f7726f8a1069f0f2e867
+    size: 116709
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c055r/c9bt9ta_0_mask.png"
+    source_group: "imd2020/1c055r"
+    split: train
+  - id: "imd2020_1c055r_c9bt9ta_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c055r/1c055r_orig.jpg"
+    sha256: 8605a3b445627d248371ff02f3d8bb28796f1e8c24f30fb501c2b94f675b6dd6
+    size: 108381
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c055r"
+    split: train
+  - id: "imd2020_1c0yl5_c9c4juu_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c0yl5/c9c4juu_0.jpg"
+    sha256: 9d068b8e879010d96ed9067c414c0ac652e1c7b678fa17e09496691a65fb1083
+    size: 173382
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c0yl5/c9c4juu_0_mask.png"
+    source_group: "imd2020/1c0yl5"
+    split: heldout
+  - id: "imd2020_1c0yl5_c9c4juu_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c0yl5/1c0yl5_orig.jpg"
+    sha256: 8daceb6ac5e857dbfcd23f20966568200c370bf8ba5207ca640b11e644afd750
+    size: 55310
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c0yl5"
+    split: heldout
+  - id: "imd2020_1c1mwo_c9cetkp_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c1mwo/c9cetkp_0.png"
+    sha256: 6cdb86e6210a25f27f1c8867d2860937ed01f77c90a7b68f8956d1e8f23635ff
+    size: 554950
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c1mwo/c9cetkp_0_mask.png"
+    source_group: "imd2020/1c1mwo"
+    split: heldout
+  - id: "imd2020_1c1mwo_c9cetkp_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c1mwo/1c1mwo_orig.jpg"
+    sha256: 1f45f1eec3ff75b3c2aaf72ad6291ba97df84bf053335d9e617e8376cb62fbfa
+    size: 359256
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c1mwo"
+    split: heldout
+  - id: "imd2020_1c2bbr_c9cgjfv_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2bbr/c9cgjfv_0.jpg"
+    sha256: a9828328e3e640ab256b5bb2f1f30eb05e4845df2b24c5e22dcd2589dc5ef165
+    size: 302040
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c2bbr/c9cgjfv_0_mask.png"
+    source_group: "imd2020/1c2bbr"
+    split: heldout
+  - id: "imd2020_1c2bbr_c9cgjfv_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2bbr/1c2bbr_orig.jpg"
+    sha256: 3a450681e84b8464f1115938484d0ecf9cceff2d6de29e7050f2402e94427673
+    size: 107316
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c2bbr"
+    split: heldout
+  - id: "imd2020_1c2gbq_c9cgxt5_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2gbq/c9cgxt5_0.jpg"
+    sha256: a66c024d054b92636ae8e6c74590083e63f3032a80f68ddf6a8feca708ac37ec
+    size: 107274
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c2gbq/c9cgxt5_0_mask.png"
+    source_group: "imd2020/1c2gbq"
+    split: train
+  - id: "imd2020_1c2gbq_c9cgxt5_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2gbq/1c2gbq_orig.jpg"
+    sha256: 1a6421b152124fa728e60674ef4b84baca02940e3439c65c7ca8d52abb8e8a12
+    size: 115878
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c2gbq"
+    split: train
+  - id: "imd2020_1c2ojm_c9cojnz_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2ojm/c9cojnz_0.jpg"
+    sha256: f31782f9c2ae7bd818d32e5e21c4f6e7179a35d4cbd77290598faa758c7fcbe8
+    size: 62199
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c2ojm/c9cojnz_0_mask.png"
+    source_group: "imd2020/1c2ojm"
+    split: train
+  - id: "imd2020_1c2ojm_c9cojnz_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2ojm/1c2ojm_orig.jpg"
+    sha256: 7b0ff147e8302615c732ec7ad4fe9ad9e60f7824afa8bce66826401325ca416b
+    size: 56828
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c2ojm"
+    split: train
+  - id: "imd2020_1c2uxu_c9clmau_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2uxu/c9clmau_0.png"
+    sha256: 4537eb466d91c4f30404bbd6cede316e3a38494fa690a5835ecc596b192dd300
+    size: 408297
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c2uxu/c9clmau_0_mask.png"
+    source_group: "imd2020/1c2uxu"
+    split: train
+  - id: "imd2020_1c2uxu_c9clmau_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c2uxu/1c2uxu_orig.jpg"
+    sha256: f8106fd68655a4ec9a7937074f294fddc1b14b7764c10956170521d334ca088b
+    size: 481269
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c2uxu"
+    split: train
+  - id: "imd2020_1c322x_c9cnst8_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c322x/c9cnst8_0.jpg"
+    sha256: 4854bcceadeeb51f8d807d06aa7765f802b039722aa637976ae8d6dc3abf75d0
+    size: 519004
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c322x/c9cnst8_0_mask.png"
+    source_group: "imd2020/1c322x"
+    split: heldout
+  - id: "imd2020_1c322x_c9cnst8_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c322x/1c322x_orig.jpg"
+    sha256: 2d9a7070d81efba216bb02b90b0c005c8b15272a13a7325d0c85c7801db39e0c
+    size: 517202
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c322x"
+    split: heldout
+  - id: "imd2020_1c3l17_c9coy2n_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c3l17/c9coy2n_0.jpg"
+    sha256: 2f91a4a60ebaeccdf3e9cda416104c213f338f6146b6adb6b46fb224bfb2c3dc
+    size: 371632
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c3l17/c9coy2n_0_mask.png"
+    source_group: "imd2020/1c3l17"
+    split: train
+  - id: "imd2020_1c3l17_c9coy2n_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c3l17/1c3l17_orig.jpg"
+    sha256: 002969db18ccc65ce0e9b1d13b22ce84eac204bb17ac0335c1fd03f7e6e9d996
+    size: 507180
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c3l17"
+    split: train
+  - id: "imd2020_1c4ksv_c9d09n3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c4ksv/c9d09n3_0.jpg"
+    sha256: 6f546abafc9436c877b035b8e342d3ef711d00dff2e6cd9a10d5825c5af75258
+    size: 245369
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c4ksv/c9d09n3_0_mask.png"
+    source_group: "imd2020/1c4ksv"
+    split: heldout
+  - id: "imd2020_1c4ksv_c9d09n3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c4ksv/1c4ksv_orig.jpg"
+    sha256: 9ea7ad520f6e2e73c2bf367e6390a0be79b6df86cb0686c5bdab6ca5ee3c3fd3
+    size: 23728
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c4ksv"
+    split: heldout
+  - id: "imd2020_1c4q11_c9d0vu3_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c4q11/c9d0vu3_0.jpg"
+    sha256: aca02232cb74f5a9386c11f283a6ad02da83ab6f094f53fd7dc4123d4ea96992
+    size: 205267
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c4q11/c9d0vu3_0_mask.png"
+    source_group: "imd2020/1c4q11"
+    split: train
+  - id: "imd2020_1c4q11_c9d0vu3_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c4q11/1c4q11_orig.jpg"
+    sha256: d7a9a0f62e2951de40f219eef4ad5fcd288ec11964a65b6aeef8513535646a08
+    size: 61310
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c4q11"
+    split: train
+  - id: "imd2020_1c4ze8_c9d2t1a_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c4ze8/c9d2t1a_0.jpg"
+    sha256: 372da620b08099e6270207b1da5aca3f29bca7a14af6322d6a9a669523b5d96f
+    size: 180057
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c4ze8/c9d2t1a_0_mask.png"
+    source_group: "imd2020/1c4ze8"
+    split: train
+  - id: "imd2020_1c4ze8_c9d2t1a_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c4ze8/1c4ze8_orig.jpg"
+    sha256: df78c950a81fe200ce6022290de5c881c14c2357dfd0d61742bc07c3a8d6797d
+    size: 48557
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c4ze8"
+    split: train
+  - id: "imd2020_1c54ga_c9dko71_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c54ga/c9dko71_0.jpg"
+    sha256: 94f87a297d776b8a3e19a752826ed24be22a0e78ac2fddbae695fc54c53bb45a
+    size: 130874
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c54ga/c9dko71_0_mask.png"
+    source_group: "imd2020/1c54ga"
+    split: heldout
+  - id: "imd2020_1c54ga_c9dko71_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c54ga/1c54ga_orig.jpg"
+    sha256: faf9f3cc0f574d5de0c785f3a37d8a3dbafa2979b3e27526403229aa1509e2fa
+    size: 66058
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c54ga"
+    split: heldout
+  - id: "imd2020_1c56yh_c9d9dft_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c56yh/c9d9dft_0.jpg"
+    sha256: 2adc1bb0b4131bfdb31a4fae315f7755fc389673994d041f2c1ebaf5d271735e
+    size: 194721
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c56yh/c9d9dft_0_mask.png"
+    source_group: "imd2020/1c56yh"
+    split: train
+  - id: "imd2020_1c56yh_c9d9dft_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c56yh/1c56yh_orig.jpg"
+    sha256: eeaa8e9b1c47be024fb4b680359f8a016560f04d5e69ee072dee9ed6dc1157d3
+    size: 190274
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c56yh"
+    split: train
+  - id: "imd2020_1c6t1h_c9dvojg_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c6t1h/c9dvojg_0.jpg"
+    sha256: f3f9dd4f92dd41d812543fc44ac18a008da3a8acba689717af1526386fa86d9a
+    size: 236075
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c6t1h/c9dvojg_0_mask.png"
+    source_group: "imd2020/1c6t1h"
+    split: train
+  - id: "imd2020_1c6t1h_c9dvojg_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c6t1h/1c6t1h_orig.jpg"
+    sha256: f32b25a92117b82f1f08807609444d8721291fe63e00cdaa3aa462543289def9
+    size: 329624
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c6t1h"
+    split: train
+  - id: "imd2020_1c7f5q_c9dr5uk_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c7f5q/c9dr5uk_0.jpg"
+    sha256: d5b0fbdd684f919d19d4f97d0a345ccffaf548e21007bbd356cb1f0bf86d4651
+    size: 84391
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c7f5q/c9dr5uk_0_mask.png"
+    source_group: "imd2020/1c7f5q"
+    split: heldout
+  - id: "imd2020_1c7f5q_c9dr5uk_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c7f5q/1c7f5q_orig.jpg"
+    sha256: a4b87fea5b1af5d7ff86392d0e3635d4d4e87db7f2ab2960104fd279409ed7ea
+    size: 34893
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c7f5q"
+    split: heldout
+  - id: "imd2020_1c7ljf_c9dwcgf_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c7ljf/c9dwcgf_0.jpg"
+    sha256: 3c00f8b8bea320b3a102956548c5a412879bc13f61d0617b878fc73f8e05af34
+    size: 165487
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c7ljf/c9dwcgf_0_mask.png"
+    source_group: "imd2020/1c7ljf"
+    split: train
+  - id: "imd2020_1c7ljf_c9dwcgf_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c7ljf/1c7ljf_orig.jpg"
+    sha256: 09eb86ec4fcbd7bf17fedacf3ce6a54c61920fbf86a9c3d606ec3ceb9b2de110
+    size: 121594
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c7ljf"
+    split: train
+  - id: "imd2020_1c7xcf_c9dwwid_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c7xcf/c9dwwid_0.jpg"
+    sha256: fb9df15048f8b0ff65162ab1406f9beff34e5f10bf435c850ee72cb94d8ab507
+    size: 271656
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c7xcf/c9dwwid_0_mask.png"
+    source_group: "imd2020/1c7xcf"
+    split: train
+  - id: "imd2020_1c7xcf_c9dwwid_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c7xcf/1c7xcf_orig.jpg"
+    sha256: a1c73c922a37a604373e69dfd1893edc7fb6b50ecbc78f96681948080869e0d4
+    size: 168987
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c7xcf"
+    split: train
+  - id: "imd2020_1c81cn_c9e195c_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c81cn/c9e195c_0.jpg"
+    sha256: c42489277f2cefb1e1ff7474ad3066b2648941484ac92db531fa126c597e2c44
+    size: 663918
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c81cn/c9e195c_0_mask.png"
+    source_group: "imd2020/1c81cn"
+    split: train
+  - id: "imd2020_1c81cn_c9e195c_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c81cn/1c81cn_orig.jpg"
+    sha256: 58973261365ce40a0e8e388156303d34656a073ac91d985537a76a37b7da4a70
+    size: 667532
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c81cn"
+    split: train
+  - id: "imd2020_1c8xyn_c9e9r5q_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c8xyn/c9e9r5q_0.jpg"
+    sha256: 9151591bab2e168fe359e02c6646fd9dd65929e71dbd05be46cb7a438e402fa2
+    size: 229484
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c8xyn/c9e9r5q_0_mask.png"
+    source_group: "imd2020/1c8xyn"
+    split: train
+  - id: "imd2020_1c8xyn_c9e9r5q_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c8xyn/1c8xyn_orig.jpg"
+    sha256: 481af5a02ab20b2d326bf4d2e8f9cfb276baf49a13f90862302efdf5f03f86b1
+    size: 148258
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c8xyn"
+    split: train
+  - id: "imd2020_1c9e7e_c9ecnrt_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9e7e/c9ecnrt_0.jpg"
+    sha256: 6ab685146b17988f06467b8b2f7f05a7764e3e1489319ea229ca0541ee6a9ed9
+    size: 180229
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c9e7e/c9ecnrt_0_mask.png"
+    source_group: "imd2020/1c9e7e"
+    split: train
+  - id: "imd2020_1c9e7e_c9ecnrt_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9e7e/1c9e7e_orig.jpg"
+    sha256: 1083fdd9dd058b06c82a113ea6cf4ccd0251d942a629b2605b2652b97bc9bcc9
+    size: 178622
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c9e7e"
+    split: train
+  - id: "imd2020_1c9ol1_c9eiaqx_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9ol1/c9eiaqx_0.jpg"
+    sha256: dbaa2353874e62621d539b9f0004d822716ab51b39c733131d6f3f14db5372cc
+    size: 674133
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c9ol1/c9eiaqx_0_mask.png"
+    source_group: "imd2020/1c9ol1"
+    split: train
+  - id: "imd2020_1c9ol1_c9eiaqx_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9ol1/1c9ol1_orig.jpg"
+    sha256: fea28cf87ef76fc264ca569e051bc2dc7e430bcf28150f7b8e71c4c525410272
+    size: 455224
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c9ol1"
+    split: train
+  - id: "imd2020_1c9vyj_c9ens87_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9vyj/c9ens87_0.jpg"
+    sha256: 0b3c2351567e1ea06e04e58e989343486985ba534d186f6bfb965d98f16fc9be
+    size: 59190
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c9vyj/c9ens87_0_mask.png"
+    source_group: "imd2020/1c9vyj"
+    split: heldout
+  - id: "imd2020_1c9vyj_c9ens87_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9vyj/1c9vyj_orig.jpg"
+    sha256: f1ff5626605f15f4bfbd1620ba17fb259c2c544de2aa007acc9e5d70fafbf890
+    size: 126339
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c9vyj"
+    split: heldout
+  - id: "imd2020_1c9wcj_c9egvex_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9wcj/c9egvex_0.jpg"
+    sha256: 66ee40e6d110704d7bbfe2f8aa298fa89850332f8be715d20114c484b9d86f11
+    size: 71161
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1c9wcj/c9egvex_0_mask.png"
+    source_group: "imd2020/1c9wcj"
+    split: train
+  - id: "imd2020_1c9wcj_c9egvex_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1c9wcj/1c9wcj_orig.jpg"
+    sha256: af6d9ffcf17a9063389df951ac3fcc79a6f58bd10436f946a684bb95179445e0
+    size: 207308
+    label: authentic
+    mask: null
+    source_group: "imd2020/1c9wcj"
+    split: train
+  - id: "imd2020_1ca8nm_c9eqqy1_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ca8nm/c9eqqy1_0.jpg"
+    sha256: 32300f0943b5f00fef9291ea77910177d1bce39d086940f2297638ae9577a508
+    size: 153586
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ca8nm/c9eqqy1_0_mask.png"
+    source_group: "imd2020/1ca8nm"
+    split: train
+  - id: "imd2020_1ca8nm_c9eqqy1_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ca8nm/1ca8nm_orig.jpg"
+    sha256: 791b21c014067f21ba4a2a4ba77bfa5533d6d04561d4e85eacd5c491700cef85
+    size: 82382
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ca8nm"
+    split: train
+  - id: "imd2020_1cb58x_c9etyea_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cb58x/c9etyea_0.jpg"
+    sha256: 48d1fda36d4e7c3a860fc76e54920f782c53dcbd42f534bdfa5f0d98a0b7c4d2
+    size: 150426
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cb58x/c9etyea_0_mask.png"
+    source_group: "imd2020/1cb58x"
+    split: train
+  - id: "imd2020_1cb58x_c9etyea_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cb58x/1cb58x_orig.jpg"
+    sha256: 15ca85a5518ec5457071a9bd349e0d112b53ad3bcb401d17899e72414e366654
+    size: 84759
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cb58x"
+    split: train
+  - id: "imd2020_1cbqiu_c9f3da2_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cbqiu/c9f3da2_0.jpg"
+    sha256: 99886f7acea586d27ac34ac5d32874855c77435239345711b89ae78e231378ff
+    size: 466668
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cbqiu/c9f3da2_0_mask.png"
+    source_group: "imd2020/1cbqiu"
+    split: train
+  - id: "imd2020_1cbqiu_c9f3da2_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cbqiu/1cbqiu_orig.jpg"
+    sha256: 8c973d6a134b6a3028d49262aae3e6856838bdcdaa44e4938265381c978a3e6f
+    size: 641098
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cbqiu"
+    split: train
+  - id: "imd2020_1cbs6k_c9f517t_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cbs6k/c9f517t_0.jpg"
+    sha256: 15b4168ea59504945df8b25594187f7061f74634d665a99c1488954b2ac07753
+    size: 97895
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cbs6k/c9f517t_0_mask.png"
+    source_group: "imd2020/1cbs6k"
+    split: heldout
+  - id: "imd2020_1cbs6k_c9f517t_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cbs6k/1cbs6k_orig.jpg"
+    sha256: 26d308864b3b2ce3d0d0929fcd5a9bedfcd8b2d0f5cb4c36b91ef7bc6904b1bd
+    size: 106141
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cbs6k"
+    split: heldout
+  - id: "imd2020_1cbtfp_c9ffae4_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cbtfp/c9ffae4_0.jpg"
+    sha256: be49af1937445246da32e67b9d20eb944a97fab19ca398f1404633a71fe56904
+    size: 178103
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cbtfp/c9ffae4_0_mask.png"
+    source_group: "imd2020/1cbtfp"
+    split: train
+  - id: "imd2020_1cbtfp_c9ffae4_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cbtfp/1cbtfp_orig.jpg"
+    sha256: 37956618025c931c38587206e695b53b3ada3382dc635d53c92316379edbdb76
+    size: 116788
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cbtfp"
+    split: train
+  - id: "imd2020_1cd24q_c9fep2z_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cd24q/c9fep2z_0.jpg"
+    sha256: 5bc6f2a2f67ea310bc52cdea3c51230acac187133257fcfecb69cda037529d97
+    size: 44618
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cd24q/c9fep2z_0_mask.png"
+    source_group: "imd2020/1cd24q"
+    split: train
+  - id: "imd2020_1cd24q_c9fep2z_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cd24q/1cd24q_orig.jpg"
+    sha256: e18258d901e0a167e8db42ffb231f47e1587010fe82e52ff4914ec860389f5c4
+    size: 411470
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cd24q"
+    split: train
+  - id: "imd2020_1cdqz3_c9fjq1l_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cdqz3/c9fjq1l_0.jpg"
+    sha256: 5d96b81a9a20eae22ad511f6fd5ae471f3e156a14f1d23f9aa27ec3997d64a5f
+    size: 184781
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cdqz3/c9fjq1l_0_mask.png"
+    source_group: "imd2020/1cdqz3"
+    split: train
+  - id: "imd2020_1cdqz3_c9fjq1l_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cdqz3/1cdqz3_orig.jpg"
+    sha256: 2e03282d78684a8324d671963d6bc3df186e638f2daa3d08172db8caff2fbd90
+    size: 130300
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cdqz3"
+    split: train
+  - id: "imd2020_1cdvuj_c9fo87w_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cdvuj/c9fo87w_0.jpg"
+    sha256: 129897e1791c2611cb8c1daabade5f513cfc9ac24749b982bbc81158c4cb6248
+    size: 721316
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cdvuj/c9fo87w_0_mask.png"
+    source_group: "imd2020/1cdvuj"
+    split: heldout
+  - id: "imd2020_1cdvuj_c9fo87w_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cdvuj/1cdvuj_orig.jpg"
+    sha256: 7892407189ae796c2046f7925ba957ccbf4abb162c5cd06661dc62f02c07b0d3
+    size: 793012
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cdvuj"
+    split: heldout
+  - id: "imd2020_1cdwa7_c9fn5j8_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cdwa7/c9fn5j8_0.jpg"
+    sha256: 7bdea592b9554b7a661e841770321d619beb7ec50cb625014888c87d4e77519e
+    size: 202972
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cdwa7/c9fn5j8_0_mask.png"
+    source_group: "imd2020/1cdwa7"
+    split: train
+  - id: "imd2020_1cdwa7_c9fn5j8_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cdwa7/1cdwa7_orig.jpg"
+    sha256: 78bc3ec4e1cae86a32000ee6ca6688513143a8011e6a76905e172a60e44378d0
+    size: 242779
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cdwa7"
+    split: train
+  - id: "imd2020_1ceaqo_c9fqvx5_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ceaqo/c9fqvx5_0.jpg"
+    sha256: 45f3d594d93a726b3b3469702e19e8c3e4e9133ac47e88542546d8c208e296f5
+    size: 199648
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1ceaqo/c9fqvx5_0_mask.png"
+    source_group: "imd2020/1ceaqo"
+    split: heldout
+  - id: "imd2020_1ceaqo_c9fqvx5_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1ceaqo/1ceaqo_orig.jpg"
+    sha256: 1bac1e44f7078ab36f65445388a9c16f81ab1d36638ed85dd4cba1a20c61f66b
+    size: 76081
+    label: authentic
+    mask: null
+    source_group: "imd2020/1ceaqo"
+    split: heldout
+  - id: "imd2020_1cek5i_c9fxe3f_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cek5i/c9fxe3f_0.jpg"
+    sha256: f2d054c1b7daa931bf4c0933a9184e804c8b58251784810483410277f93b7c0f
+    size: 254689
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cek5i/c9fxe3f_0_mask.png"
+    source_group: "imd2020/1cek5i"
+    split: train
+  - id: "imd2020_1cek5i_c9fxe3f_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cek5i/1cek5i_orig.jpg"
+    sha256: e93023c828b72677b85aacd8d3e4892dc94f1bf0e56220132e9ecae4352d9fad
+    size: 272116
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cek5i"
+    split: train
+  - id: "imd2020_1cexsx_c9fxudz_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cexsx/c9fxudz_0.jpg"
+    sha256: 2cb74fdc956e8c08a3c732a2193ad2ec641e3bbb498ead9be84d885406497c4f
+    size: 75544
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cexsx/c9fxudz_0_mask.png"
+    source_group: "imd2020/1cexsx"
+    split: train
+  - id: "imd2020_1cexsx_c9fxudz_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cexsx/1cexsx_orig.jpg"
+    sha256: 5e40bc848d69b8241989d352918acf827da35aaabbb0863d2512682e2abbfaad
+    size: 99027
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cexsx"
+    split: train
+  - id: "imd2020_1cezq4_c9fwc5l_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cezq4/c9fwc5l_0.jpg"
+    sha256: 70eb89e146b8eac2c024eb7b870d0c4c09e2d5026150c5166716075f05d54bd4
+    size: 346189
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cezq4/c9fwc5l_0_mask.png"
+    source_group: "imd2020/1cezq4"
+    split: heldout
+  - id: "imd2020_1cezq4_c9fwc5l_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cezq4/1cezq4_orig.jpg"
+    sha256: 0fdfe2639d52e6ed73dc5eb4fd45f7bfce252607f2e3ce7ed80bd519088f49f6
+    size: 54043
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cezq4"
+    split: heldout
+  - id: "imd2020_1cfau1_c9g2fgf_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfau1/c9g2fgf_0.jpg"
+    sha256: 85c9d010a83dbdaf1020d77821eaba00e36be8bfa474523da45c2a4039f3a5dc
+    size: 186503
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cfau1/c9g2fgf_0_mask.png"
+    source_group: "imd2020/1cfau1"
+    split: train
+  - id: "imd2020_1cfau1_c9g2fgf_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfau1/1cfau1_orig.jpg"
+    sha256: e454630672981b644f962636d834c3e93c2ed1dd57647fc4a1d4f1f358c2bfc3
+    size: 493808
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cfau1"
+    split: train
+  - id: "imd2020_1cfc30_c9g4hr5_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfc30/c9g4hr5_0.jpg"
+    sha256: 6e4c745ae91c72504089558f8d802a6c17dc05f88827c649d4d54da50e5a2490
+    size: 146108
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cfc30/c9g4hr5_0_mask.png"
+    source_group: "imd2020/1cfc30"
+    split: train
+  - id: "imd2020_1cfc30_c9g4hr5_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfc30/1cfc30_orig.jpg"
+    sha256: 7c8d00474d8cc3f392a890118b594a8565ddeaebad27a3f01b653c9b6893f781
+    size: 114619
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cfc30"
+    split: train
+  - id: "imd2020_1cfo34_c9gd5k9_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfo34/c9gd5k9_0.jpg"
+    sha256: 87171739320d3f0f15c56c643e9146ca1f70dca1e4cd9aeeb67e5015537365a3
+    size: 423562
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cfo34/c9gd5k9_0_mask.png"
+    source_group: "imd2020/1cfo34"
+    split: train
+  - id: "imd2020_1cfo34_c9gd5k9_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfo34/1cfo34_orig.jpg"
+    sha256: 4386feed4a988ae632589843b05133d81780045bed8caec4b79bc48fdbaf54b8
+    size: 714796
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cfo34"
+    split: train
+  - id: "imd2020_1cfo9x_c9g5zv6_0_manipulated"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfo9x/c9g5zv6_0.jpg"
+    sha256: ebd2b5f5d2824b1828263428fdce2d1107241dbfd126507b6665151b96f54874
+    size: 248564
+    label: manipulated
+    mask: "data/corpus/imd2020/extracted/1cfo9x/c9g5zv6_0_mask.png"
+    source_group: "imd2020/1cfo9x"
+    split: heldout
+  - id: "imd2020_1cfo9x_c9g5zv6_0_authentic"
+    axis: imd2020
+    path: "data/corpus/imd2020/extracted/1cfo9x/1cfo9x_orig.jpg"
+    sha256: 1d916355761c89c419a0166fa50748f5466bbfb2bf3d9e36beadc6127de3fd20
+    size: 245963
+    label: authentic
+    mask: null
+    source_group: "imd2020/1cfo9x"
+    split: heldout
