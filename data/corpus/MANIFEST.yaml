@@ -244,3 +244,36 @@ images:
     attribution: "AI Qu, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:DALL_E_Flow.png"
     camera: null
     notes: "PNG; Wikimedia file title identifies DALL-E as the generative source."
+  - id: ai_midjourney_001
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/f/f4/Midjourney_-_Comic_Dinosaur.png"
+    sha256: "caa0174b9bc24712f0aaeda53817ccb0ba17aa4aa0fbc5a29d32f2220144f223"
+    bytes: 1402239
+    license: "CC BY-SA 4.0"
+    attribution: "Chikorita, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Midjourney_-_Comic_Dinosaur.png"
+    generator: "Midjourney v4"
+    camera: null
+    notes: "PNG; Commons description identifies Midjourney v4 as the generator."
+  - id: ai_stable_diffusion_001
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/8/82/Astronaut_Riding_a_Horse_%28SD3.5%29.webp"
+    sha256: "0426c90afa64550e939e9f93403f2ed1e04bc52de55f12bb9b82a0a53cd8b1fd"
+    bytes: 88204
+    license: "Public domain"
+    attribution: "VulcanSphere, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Astronaut_Riding_a_Horse_(SD3.5).webp"
+    generator: "Stable Diffusion 3.5 Large"
+    camera: null
+    notes: "WEBP; Commons description identifies Stable Diffusion 3.5 Large as the generator."
+  - id: ai_xai_aurora_001
+    axis: real_ai
+    label: ai_generated
+    url: "https://upload.wikimedia.org/wikipedia/commons/e/e1/Cybertruck_by_xAI_Aurora_%28AI_generated_photo%29.jpg"
+    sha256: "db36e34ecd2fe591844045bc54c67659e3f03e07e640513abfb84b720dcb8647"
+    bytes: 80717
+    license: "Public domain"
+    attribution: "xAI Aurora; prompted by xAI, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Cybertruck_by_xAI_Aurora_(AI_generated_photo).jpg"
+    generator: "xAI Aurora"
+    camera: null
+    notes: "JPEG; Commons description identifies xAI Aurora as the generator."

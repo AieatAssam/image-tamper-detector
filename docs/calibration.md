@@ -50,8 +50,7 @@ for the `authentic_recompress` and `resize_then_save` false-positive traps.
 
 The committed numbers are valid for images resembling the corpus. The corpus
 is small, partly synthetic, and not representative of the open web. The
-manifest currently has 12 strict real-camera images, nine real-AI images, and
-two C2PA fixtures; three additional real-AI images are still missing. Synthetic
-images cannot validate CFA, spectral, or PRNU sensor-provenance detectors. The
-`double_jpeg` aggregate was sign-corrected after its corpus measurement showed
-the raw direction was inverted.
+manifest currently has 12 strict real-camera images, 12 real-AI images, and
+two C2PA fixtures. Synthetic images cannot validate CFA, spectral, or PRNU
+sensor-provenance detectors. The `double_jpeg` aggregate was sign-corrected
+after its corpus measurement showed the raw direction was inverted.

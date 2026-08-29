@@ -1,5 +1,6 @@
 import time
 from io import BytesIO
+from unittest.mock import patch
 
 import numpy as np
 from PIL import Image
@@ -38,8 +39,25 @@ def test_real_textureless_copy_move_is_low_confidence():
     result = CopyMoveDetector().run(ImageContext.from_path("data/samples/tampered/landscape_copy_paste.jpg"))
     assert result.state is DetectorState.NOT_APPLICABLE
     assert result.score is None and result.flagged is None
-    assert "low confidence" in result.reason
+    assert "local keypoint support" in result.reason
     assert result.metrics["keypoints"] >= 100
+    assert result.metrics["surviving_matches"] == 64
+    assert result.metrics["largest_candidate_region_matches"] == 2
+    assert result.metrics["candidate_region_keypoints"] < 6
+
+
+def test_keypoints_with_local_candidate_but_no_verified_cluster_are_a_negative():
+    rng = np.random.default_rng(11)
+    image = rng.integers(0, 256, (512, 512, 3), dtype=np.uint8)
+    candidate = {(0, 0): [(0, 1), (2, 3), (4, 5)]}
+    with patch("backend.app.analysis.copy_move._cluster_matches", return_value=candidate):
+        result = CopyMoveDetector().run(ImageContext(_jpeg(image)))
+    assert result.state is DetectorState.APPLICABLE
+    assert result.score is not None and 0.0 <= result.score < 0.5
+    assert result.flagged is False
+    assert result.metrics["verified_clusters"] == 0
+    assert result.metrics["candidate_region_keypoints"] == 6
+    assert "no verified affine cluster" in result.reason
 
 
 def test_copy_move_duration_cap_is_wall_clock():

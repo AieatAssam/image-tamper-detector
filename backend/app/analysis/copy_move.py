@@ -13,6 +13,9 @@ from backend.app.analysis.base import DetectorResult, DetectorState, ImageContex
 MIN_KEYPOINTS = 100
 MIN_OFFSET = 32.0
 GRID_SIZE = 8.0
+# ponytail: three-pair local gate; use a dense region proposal if sparse texture becomes a required class.
+MIN_CANDIDATE_REGION_MATCHES = 3
+MIN_VERIFIED_CLUSTER_MATCHES = 8
 
 
 def _cluster_matches(keypoints: list[cv2.KeyPoint], descriptors: np.ndarray) -> dict[tuple[int, int], list[tuple[int, int]]]:
@@ -32,7 +35,7 @@ def _cluster_matches(keypoints: list[cv2.KeyPoint], descriptors: np.ndarray) -> 
             continue
         key = tuple(np.rint(offset / GRID_SIZE).astype(int))
         clusters[key].append((best.queryIdx, best.trainIdx))
-    return {key: matches for key, matches in clusters.items() if len(matches) >= 8}
+    return dict(clusters)
 
 
 def _visualization(image: np.ndarray, hulls: list[np.ndarray], arrows: list[tuple[np.ndarray, np.ndarray]]) -> np.ndarray:
@@ -80,23 +83,43 @@ class CopyMoveDetector:
                 cv2.resize(mask, (ctx.width, ctx.height), interpolation=cv2.INTER_NEAREST), _duration(started),
             )
 
+        candidate_clusters = _cluster_matches(keypoints, descriptors)
+        largest_candidate_matches = max(candidate_clusters.values(), key=len, default=[])
+        largest_candidate = len(largest_candidate_matches)
+        surviving_matches = sum(len(matches) for matches in candidate_clusters.values())
+        base_metrics.update({
+            "surviving_matches": float(surviving_matches),
+            "largest_candidate_region_matches": float(largest_candidate),
+            "candidate_region_keypoints": float(len({index for match in largest_candidate_matches for index in match})),
+        })
+        if largest_candidate < MIN_CANDIDATE_REGION_MATCHES:
+            mask = np.zeros((*image.shape[:2], 3), dtype=np.uint8)
+            return DetectorResult(
+                self.id, DetectorState.NOT_APPLICABLE, None, None, float(config["threshold"]),
+                "insufficient local keypoint support in candidate regions; copy-move evidence could not be assessed",
+                base_metrics, cv2.resize(mask, (ctx.width, ctx.height), interpolation=cv2.INTER_NEAREST), _duration(started),
+            )
+
         verified: list[tuple[int, np.ndarray, np.ndarray, np.ndarray]] = []
-        for _, matches in sorted(_cluster_matches(keypoints, descriptors).items(), key=lambda item: len(item[1]), reverse=True):
+        for _, matches in sorted(candidate_clusters.items(), key=lambda item: len(item[1]), reverse=True):
+            if len(matches) < MIN_VERIFIED_CLUSTER_MATCHES:
+                continue
             source = np.float32([keypoints[query].pt for query, _ in matches])
             destination = np.float32([keypoints[train].pt for _, train in matches])
             affine, inlier_mask = cv2.estimateAffinePartial2D(
                 source, destination, method=cv2.RANSAC, ransacReprojThreshold=3.0
             )
-            if affine is None or inlier_mask is None or int(inlier_mask.sum()) < 8:
+            if affine is None or inlier_mask is None or int(inlier_mask.sum()) < MIN_VERIFIED_CLUSTER_MATCHES:
                 continue
             inliers = inlier_mask.ravel().astype(bool)
             verified.append((int(inliers.sum()), source[inliers], destination[inliers], affine))
 
         overlay = image.copy()
         if not verified:
+            score = to_probability(0.0, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
             return DetectorResult(
-                self.id, DetectorState.NOT_APPLICABLE, None, None, float(config["threshold"]),
-                "low confidence: no verified affine cluster; copy-move evidence could not be assessed",
+                self.id, DetectorState.APPLICABLE, score, score >= 0.5, float(config["threshold"]),
+                "no_forgery_found: keypoints were present in a candidate region but no verified affine cluster was found",
                 base_metrics, cv2.resize(overlay, (ctx.width, ctx.height), interpolation=cv2.INTER_LINEAR), _duration(started),
             )
 
@@ -112,6 +135,7 @@ class CopyMoveDetector:
         best_source, best_destination = best[1], best[2]
         translation = best[3][:, 2]
         metrics = {
+            **base_metrics,
             "keypoints": float(len(keypoints)),
             "verified_clusters": float(len(verified)),
             "inlier_count": float(best[0]),
