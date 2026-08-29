@@ -1,0 +1,246 @@
+id: S02
+title: "React 19, Chakra UI v3, Vite 8, TypeScript 7, Biome replaces ESLint"
+depends_on: [S00]
+
+objective: >
+  Bring the frontend from four-majors-behind to current, migrate every Chakra
+  component to the v3 compositional API, and replace the ESLint toolchain with
+  Biome. This stage does NOT redesign the UI -- it produces a build that
+  compiles, lints and renders identically to today on the new stack. The UX
+  rework is S11, and keeping the two apart is what makes each reviewable.
+
+context:
+  - "Frontend source is small: 5 files under src/ totalling ~300 lines. App.tsx, main.tsx, theme.ts, components/ImageAnalyzer.tsx, components/AnalysisResults.tsx, types/api.ts."
+  - "Chakra components currently used: ChakraProvider, Container, Heading, VStack, HStack, Box, Button, Card, Grid, Image, Text, Badge, Progress, useToast."
+  - "react-icons is declared in package.json but imported nowhere in src/. framer-motion is declared only as a Chakra v2 peer."
+  - "Every pin for this stage is resolved in plan/reference/versions.lock.yaml section `frontend`. Copy them verbatim."
+  - "The Chakra v2->v3 mappings in step 4 were taken from the official migration guide at https://chakra-ui.com/docs/get-started/migration and are quoted, not inferred."
+  - "vite.config.ts currently proxies '/analyze' to http://localhost:8000. S04 introduces /api/v1; the proxy must cover BOTH prefixes during the deprecation window."
+
+files_allowed:
+  - "frontend/package.json"
+  - "frontend/package-lock.json"
+  - "frontend/tsconfig.json"
+  - "frontend/tsconfig.node.json"
+  - "frontend/vite.config.ts"
+  - "frontend/biome.json"
+  - "frontend/vitest.config.ts"
+  - "frontend/index.html"
+  - "frontend/src/**"
+  - "frontend/.eslintrc*"
+  - "frontend/eslint.config.*"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: "git checkout main && git checkout -b plan/S02"
+
+  - n: 2
+    action: >
+      Rewrite frontend/package.json dependency blocks using the exact pins from
+      versions.lock.yaml. Use exact versions (no ^ or ~) so CI and dev agree.
+    edit:
+      file: frontend/package.json
+      dependencies:
+        react: "19.2.8"
+        react-dom: "19.2.8"
+        "@chakra-ui/react": "3.37.0"
+        "@emotion/react": "11.14.0"
+        axios: "1.20.0"
+        react-dropzone: "20.1.1"
+      devDependencies:
+        vite: "8.2.2"
+        "@vitejs/plugin-react": "6.1.1"
+        typescript: "7.0.2"
+        "@types/react": "19.2.18"
+        "@types/react-dom": "19.2.5"
+        "@biomejs/biome": "2.5.11"
+        vitest: "4.1.11"
+        "@vitest/coverage-v8": "4.1.11"
+        "@testing-library/react": "16.3.3"
+        jsdom: "30.0.1"
+      remove:
+        - "@emotion/styled      # Chakra v3 migration guide: npm uninstall @emotion/styled framer-motion"
+        - "framer-motion        # same"
+        - "react-icons          # imported nowhere in src/; re-add in S11 only if actually used"
+        - "eslint"
+        - "@typescript-eslint/eslint-plugin"
+        - "@typescript-eslint/parser"
+        - "eslint-plugin-react-hooks"
+        - "eslint-plugin-react-refresh"
+      scripts:
+        dev: "vite"
+        build: "tsc --noEmit && vite build"
+        preview: "vite preview"
+        lint: "biome check ."
+        format: "biome format --write ."
+        test: "vitest run"
+        "test:coverage": "vitest run --coverage"
+
+  - n: 3
+    action: "Install and delete the ESLint config files."
+    commands: |
+      cd frontend
+      rm -f .eslintrc .eslintrc.js .eslintrc.cjs .eslintrc.json eslint.config.js eslint.config.mjs
+      rm -rf node_modules package-lock.json
+      npm install
+      npx @biomejs/biome init
+
+  - n: 4
+    action: >
+      Migrate every Chakra call site from v2 to v3. The mappings below are
+      quoted from the official migration guide. Apply ALL of them; do not stop
+      at the ones that happen to produce a type error, because several (spacing
+      -> gap, colorScheme -> colorPalette) fail SILENTLY as unknown props.
+    migration_map:
+      provider:
+        before: |
+          import { extendTheme, ChakraProvider } from "@chakra-ui/react"
+          export const theme = extendTheme({ fonts: { body: "'Figtree'" } })
+          <ChakraProvider theme={theme}><App /></ChakraProvider>
+        after: |
+          import { createSystem, defaultConfig } from "@chakra-ui/react"
+          export const system = createSystem(defaultConfig, {
+            theme: { tokens: { fonts: { body: { value: "'Figtree'" } } } }
+          })
+          <ChakraProvider value={system}><App /></ChakraProvider>
+        note: "EVERY token value must be wrapped as { value: ... }. frontend/src/theme.ts must be rewritten to this shape."
+      card:
+        before: "<Card><CardHeader>..</CardHeader><CardBody>..</CardBody></Card>"
+        after:  "<Card.Root><Card.Header>..</Card.Header><Card.Body>..</Card.Body></Card.Root>"
+        note: "Card -> Card.Root, CardHeader -> Card.Header, CardBody -> Card.Body, CardFooter -> Card.Footer. In v3 Card.Root has no default padding, so content that relied on v2's built-in padding must be wrapped in Card.Body."
+      stack_spacing:
+        before: "<VStack spacing={4}>"
+        after:  "<VStack gap={4}>"
+        note: "`spacing` is gone on VStack, HStack and Stack. It does not error -- it is silently ignored. All layout collapses. There are 8 occurrences across App.tsx, ImageAnalyzer.tsx and AnalysisResults.tsx."
+      progress:
+        before: '<Progress hasStripe isAnimated value={75} colorScheme="blue" />'
+        after: |
+          <Progress.Root striped animated value={75} colorPalette="blue">
+            <Progress.Track><Progress.Range /></Progress.Track>
+          </Progress.Root>
+        note: "hasStripe -> striped, isAnimated -> animated, colorScheme -> colorPalette, and the Track/Range children are now REQUIRED. AnalysisResults.tsx uses Progress twice."
+      button:
+        before: '<Button isLoading loadingText="Analyzing" colorScheme="green">Save</Button>'
+        after:  '<Button loading colorPalette="green">Save</Button>'
+        note: >
+          isLoading -> loading; colorScheme -> colorPalette; leftIcon/rightIcon
+          become children. CRITICAL: `loadingText` was REMOVED with no direct
+          replacement. ImageAnalyzer.tsx passes loadingText="Analyzing" on all
+          four buttons. Render the text conditionally in children instead:
+          {isAnalyzing ? 'Analyzing' : 'ELA Analysis'}
+      toast:
+        before: "const toast = useToast(); toast({ title, description, status: 'error', duration: 5000, isClosable: true })"
+        after: >
+          useToast is removed. Run `npx @chakra-ui/cli snippet add toaster` to
+          generate src/components/ui/toaster.tsx, which exports a `toaster`
+          created via createToaster, and mount <Toaster /> once at the app root.
+          Call sites become toaster.create({ title, description, type: 'error' }).
+          NOTE `status` -> `type`.
+      image:
+        note: "fit -> objectFit, align -> objectPosition. fallbackSrc/fallback/ignoreFallback were removed; use the native onError handler. ImageAnalyzer.tsx and AnalysisResults.tsx both use objectFit already, so verify only."
+      style_props:
+        note: "sx -> css (and nested selectors now need an '&' prefix: sx={{svg:{...}}} becomes css={{'& svg':{...}}}); noOfLines -> lineClamp; truncated -> truncate; isDisabled -> disabled; colorScheme -> colorPalette EVERYWHERE, including on Badge."
+
+  - n: 5
+    action: >
+      Fix the two pre-existing HTML validity bugs in AnalysisResults.tsx that
+      the migration will surface: <Progress> (a div) is nested inside <Text>
+      (a p), in both SingleAnalysisResult and the combined block. A div inside
+      a p is invalid HTML and React 19 warns on it. Change the wrapper to a Box
+      or a fragment.
+    commands: "grep -n 'Progress' frontend/src/components/AnalysisResults.tsx"
+
+  - n: 6
+    action: >
+      Update vite.config.ts: keep the existing /analyze proxy AND add /api,
+      because S04 introduces /api/v1/analyze while /analyze/* stays alive
+      through its deprecation window.
+    edit:
+      file: frontend/vite.config.ts
+      requirements:
+        - "server.proxy keys: '/analyze' and '/api', both to http://localhost:8000, changeOrigin true"
+        - "keep host '0.0.0.0' and port 5173 -- the Docker/nginx setup depends on them"
+        - "add build.sourcemap: true, so S11 and S13 can debug the production bundle"
+
+  - n: 7
+    action: >
+      Configure Biome. It must lint AND format, replacing both ESLint and any
+      prettier behaviour. Enable the React/a11y rule sets, since S11's
+      accessibility work depends on them being on.
+    edit:
+      file: frontend/biome.json
+      requirements:
+        - "$schema pointing at the 2.5.11 schema"
+        - "files.includes limited to src/**, vite.config.ts, vitest.config.ts"
+        - "linter.rules: recommended on, plus the a11y group and the correctness group's useExhaustiveDependencies and useHookAtTopLevel enabled as errors"
+        - "formatter: indentStyle space, indentWidth 2, lineWidth 100"
+        - "javascript.formatter.quoteStyle single, semicolons always"
+
+  - n: 8
+    action: >
+      Rewrite tsconfig.json for TypeScript 7. Do not carry the old file forward
+      unchanged: TS7 removed several legacy flags and tightens defaults. Run
+      `npx tsc --showConfig` and remove anything it reports as unknown.
+    requirements:
+      - "target ES2022 or later, module preserve or esnext, moduleResolution bundler"
+      - "strict true, noUncheckedIndexedAccess true, noUnusedLocals true, noUnusedParameters true"
+      - "jsx react-jsx, lib [ES2023, DOM, DOM.Iterable]"
+      - "types must include vitest/globals only if you enable globals in vitest.config.ts"
+
+  - n: 9
+    action: >
+      Add one smoke test so the new test runner is proven wired, not merely
+      installed. Do NOT write a component test suite here -- that is S11.
+    edit:
+      create: frontend/src/App.test.tsx
+      requirements:
+        - "render <App /> with @testing-library/react and assert the heading text is present"
+        - "this is the ONE runnable check for this stage; it fails if the Chakra provider migration is wrong, which is exactly the failure mode that silently ships otherwise"
+
+  - n: 10
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S02: React 19, Chakra UI v3, Vite 8, TypeScript 7; Biome replaces ESLint"'
+
+acceptance:
+  - check: "no ESLint package remains declared"
+    command: "cd frontend && ! grep -qiE '\"(eslint|@typescript-eslint/|eslint-plugin-)' package.json"
+  - check: "no ESLint config file remains"
+    command: "cd frontend && ! ls .eslintrc* eslint.config.* 2>/dev/null | grep -q ."
+  - check: "framer-motion and @emotion/styled are gone"
+    command: "cd frontend && ! grep -qE '\"(framer-motion|@emotion/styled)\"' package.json"
+  - check: "every dependency is exactly pinned (no ^ or ~)"
+    command: "cd frontend && ! grep -E '\"[~^][0-9]' package.json"
+  - check: "clean install succeeds"
+    command: "cd frontend && rm -rf node_modules && npm ci"
+  - check: "typecheck passes"
+    command: "cd frontend && npx tsc --noEmit"
+  - check: "biome reports no errors"
+    command: "cd frontend && npx biome check ."
+  - check: "production build succeeds"
+    command: "cd frontend && npm run build && test -f dist/index.html"
+  - check: "smoke test passes -- this is what proves the Chakra v3 provider migration is correct"
+    command: "cd frontend && npm run test"
+  - check: "no Chakra v2 prop survives anywhere in src"
+    command: "cd frontend && ! grep -rnE '(spacing=\\{|colorScheme=|isLoading|loadingText|hasStripe|isAnimated|useToast|extendTheme|noOfLines|<CardBody|<CardHeader)' src/"
+  - check: "vite proxies both the legacy and the v1 API prefix"
+    command: "cd frontend && grep -q \"'/analyze'\" vite.config.ts && grep -q \"'/api'\" vite.config.ts"
+
+constraints:
+  - "DO NOT redesign the UI, change the layout, add features, or restyle. Visual output should be as close to identical as the v3 component defaults allow. Every UX change belongs to S11, and mixing them makes this migration unreviewable."
+  - "DO NOT change frontend/src/types/api.ts. The API contract changes in S04 and the frontend adopts it in S11."
+  - "DO NOT add any dependency not listed in versions.lock.yaml frontend."
+  - "DO NOT re-add react-icons unless you actually import it."
+  - "DO NOT leave `npm install` unpinned -- commit the regenerated package-lock.json."
+  - "If a Chakra v3 API differs from the migration_map above, TRUST THE INSTALLED PACKAGE, not this file, and record the discrepancy in your stage report."
+
+rollback: |
+  git checkout main && git branch -D plan/S02 && cd frontend && rm -rf node_modules && npm ci
+
+artifacts:
+  - frontend/package.json
+  - frontend/package-lock.json
+  - frontend/biome.json
+  - frontend/vitest.config.ts
+  - frontend/src/App.test.tsx

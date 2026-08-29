@@ -1,0 +1,157 @@
+id: S04
+title: "Detector protocol + registry; coherent P(tampered) confidence semantics; versioned API"
+depends_on: [S03]
+
+objective: >
+  Introduce the single abstraction the rest of the plan depends on: a uniform
+  Detector protocol and a registry, so that stages S06-S09 and S12 can each add
+  a detector by writing one class and one registration line, without touching
+  main.py, the response model, or the frontend. At the same time, fix the
+  incoherent confidence scores and introduce /api/v1/analyze. Six new detectors
+  bolted onto the current copy-pasted endpoint structure would be unmaintainable
+  and unreviewable; this stage is what stops that.
+
+context:
+  - "VERIFIED defect: ELA returns confidence_score = 1 - edge_discontinuity while flagging when edge_discontinuity > 0.45. The most suspicious image reports the LOWEST confidence. The score is inverted."
+  - "VERIFIED defect: PRNU returns a constant 0.8 if flagged else 0.2. It carries no information; two images either side of the threshold by 0.001 report 0.8 and 0.2."
+  - "VERIFIED: entropy's DECISION direction is correct (is_ai_generated = matching_proportion < 0.35), but its confidence (1 - matching_proportion) is not conditioned on the verdict."
+  - "VERIFIED: /analyze/combined does `is_tampered = any([ela, prnu, entropy])` and averages the three incommensurate confidence values."
+  - "VERIFIED: any exception inside any handler produces HTTP 500, so one failing detector kills the whole analysis."
+  - "The full target contract is in plan/reference/api-contract.yaml. Implement it; do not invent a different shape."
+
+files_allowed:
+  - "backend/app/analysis/base.py"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/analysis/adapters.py"
+  - "backend/app/analysis/calibration.json"
+  - "backend/app/api/**"
+  - "backend/app/main.py"
+  - "backend/app/config.py"
+  - "backend/tests/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: "git checkout main && git checkout -b plan/S04"
+
+  - n: 2
+    action: "Define the Detector protocol."
+    edit:
+      create: backend/app/analysis/base.py
+      requirements:
+        - "enum DetectorState: APPLICABLE, NOT_APPLICABLE, ERROR"
+        - "frozen dataclass DetectorResult: detector_id: str, state: DetectorState, score: float|None, flagged: bool|None, threshold: float, reason: str, metrics: dict[str,float], visualization: np.ndarray|None, duration_ms: int, error: str|None"
+        - "typing.Protocol class Detector with: id: str, name: str, family: str, applicable_formats: frozenset[str], produces_map: bool, description: str, limitations: list[str]"
+        - "Detector.applicable(ctx: ImageContext) -> tuple[bool, str] -- returns (False, reason) when the detector cannot speak about this image, e.g. qtable on a PNG"
+        - "Detector.run(ctx: ImageContext) -> DetectorResult"
+        - "dataclass ImageContext carrying the raw bytes ONCE, plus lazily-computed shared derivations: pil_image, rgb_uint8 ndarray, gray_uint8 ndarray, format, width, height, sha256, exif dict, and a downscaled variant capped at 1600px. RATIONALE: eleven detectors each decoding the same JPEG independently is the dominant cost of a combined analysis. Compute once, share."
+        - "a module-level helper `to_probability(raw, threshold, scale, higher_is_worse)` implementing exactly the sigmoid mapping in api-contract.yaml confidence_semantics.mapping_recipe. Every detector MUST use it. This is the single place the score direction can be got right or wrong."
+
+  - n: 3
+    action: "Build the registry."
+    edit:
+      create: backend/app/analysis/registry.py
+      requirements:
+        - "a dict id -> Detector instance, populated by an explicit `register()` call per detector at import time -- NOT by filesystem scanning or importlib magic; explicit is debuggable"
+        - "get_all(), get(ids: list[str]), and a DEFAULT_ENABLED set"
+        - "run_all(ctx, ids) executing each detector, catching EVERY exception per detector and converting it to a DetectorResult with state=ERROR. A detector that raises MUST NOT fail the request. This is the property that lets S06-S12 land incrementally without destabilising the API."
+        - "record duration_ms per detector"
+        - "run detectors concurrently across the threadpool, bounded by config.MAX_CONCURRENT_ANALYSES"
+
+  - n: 4
+    action: >
+      Wrap the three existing analyzers as Detector implementations, in
+      adapters.py. Do NOT rewrite ELAAnalyzer, PRNUAnalyzer or EntropyAnalyzer
+      -- wrap them. Their internals are S08's and S10's business.
+    requirements:
+      - "EladDetector wraps ELAAnalyzer. score via to_probability(edge_discontinuity, threshold=0.45, scale=TBD, higher_is_worse=True). Provisional scale goes in calibration.json and is replaced by S10's fit."
+      - "NoiseResidualDetector wraps PRNUAnalyzer. score via to_probability(uniformity_score, threshold=300, scale=TBD, higher_is_worse=True). The constant 0.8/0.2 is DELETED."
+      - "EntropyDetector wraps EntropyAnalyzer. score via to_probability(matching_proportion, threshold=0.35, scale=TBD, higher_is_worse=False) -- note higher_is_worse is FALSE here; the catalog's signal_direction says lower matching_proportion means more likely AI. Getting this boolean wrong inverts the detector silently."
+      - "each adapter fills `reason` with a sentence citing the actual numbers, e.g. 'edge discontinuity 0.61 exceeds the 0.45 threshold'"
+      - "each adapter declares applicable_formats: ELA is meaningful only on JPEG -- on a PNG the analyzer re-encodes to JPEG and manufactures an error level that reflects nothing about the file's history. Return NOT_APPLICABLE for non-JPEG rather than a misleading number. This will change current behaviour on the two PNG receipt samples; that is correct and intended."
+
+  - n: 5
+    action: "Seed calibration.json with provisional values, clearly labelled as such."
+    edit:
+      create: backend/app/analysis/calibration.json
+      requirements:
+        - "top-level: {\"version\": \"provisional-S04\", \"fitted_on\": null, \"detectors\": {...}, \"fusion\": {...}}"
+        - "per detector: {threshold, scale, weight, higher_is_worse}"
+        - "thresholds copied from the CURRENT hardcoded values so behaviour does not change in this stage"
+        - "scale set to a documented placeholder and weight set to 1.0 for all"
+        - "a top-level comment field stating: PROVISIONAL. Not fitted to any corpus. Replaced by scripts/calibrate.py in stage S10. Do not treat these numbers as calibrated."
+
+  - n: 6
+    action: "Implement GET /api/v1/detectors and POST /api/v1/analyze per api-contract.yaml endpoints. Add GET /healthz."
+    requirements:
+      - "the response model is the schema in api-contract.yaml response_schema, expressed as pydantic models"
+      - "the `detectors` query field selects a subset; default is registry.DEFAULT_ENABLED"
+      - "include_maps=false omits every visualization_png_base64"
+      - "fusion in this stage is a PLACEHOLDER: mean of applicable scores, with the verdict bands from api-contract.yaml, and fusion.method set to 'provisional_mean'. The real weighted-logit fusion is S10. Say so in the response's calibration_version field."
+      - "the inconclusive_rule from api-contract.yaml applies from this stage: fewer than 3 applicable detectors forces verdict=inconclusive"
+      - "each visualisation is encoded exactly once"
+
+  - n: 7
+    action: >
+      Keep the four legacy endpoints working, returning their current shape,
+      each adding a `Deprecation: true` response header and a warning log line.
+      Reimplement them as thin wrappers over the registry so there is one code
+      path, not two.
+
+  - n: 8
+    action: "Tests."
+    edit:
+      create: backend/tests/test_contract.py
+      requirements:
+        - "score/flag coherence, asserted for EVERY registered detector: for each sample image, if state==APPLICABLE then flagged == (score >= 0.5). This single property test is what makes an inverted detector impossible to merge."
+        - "monotonicity: for each detector, to_probability is non-decreasing in suspicion -- feed the raw statistic at threshold-2*scale, threshold, threshold+2*scale and assert the scores are increasing and that the middle one is 0.5 +/- 1e-6"
+        - "a deliberately raising detector registered in a fixture yields state=ERROR and HTTP 200, not HTTP 500"
+        - "ELA reports NOT_APPLICABLE on a PNG"
+        - "an image where fewer than 3 detectors apply returns verdict=inconclusive"
+        - "GET /api/v1/detectors lists exactly the registered ids"
+        - "GET /healthz returns 200 without touching any image code"
+        - "the four legacy endpoints still return their documented shape and carry the Deprecation header"
+
+  - n: 9
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S04: detector protocol and registry, coherent P(tampered) scoring, /api/v1 contract"'
+
+acceptance:
+  - check: "score/flag coherence holds for every detector on every sample image"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q"
+  - check: "no constant confidence score survives"
+    command: "! grep -rn '0.8 if .* else 0.2' backend/app/"
+  - check: "no inverted ELA confidence survives"
+    command: "! grep -rn '1 - min(1.0, .*edge_discontinuity' backend/app/"
+  - check: "the OR-of-detectors verdict is gone"
+    command: "! grep -rn 'any(\\[ela_tampered' backend/app/main.py"
+  - check: "a raising detector does not 500 the request"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q -k raising"
+  - check: "new endpoints exist"
+    command: ".venv/bin/python -c \"from backend.app.main import app; p={r.path for r in app.routes}; assert '/api/v1/analyze' in p and '/api/v1/detectors' in p and '/healthz' in p, p; print('routes ok')\""
+  - check: "legacy endpoints still work and are marked deprecated"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q -k legacy"
+  - check: "adding a detector requires no change to main.py -- registry-only"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q -k registry"
+  - check: "the image is decoded once per request, not once per detector"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q -k decode_once"
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+constraints:
+  - "DO NOT change any threshold VALUE. Move them from hardcoded literals into calibration.json unchanged. S10 refits them."
+  - "DO NOT implement weighted fusion here. The placeholder mean is deliberate: real fusion needs S05's corpus to fit weights, and a hand-picked weight vector shipped now would be indistinguishable from a fitted one later."
+  - "DO NOT rewrite the internals of ELAAnalyzer, PRNUAnalyzer or EntropyAnalyzer. Wrap them."
+  - "DO NOT remove the legacy /analyze/* endpoints. The frontend still uses them until S11."
+  - "DO NOT add a new detector in this stage. The registry must be proven with the existing three first."
+  - "DO NOT let any detector return a score without going through to_probability(). Direct construction of a score is how the current inversion bugs happened."
+
+rollback: "git checkout main && git branch -D plan/S04"
+
+artifacts:
+  - backend/app/analysis/base.py
+  - backend/app/analysis/registry.py
+  - backend/app/analysis/adapters.py
+  - backend/app/analysis/calibration.json
+  - backend/tests/test_contract.py

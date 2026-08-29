@@ -1,0 +1,176 @@
+id: S08
+title: "CFA/demosaicing periodicity, FFT spectral peaks, PRNU rework"
+depends_on: [S05]
+
+objective: >
+  Add the two detectors that ask where the PIXELS CAME FROM rather than what was
+  done to the file, and correct the misrepresentation in the existing PRNU
+  module. This is the family that actually addresses the repo's stated goal of
+  detecting AI-generated images: a diffusion model's output never passed through
+  a Bayer filter, and its upsampling stack leaves periodic spectral structure
+  that a lens and sensor do not produce.
+
+context:
+  - "Full specifications: plan/reference/detector-catalog.yaml under new.cfa_periodicity, new.spectral_peaks and existing.prnu."
+  - "HARD CONSTRAINT, from plan.yaml acceptance_tiers.synthetic_validity_limits: these detectors CANNOT be validated on the synthetic corpus. Splicing one Unsplash JPEG into itself neither creates nor destroys Bayer interpolation structure the way a real camera-versus-generator difference does. Their Tier A acceptance MUST use the checksum-verified real_camera and real_ai images from data/corpus/MANIFEST.yaml. If S05 could not source enough of those, this stage's acceptance is reduced accordingly and the shortfall recorded -- it is NOT substituted with synthetic images."
+  - "VERIFIED about the existing prnu.py: it computes the mean LOCAL VARIANCE of a denoising residual and thresholds it at 300. That is a blind noise-inconsistency statistic. It is NOT PRNU. True PRNU is per-camera sensor attribution requiring roughly 50 flat-field reference images from the same camera, which this stateless upload endpoint cannot have."
+  - "VERIFIED: the threshold 300 was chosen to make the two GPT-4o receipt samples classify correctly (see the docstring in backend/tests/test_prnu.py). It is fitted to n=2."
+  - "The spectral detector has a specific trap: JPEG's own 8x8 block grid produces a lattice of peaks at multiples of N/8. Without excluding those frequencies, every JPEG reads as generated."
+
+files_allowed:
+  - "backend/app/analysis/cfa.py"
+  - "backend/app/analysis/spectral.py"
+  - "backend/app/analysis/prnu.py"
+  - "backend/app/analysis/adapters.py"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/analysis/calibration.json"
+  - "backend/tests/test_cfa.py"
+  - "backend/tests/test_spectral.py"
+  - "backend/tests/test_prnu.py"
+  - "benchmarks/**"
+  - "docs/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch, benchmark, and confirm the real corpus is present -- this stage is not meaningful without it."
+    commands: |
+      git checkout main && git checkout -b plan/S08
+      .venv/bin/python scripts/fetch_corpus.py --check || { echo "real corpus missing or corrupt -- S08 cannot be validated"; exit 1; }
+      .venv/bin/python scripts/benchmark.py --out benchmarks/pre-S08.json --corpus all
+
+  - n: 2
+    action: >
+      Implement CfaDetector per the catalog spec. Test all four Bayer phases and
+      keep the strongest. The output statistic is the ratio
+      mean(variance of the two lowest-variance lattice classes) /
+      mean(variance of the two highest). A genuine demosaiced image gives a
+      ratio well below 1.0; a rendered or resampled image gives a ratio near 1.0.
+      NOTE THE DIRECTION: higher ratio means MORE suspicious, which is the
+      opposite of most statistics here. Pass higher_is_worse=True and write a
+      comment saying why, because this is easy to invert by reflex.
+    gating_requirement: >
+      CFA structure does not survive resizing. This detector MUST return
+      NOT_APPLICABLE when the image was resized after capture. Detect that via
+      the same check S09's exif detector uses (EXIF PixelXDimension versus the
+      actual decoded width), and additionally return NOT_APPLICABLE when no EXIF
+      dimensions are available AND the image dimensions are not plausible sensor
+      dimensions. It is far better to say nothing than to report "no CFA
+      structure, therefore generated" about a photograph someone resized for the
+      web. The corpus's resize_then_save family is the explicit trap for this
+      and the acceptance below tests it.
+
+  - n: 3
+    action: >
+      Implement SpectralPeakDetector per the catalog spec. Order of operations
+      matters and is not negotiable: high-pass residual first, then the 2-D Hann
+      window, then FFT, then shift, then log1p magnitude, then subtract the
+      azimuthal average so only the anisotropic component remains, then measure
+      peak-to-sigma excluding a radius-5 disc around DC.
+    jpeg_grid_exclusion: >
+      MANDATORY. After resizing to 512x512, the JPEG 8x8 block grid places peaks
+      at multiples of 64 cycles in each axis. Mask out a small neighbourhood
+      around every (64i, 64j) location before computing the peak statistic.
+      Without this the detector reports every JPEG as generated, and it will
+      look like it works because most of the corpus AI images are PNG and most
+      of the camera images are JPEG -- a pure format artefact masquerading as
+      skill. The acceptance below tests exactly this confound.
+
+  - n: 4
+    action: >
+      Rework the PRNU module's PRESENTATION, not its mathematics. Rename the
+      user-visible concept from "Photo Response Non-Uniformity / camera sensor
+      fingerprint" to "noise residual inconsistency" in the detector's name,
+      description and API output. The file may stay prnu.py. Update the
+      docstring to state plainly what is computed and what would be required for
+      real PRNU attribution. Update README.md's PRNU bullet, which currently
+      claims the system detects "images from different source cameras" -- it
+      cannot do that without reference fingerprints.
+    constraints:
+      - "DO NOT change the algorithm or the 300 threshold in this stage. S10 recalibrates it against the corpus. Changing both the maths and the presentation at once makes the S10 fit uninterpretable."
+
+  - n: 5
+    action: "Register both new detectors, add provisional calibration entries, and produce visualisations: the per-window CFA ratio map, and the flattened spectrum with detected peaks marked."
+
+  - n: 6
+    action: "Tests -- all Tier A, but sourced from the REAL corpus for the two provenance detectors."
+    test_requirements:
+      cfa:
+        - "CONSTRUCTED POSITIVE: synthesise a demosaiced image in the test -- take a random image, subsample it to a Bayer pattern, bilinearly demosaic it back -- and assert the ratio is clearly below 1.0. This proves the maths without needing any file."
+        - "CONSTRUCTED NEGATIVE: the same random image with no Bayer round-trip gives a ratio near 1.0."
+        - "REAL: mean ratio over the real_camera axis is strictly lower than over the real_ai axis. Directional, on real data, which is the only place this claim is meaningful."
+        - "TRAP: every entry in the corpus resize_then_save family returns NOT_APPLICABLE, not 'manipulated'."
+      spectral:
+        - "CONSTRUCTED POSITIVE: build an image by nearest-neighbour upsampling a small random image by 4x, and assert a high peak-to-sigma -- this is exactly the artefact the detector is designed to find."
+        - "REAL: mean peak-to-sigma over real_ai exceeds real_camera."
+        - "CONFOUND TEST, MANDATORY: take the real_camera images, save them as PNG, and assert their scores do not change materially (tolerance 0.05). If they do, the detector is keying on file format rather than on generation, and the real-versus-AI separation above is an artefact."
+        - "JPEG GRID: an authentic photo saved at quality 60 does not score above an authentic photo saved at quality 95 by more than 0.1 -- proves the grid exclusion works."
+      prnu:
+        - "existing tests still pass unchanged -- this stage changes no maths"
+        - "the API output no longer uses the words 'sensor fingerprint' or claims camera attribution"
+
+  - n: 7
+    action: "Benchmark and commit."
+    commands: |
+      .venv/bin/python scripts/benchmark.py --out benchmarks/post-S08.json --corpus all
+      git add -A && git commit -m "S08: add CFA periodicity and spectral peak detectors; correct PRNU claims"
+
+acceptance:
+  - check: "the three test modules pass"
+    command: ".venv/bin/python -m pytest backend/tests/test_cfa.py backend/tests/test_spectral.py backend/tests/test_prnu.py -q"
+  - check: "both new detectors registered"
+    command: ".venv/bin/python -c \"from backend.app.analysis.registry import get_all; ids=set(get_all()); assert {'cfa','spectral'} <= ids, ids\""
+  - check: "CFA separates real cameras from real AI on the REAL corpus"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      b=json.load(open('benchmarks/post-S08.json'))
+      s=b['per_axis_mean_score']['cfa']
+      assert s['real_ai'] > s['real_camera'], s
+      print('cfa separation', s)
+      PY
+  - check: "spectral separates real AI from real cameras"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      s=json.load(open('benchmarks/post-S08.json'))['per_axis_mean_score']['spectral']
+      assert s['real_ai'] > s['real_camera'], s
+      print('spectral separation', s)
+      PY
+  - check: "the format confound is excluded -- re-saving camera images as PNG does not move the spectral score"
+    command: ".venv/bin/python -m pytest backend/tests/test_spectral.py -q -k confound"
+  - check: "the JPEG 8x8 grid is excluded"
+    command: ".venv/bin/python -m pytest backend/tests/test_spectral.py -q -k grid"
+  - check: "CFA declines to answer on resized images instead of guessing"
+    command: ".venv/bin/python -m pytest backend/tests/test_cfa.py -q -k resize"
+  - check: "the PRNU threshold 300 was not changed in this stage"
+    command: "grep -q '300' backend/app/analysis/calibration.json && git diff main...HEAD -- backend/app/analysis/prnu.py | grep -E '^[+-].*(300|variance_threshold *=)' | grep -qv '^[+-][+-]' && exit 1 || exit 0"
+  - check: "no user-facing text still claims camera-sensor attribution"
+    command: "! grep -rniE 'sensor (pattern )?(noise|fingerprint)|source camera' backend/app/analysis/adapters.py README.md"
+  - check: "no regression"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      pre=json.load(open('benchmarks/pre-S08.json'))['detectors']
+      post=json.load(open('benchmarks/post-S08.json'))['detectors']
+      bad=[(d,ms['corpus']) for d in pre for ms in pre[d]['metric_sets']
+           for n in post[d]['metric_sets'] if n['corpus']==ms['corpus'] and ms['auc']-n['auc']>0.02]
+      assert not bad, bad; print('no regression')
+      PY
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+constraints:
+  - "DO NOT validate cfa or spectral against data/corpus/synthetic. Their acceptance uses the real axes only. Splices generated from one JPEG carry no information about sensor provenance."
+  - "DO NOT change the PRNU algorithm or its 300 threshold here. Presentation only."
+  - "DO NOT skip the JPEG grid exclusion in spectral. Without it the detector measures file format, not generation."
+  - "DO NOT let cfa return a score for a resized image. NOT_APPLICABLE."
+  - "DO NOT add a dependency."
+  - "DO NOT set an absolute AUC floor."
+
+rollback: "git checkout main && git branch -D plan/S08"
+
+artifacts:
+  - backend/app/analysis/cfa.py
+  - backend/app/analysis/spectral.py
+  - benchmarks/post-S08.json

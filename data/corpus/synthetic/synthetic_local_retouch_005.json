@@ -1,0 +1,17 @@
+{
+  "family": "local_retouch",
+  "id": "synthetic_local_retouch_005",
+  "label": "manipulated",
+  "params": {
+    "operation": "brightness",
+    "region": [
+      411,
+      123,
+      717,
+      379
+    ],
+    "seed": 20260828
+  },
+  "seed": 20260828,
+  "source_image": "data/samples/original/landscape_original.jpg"
+}

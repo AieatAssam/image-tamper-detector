@@ -1,0 +1,25 @@
+{
+  "family": "copy_move",
+  "id": "synthetic_copy_move_001",
+  "label": "manipulated",
+  "params": {
+    "destination_region": [
+      141,
+      158,
+      390,
+      383
+    ],
+    "feathered": false,
+    "rotation": 5,
+    "scale": 1.1,
+    "seed": 20260828,
+    "source_region": [
+      454,
+      186,
+      664,
+      373
+    ]
+  },
+  "seed": 20260828,
+  "source_image": "data/samples/original/landscape_original.jpg"
+}

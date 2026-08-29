@@ -1,0 +1,150 @@
+id: S00
+title: "Create py3.14 venv, record ACTUAL pre-upgrade state, capture numeric baseline"
+depends_on: []
+
+objective: >
+  Establish a reproducible environment and, critically, capture an objective
+  record of how the code behaves BEFORE anything is upgraded. Upgrading numpy
+  1.x -> 2.5 and scikit-image 0.19 -> 0.26 will shift every computed feature
+  value and therefore every hand-tuned threshold in the repo. Without a
+  before-picture that drift is invisible and silently poisons every later stage.
+  This stage changes NO application code.
+
+context:
+  - "No virtualenv exists in the repo. `.venv` is in .gitignore. numpy is not importable from the system python3."
+  - "Because of that, the CURRENT pass/fail state of backend/tests/*.py is UNKNOWN. Do not assume the tests pass. Do not assume they fail. Record what actually happens."
+  - "requirements.txt currently uses `>=` ranges, so `pip install -r requirements.txt` today would install the LATEST versions anyway and would not reproduce the environment the thresholds were tuned against."
+  - "Local interpreter observed: Python 3.14.7. Node 24.17.0, npm 11.13.0."
+  - "backend/app/analysis/c2pa.py is not imported by main.py; backend/tests/test_c2pa.py imports it directly and will fail at import time if c2pa-python cannot be installed."
+  - "data/samples contains exactly 4 images: original/landscape_original.jpg, tampered/landscape_copy_paste.jpg, tampered/gpt-4o-generated-receipt-01.png, tampered/gpt-4o-generated-receipt-02.png. data/samples/original/README.md ALSO describes portrait_original.jpg, document_original.jpg and receipt_original.jpg, which DO NOT EXIST on disk."
+
+files_allowed:
+  - "plan/STATUS.yaml"
+  - "scripts/capture_baseline.py"
+  - "baseline/**"
+  - ".gitignore"
+
+steps:
+  - n: 1
+    action: "Verify you are in the right place and on a clean tree."
+    commands: |
+      test -f backend/app/main.py || { echo "WRONG CWD"; exit 1; }
+      git status --porcelain
+      test -z "$(git status --porcelain)" || { echo "TREE NOT CLEAN -- commit or stash first"; exit 1; }
+      git checkout -b plan/S00
+
+  - n: 2
+    action: "Confirm the interpreter is 3.14.x. If it is not, STOP and emit a BLOCKED report -- do not silently build on another version."
+    commands: |
+      python3 -c "import sys; assert sys.version_info[:2]==(3,14), f'expected 3.14, got {sys.version_info[:2]}'; print(sys.version)"
+
+  - n: 3
+    action: "Create the virtualenv at .venv and confirm .gitignore already excludes it."
+    commands: |
+      python3 -m venv .venv
+      .venv/bin/python -m pip install --upgrade pip
+      grep -qx '.venv' .gitignore || echo '.venv' >> .gitignore
+
+  - n: 4
+    action: >
+      Install the CURRENT requirements.txt EXACTLY AS WRITTEN. Do not fix it,
+      do not remove tensorflow, do not change a single line. The point is to
+      observe what today's file actually produces. If installation fails
+      (tensorflow has no cp314 wheel is the most likely cause), that failure IS
+      the finding -- record the literal error in baseline/install.log and move
+      to step 5 using a REDUCED install of only the packages that the backend
+      actually imports.
+    commands: |
+      mkdir -p baseline
+      .venv/bin/pip install -r requirements.txt 2>&1 | tee baseline/install.log; echo "exit=${PIPESTATUS[0]}" | tee -a baseline/install.log
+      # Fallback ONLY if the above failed. These are the packages backend/ actually imports.
+      # (verified by: grep -rhoE "^\s*(import|from)\s+[a-zA-Z_][a-zA-Z0-9_.]*" backend/ scripts/)
+      # numpy cv2 PIL scipy skimage pywt fastapi pydantic pytest c2pa
+      .venv/bin/python -c "import numpy" 2>/dev/null || \
+        .venv/bin/pip install numpy opencv-python pillow scipy scikit-image PyWavelets fastapi uvicorn pydantic python-multipart pytest pytest-xdist c2pa-python 2>&1 | tee -a baseline/install.log
+      .venv/bin/pip freeze > baseline/pip-freeze.before.txt
+
+  - n: 5
+    action: "Record the ACTUAL current test results. Non-zero exit here is EXPECTED and is data, not failure. Do not fix any test in this stage."
+    commands: |
+      .venv/bin/python -m pytest backend/tests -v --tb=short > baseline/pytest.before.txt 2>&1 || true
+      tail -20 baseline/pytest.before.txt
+
+  - n: 6
+    action: >
+      Write scripts/capture_baseline.py. It runs every analyzer over every image
+      in data/samples/** and dumps the RAW FEATURE VALUES (not just the boolean
+      verdicts) to JSON, sorted by key, with floats rounded to 9 significant
+      digits so the file diffs cleanly.
+    edit:
+      create: scripts/capture_baseline.py
+      requirements:
+        - "CLI: `python scripts/capture_baseline.py --out baseline/features.before.json`"
+        - "walk data/samples/**/*.{jpg,jpeg,png} sorted by relative path so ordering is deterministic"
+        - "for each image record: relative path, sha256 of the file bytes, decoded width/height/format"
+        - "ELA: call ELAAnalyzer().detect_tampering(path) and record is_tampered plus all four fields of the returned TamperingFeatures"
+        - "PRNU: call PRNUAnalyzer(variance_threshold=300).detect_tampering(path) and record is_tampered and uniformity_score"
+        - "Entropy: call EntropyAnalyzer().detect_ai_generated(path) and record is_ai_generated and matching_proportion"
+        - "C2PA: call C2PAAnalyzer().analyze_image(str(path)) inside try/except and record either the result or the repr of the exception. DO NOT let a C2PA failure abort the run."
+        - "wrap EVERY analyzer call in try/except; on exception record {'error': repr(e)} for that analyzer and continue"
+        - "also record the sha256 of each returned visualization array's bytes, so S01 can detect visualisation drift as well as scalar drift"
+        - "record sys.version, numpy.__version__, cv2.__version__, skimage.__version__, PIL.__version__, scipy.__version__ in a top-level `environment` object"
+        - "json.dump with sort_keys=True, indent=2"
+        - "DO NOT import matplotlib, tensorflow or sklearn"
+
+  - n: 7
+    action: "Run it and commit the baseline."
+    commands: |
+      .venv/bin/python scripts/capture_baseline.py --out baseline/features.before.json
+      test -s baseline/features.before.json
+      .venv/bin/python -c "
+      import json; d=json.load(open('baseline/features.before.json'))
+      assert len(d['images'])==4, f\"expected 4 sample images, got {len(d['images'])}\"
+      print('baseline captured for', len(d['images']), 'images')"
+
+  - n: 8
+    action: "Create plan/STATUS.yaml with one entry per stage, all `pending` except S00."
+    edit:
+      create: plan/STATUS.yaml
+      requirements:
+        - "keys S00..S13, each {status, branch, commit, notes}"
+        - "S00 set to in_progress now; set to passed only after the acceptance block below runs clean"
+
+  - n: 9
+    action: "Commit."
+    commands: |
+      git add -A && git commit -m "S00: py3.14 venv, pre-upgrade baseline capture, plan status file"
+
+acceptance:
+  - check: "interpreter is 3.14"
+    command: ".venv/bin/python -c \"import sys; sys.exit(0 if sys.version_info[:2]==(3,14) else 1)\""
+  - check: "core scientific stack imports"
+    command: ".venv/bin/python -c 'import numpy, cv2, PIL, scipy, skimage, pywt, fastapi, pydantic'"
+  - check: "baseline feature file exists, is valid JSON, and covers all 4 sample images"
+    command: ".venv/bin/python -c \"import json,sys; d=json.load(open('baseline/features.before.json')); sys.exit(0 if len(d['images'])==4 and 'environment' in d else 1)\""
+  - check: "baseline is reproducible -- running the capture twice produces byte-identical output"
+    command: ".venv/bin/python scripts/capture_baseline.py --out /tmp/b2.json && cmp baseline/features.before.json /tmp/b2.json"
+  - check: "pre-upgrade pytest output was recorded (content not asserted)"
+    command: "test -s baseline/pytest.before.txt"
+  - check: "pip freeze recorded"
+    command: "test -s baseline/pip-freeze.before.txt"
+  - check: "no application code was modified"
+    command: "git diff --name-only main...HEAD | grep -qvE '^(backend|frontend)/' || true; git diff --name-only main...HEAD | grep -E '^(backend/app|frontend/src)/' && exit 1 || exit 0"
+
+constraints:
+  - "DO NOT modify requirements.txt in this stage. Its brokenness is the thing being measured."
+  - "DO NOT fix any failing test. Recording the failure is the deliverable."
+  - "DO NOT modify anything under backend/app/ or frontend/src/."
+  - "DO NOT delete or regenerate anything under data/samples/."
+  - "If step 4 cannot install a working numpy/cv2/skimage on 3.14, emit a BLOCKED report. Do NOT fall back to Python 3.12 on your own initiative -- that contradicts decision D1 and must be a human decision."
+
+rollback: |
+  git checkout main && git branch -D plan/S00 && rm -rf .venv baseline
+
+artifacts:
+  - baseline/features.before.json
+  - baseline/pytest.before.txt
+  - baseline/pip-freeze.before.txt
+  - baseline/install.log
+  - scripts/capture_baseline.py
+  - plan/STATUS.yaml

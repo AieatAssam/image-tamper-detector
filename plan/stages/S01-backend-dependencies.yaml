@@ -1,0 +1,212 @@
+id: S01
+title: "Prune 6 unused backend deps, pin the rest to verified versions, diff the baseline"
+depends_on: [S00]
+
+objective: >
+  Turn requirements.txt from a set of open-ended `>=` ranges containing six
+  entirely unused packages into an exact, reproducible pin set that installs on
+  Python 3.14. Then re-run the S00 baseline capture and produce an explicit,
+  reviewed diff of how the upgrade moved every computed feature value. The diff
+  is the deliverable as much as the pins are.
+
+context:
+  - "requirements.txt has 19 lines. Six of them are imported NOWHERE: tensorflow, matplotlib, scikit-learn, python-jose, slowapi, python-dotenv. Verified by: grep -rnE '^\\s*(import|from)\\s+(tensorflow|matplotlib|sklearn|jose|slowapi|dotenv)' backend/ scripts/ -> no matches."
+  - "tensorflow alone is roughly 600MB in the Docker image and is the package least likely to have a cp314 wheel."
+  - "`PyWavelets` is listed with NO version specifier at all, yet prnu.py imports pywt and depends on it."
+  - "`opencv-python` (GUI build) is used on a headless server, which is why the Dockerfile installs libgl1-mesa-glx and libglib2.0-0."
+  - "slowapi being unused matters beyond size: project_plan.md ticks 'Implement rate limiting [x]' and the README implies rate limiting exists. main.py contains no limiter. The documentation is false."
+  - "Every pin for this stage is already resolved in plan/reference/versions.lock.yaml with wheel-tag evidence. Copy them; do not re-derive them from memory."
+
+files_allowed:
+  - "requirements.txt"
+  - "requirements-dev.txt"
+  - "pyproject.toml"
+  - "baseline/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: |
+      git checkout main && git checkout -b plan/S01
+
+  - n: 2
+    action: >
+      Re-verify the six removals rather than trusting this file. If ANY of these
+      greps returns a match, do not remove that package -- emit a BLOCKED report
+      instead, because the fact recorded in context is then wrong.
+    commands: |
+      ! grep -rnE '^\s*(import|from)\s+(tensorflow|matplotlib|sklearn|jose|slowapi|dotenv)' backend/ scripts/ || { echo "REMOVAL PRECONDITION FAILED"; exit 1; }
+      echo "all six confirmed unused"
+
+  - n: 3
+    action: >
+      Rewrite requirements.txt with exact `==` pins, taken VERBATIM from
+      plan/reference/versions.lock.yaml section `backend_keep`. Add a header
+      comment stating the resolution date and pointing at the lock file. Group
+      into runtime and analysis sections with a one-line comment per package
+      saying which module imports it.
+    edit:
+      file: requirements.txt
+      target_content_shape: |
+        # Resolved 2026-08-28 against PyPI. See plan/reference/versions.lock.yaml
+        # for wheel-tag evidence of Python 3.14 compatibility.
+        # Target: Python 3.14
+        #
+        # --- web ---
+        fastapi==0.141.1
+        uvicorn[standard]==0.52.4
+        pydantic==2.13.5
+        python-multipart==0.0.32
+        #
+        # --- image analysis ---
+        numpy==2.5.2
+        opencv-python-headless==4.14.0.94   # NOT opencv-python: server is headless
+        pillow==12.3.0
+        scipy==1.18.1
+        scikit-image==0.26.0
+        PyWavelets==1.9.0
+        #
+        # --- provenance ---
+        c2pa-python==0.37.8
+      removed_lines:
+        - "tensorflow"
+        - "#tensorflow-metal"
+        - "matplotlib>=3.4.3"
+        - "scikit-learn>=0.24.2"
+        - "python-jose[cryptography]>=3.3.0"
+        - "slowapi>=0.1.8"
+        - "python-dotenv>=1.0.0"
+      note: "pytest and pytest-xdist move OUT of requirements.txt and into requirements-dev.txt -- test tooling does not belong in the production image."
+
+  - n: 4
+    action: "Create requirements-dev.txt."
+    edit:
+      create: requirements-dev.txt
+      requirements:
+        - "-r requirements.txt on the first line"
+        - "pytest==9.1.1"
+        - "pytest-xdist[psutil]==3.8.0"
+        - "httpx and pytest-cov: run the verify_command in versions.lock.yaml backend_add to get their current versions, then pin what it prints. DO NOT invent these two numbers."
+
+  - n: 5
+    action: "Recreate the venv from scratch against the new pins. A fresh venv, not an upgrade in place -- upgrading in place leaves the removed packages installed and hides breakage."
+    commands: |
+      rm -rf .venv
+      python3 -m venv .venv
+      .venv/bin/python -m pip install --upgrade pip
+      .venv/bin/pip install -r requirements-dev.txt 2>&1 | tee baseline/install.after.log
+      .venv/bin/pip freeze > baseline/pip-freeze.after.txt
+      # the six removed packages must be absent
+      ! .venv/bin/pip show tensorflow matplotlib scikit-learn python-jose slowapi python-dotenv 2>/dev/null | grep -q '^Name:' || { echo "a removed package is still installed"; exit 1; }
+
+  - n: 6
+    action: >
+      Fix ONLY import-level breakage caused by the upgrade. This is the one
+      narrow exception to files_allowed: you may touch backend/app/analysis/*.py
+      and backend/tests/*.py, but ONLY to repair a call that the new library
+      version renamed or removed. Known candidates, each of which you must
+      check rather than assume:
+        (a) scikit-image renamed the rank-filter argument `selem` -> `footprint`
+            (deprecated 0.19, REMOVED 0.20). entropy.py stores self.selem;
+            inspect every call site for a `selem=` keyword.
+        (b) numpy 2.x removed np.float_, np.int0, np.NaN, np.Inf and changed
+            integer promotion (NEP 50). grep for those names.
+        (c) pydantic 2.13 deprecates `class Config` in favour of
+            `model_config = ConfigDict(...)`. main.py uses `class Config` twice.
+        (d) c2pa-python 0.37 removed the entire API c2pa.py uses. DO NOT FIX
+            THAT HERE -- it is stage S09. If test_c2pa.py breaks, mark it
+            xfail with reason "c2pa API rewrite pending, see plan stage S09".
+      Any change that is not strictly a rename/removal repair belongs in S03.
+    commands: |
+      grep -rn 'selem' backend/ || true
+      grep -rnE 'np\.(float_|int0|NaN|Inf|object_|bool8)' backend/ || true
+      grep -rn 'class Config' backend/ || true
+
+  - n: 7
+    action: "Re-run the baseline capture and diff it against S00's."
+    commands: |
+      .venv/bin/python scripts/capture_baseline.py --out baseline/features.after.json
+      .venv/bin/python - <<'PY' | tee baseline/DRIFT.md
+      import json
+      b=json.load(open('baseline/features.before.json'))
+      a=json.load(open('baseline/features.after.json'))
+      print('# Dependency upgrade drift report\n')
+      print('## Environment\n')
+      for k in sorted(set(b['environment'])|set(a['environment'])):
+          print(f"- {k}: {b['environment'].get(k)} -> {a['environment'].get(k)}")
+      print('\n## Per-image feature drift\n')
+      bi={i['path']:i for i in b['images']}; ai={i['path']:i for i in a['images']}
+      verdict_flips=[]
+      for p in sorted(bi):
+          print(f'\n### {p}')
+          for det in sorted(set(bi[p])|set(ai[p])):
+              if det in ('path','sha256','width','height','format'): continue
+              ov, nv = bi[p].get(det), ai[p].get(det)
+              if ov != nv:
+                  print(f'- **{det}**: `{ov}` -> `{nv}`')
+                  if isinstance(ov,dict) and isinstance(nv,dict):
+                      for key in ('is_tampered','is_ai_generated'):
+                          if key in ov and ov.get(key)!=nv.get(key):
+                              verdict_flips.append((p,det,key,ov.get(key),nv.get(key)))
+              else:
+                  print(f'- {det}: unchanged')
+      print('\n## VERDICT FLIPS\n')
+      print('\n'.join(f'- {v}' for v in verdict_flips) if verdict_flips else '- none')
+      PY
+
+  - n: 8
+    action: >
+      READ baseline/DRIFT.md. For every verdict flip and every feature value
+      that moved by more than 5 percent, add a line to the report explaining
+      WHICH library change caused it. If you cannot attribute a flip to a
+      specific library change, say so explicitly in the report rather than
+      leaving it unexplained. This report is what stage S10 uses to decide
+      whether the existing thresholds are salvageable.
+
+  - n: 9
+    action: "Commit."
+    commands: |
+      git add -A && git commit -m "S01: pin backend deps to verified py3.14 versions, drop 6 unused packages, record upgrade drift"
+
+acceptance:
+  - check: "requirements.txt contains no unpinned requirement"
+    command: "! grep -E '^[a-zA-Z].*(>=|<=|~=|>|<)' requirements.txt && ! grep -E '^[a-zA-Z][a-zA-Z0-9_.-]*(\\[[^]]*\\])?$' requirements.txt"
+  - check: "the six unused packages are gone from requirements.txt"
+    command: "! grep -iE '^(tensorflow|matplotlib|scikit-learn|python-jose|slowapi|python-dotenv)' requirements.txt"
+  - check: "opencv is the headless build"
+    command: "grep -q '^opencv-python-headless==4.14.0.94' requirements.txt && ! grep -qE '^opencv-python==' requirements.txt"
+  - check: "clean install from the pins succeeds on 3.14"
+    command: "rm -rf /tmp/s01check && python3 -m venv /tmp/s01check && /tmp/s01check/bin/pip install -q -r requirements.txt && /tmp/s01check/bin/python -c 'import numpy,cv2,PIL,scipy,skimage,pywt,fastapi,pydantic,c2pa'"
+  - check: "no removed package survives in the venv"
+    command: "! .venv/bin/pip freeze | grep -iE '^(tensorflow|matplotlib|scikit-learn|python-jose|slowapi|python-dotenv)=='"
+  - check: "app still imports after the upgrade"
+    command: ".venv/bin/python -c 'from backend.app.main import app; print(len(app.routes), \"routes\")'"
+  - check: "baseline capture still runs and covers 4 images"
+    command: ".venv/bin/python -c \"import json,sys; d=json.load(open('baseline/features.after.json')); sys.exit(0 if len(d['images'])==4 else 1)\""
+  - check: "drift report exists and names the actual library version transitions"
+    command: "test -s baseline/DRIFT.md && grep -q 'numpy' baseline/DRIFT.md"
+  - check: "the test suite runs to completion without collection errors (individual test failures are permitted and expected at this stage)"
+    command: ".venv/bin/python -m pytest backend/tests --collect-only -q > /dev/null"
+
+benchmark_report:
+  - metric: "Docker image size reduction from dropping tensorflow"
+    note: "measured in S13 when the image is rebuilt; informational only, does not gate this stage"
+
+constraints:
+  - "DO NOT change any numeric detection threshold. Not 0.45, not 2000.0, not 25.0, not 100.0, not 300, not 0.35. Threshold recalibration is S10 and needs the benchmark from S05 to be meaningful."
+  - "DO NOT fix logic bugs here, including the ELA uint8 wraparound. That is S03. Mixing a correctness fix into the upgrade makes the drift report uninterpretable -- you would not know whether a value moved because of numpy or because of your fix."
+  - "DO NOT rewrite backend/app/analysis/c2pa.py. That is S09. xfail its tests instead."
+  - "DO NOT upgrade to opencv-python-headless 5.x. See decision D2."
+  - "DO NOT add any package not listed in versions.lock.yaml backend_keep or backend_add."
+  - "DO NOT delete baseline/features.before.json. Later stages diff against it."
+
+rollback: |
+  git checkout main && git branch -D plan/S01 && rm -rf .venv && python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+
+artifacts:
+  - requirements.txt
+  - requirements-dev.txt
+  - baseline/features.after.json
+  - baseline/DRIFT.md
+  - baseline/pip-freeze.after.txt

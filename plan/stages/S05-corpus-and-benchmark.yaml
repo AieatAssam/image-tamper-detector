@@ -1,0 +1,317 @@
+id: S05
+title: "Deterministic synthetic corpus generator, checksum-verified real-image manifest, benchmark harness"
+depends_on: [S04]
+
+objective: >
+  Build the measuring instrument. Until this stage exists there is no way for
+  any agent to demonstrate that a detection change was an improvement rather
+  than a plausible-sounding rewrite. Everything after S05 is gated on numbers
+  this stage produces. This is the most important stage in the plan.
+
+context:
+  - "data/samples/ contains exactly FOUR images: one authentic landscape, one copy-paste tamper derived from it, and two GPT-4o receipt PNGs. Four images cannot validate eleven detectors. The PRNU threshold of 300 is fitted to n=2 and is the clearest existing symptom."
+  - "data/samples/original/README.md describes three further files that do not exist on disk."
+  - "scripts/create_tampered_sample.py already generates one copy-paste tamper from landscape_original.jpg. It is the seed of the generator, but it emits NO ground-truth mask, so nothing can measure localisation quality."
+  - "DECISION D7: external corpora (CASIA v2, IMD2020, Columbia) are Tier B only. CASIA v2's ground-truth masks are distributed via Kaggle, which requires a login. A stage an agent cannot execute offline is exactly the guesswork this plan forbids."
+  - "CRITICAL, from plan.yaml acceptance_tiers.synthetic_validity_limits: a generator can faithfully synthesise PROCESSING HISTORY (splices, recompression, copy-move, quality changes) but CANNOT synthesise SENSOR PROVENANCE. Re-splicing one Unsplash JPEG creates no genuine Bayer interpolation structure and no genuine sensor noise. Therefore cfa_periodicity, spectral_peaks and the noise-residual detector MUST be validated against real images, never against generated splices. That is why this stage builds TWO corpora, not one."
+  - "The Wikimedia Commons API was verified working on 2026-08-28 and returns direct upload.wikimedia.org URLs together with the license string. Example query and response shape are in step 4."
+
+files_allowed:
+  - "scripts/make_corpus.py"
+  - "scripts/fetch_corpus.py"
+  - "scripts/benchmark.py"
+  - "data/corpus/**"
+  - "backend/tests/test_corpus.py"
+  - "docs/corpus.md"
+  - ".gitignore"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: "git checkout main && git checkout -b plan/S05"
+
+  - n: 2
+    action: >
+      Write scripts/make_corpus.py -- the deterministic synthetic generator.
+      This produces the PROCESSING-HISTORY corpus. Every output must be
+      byte-reproducible from the seed.
+    edit:
+      create: scripts/make_corpus.py
+      output_schema: "plan/reference/api-contract.yaml -> corpus_index_schema. Emit exactly that shape; S05 acceptance and scripts/benchmark.py both index it literally."
+      requirements:
+        - "CLI: python scripts/make_corpus.py --seed 20260828 --out data/corpus/synthetic --seed-images data/samples/original"
+        - "DETERMINISM IS MANDATORY: seed both random.Random(seed) and np.random.default_rng(seed). Never call the module-level np.random functions. Running twice must produce byte-identical files. This is asserted in acceptance."
+        - "for EVERY generated image also write a ground-truth mask PNG (255 where manipulated, 0 elsewhere) and a JSON sidecar recording: label (authentic|manipulated), manipulation family, every parameter used, the source image, and the seed"
+        - "write data/corpus/synthetic/index.json listing every entry with its path, mask path, label and family"
+      families_to_generate:
+        - id: authentic_recompress
+          desc: "the seed image saved once at quality q, q in {70,80,90,95}. label=authentic. These are the negatives; without them every detector can score perfectly by always saying 'manipulated'."
+          mask: "all zeros"
+        - id: splice
+          desc: "paste a rectangular region from a DIFFERENT source image, after first compressing the donor at a different quality than the host. Vary region size (5%,10%,20% of area), position, and whether the boundary is feathered. This is the family ELA, jpeg_ghosts and double_jpeg must detect."
+          mask: "the pasted region"
+        - id: copy_move
+          desc: "copy a region from the SAME image to another location. Vary offset, scale (1.0, 1.1), rotation (0, 5 degrees), and feathering. Generalises scripts/create_tampered_sample.py. This is the family copy_move must detect, and the family ELA and the noise detector are expected to MISS -- record that expectation."
+          mask: "BOTH the source and the destination regions"
+        - id: double_compress_aligned
+          desc: "save at q1 then re-save at q2 != q1, grid-aligned. label=manipulated for the recompression detectors only."
+          mask: "all ones (global)"
+        - id: double_compress_shifted
+          desc: "as above but crop by (dx,dy) in {(1,0),(4,4),(7,3)} between saves, breaking 8x8 grid alignment"
+          mask: "all ones"
+        - id: local_retouch
+          desc: "apply a local operation to a region: gaussian blur, brightness shift, clone-stamp-like patch, or median filter"
+          mask: "the retouched region"
+        - id: resize_then_save
+          desc: "downscale by 0.5/0.75 then save. label=authentic content but RESIZED -- this is the family that must make cfa_periodicity report not_applicable rather than 'manipulated'. It is the corpus's false-positive trap."
+          mask: "all zeros"
+      minimum_counts: "at least 40 authentic and 60 manipulated entries. Fewer than that and a single image dominates every metric."
+      constraints:
+        - "NEVER write into data/samples/. Read from it only."
+        - "generated images are NOT committed to git -- add data/corpus/synthetic/ to .gitignore. index.json and the sidecars ARE committed, so the corpus definition is reviewable while the bytes are reproducible on demand."
+
+  - n: 3
+    action: >
+      Write data/corpus/MANIFEST.yaml -- the real-image corpus definition. These
+      are the images that validate the provenance detectors, which the generator
+      cannot touch.
+    edit:
+      create: data/corpus/MANIFEST.yaml
+      schema: |
+        version: 1
+        images:
+          - id: cam_001
+            axis: real_camera | real_ai | real_c2pa_signed
+            label: authentic | ai_generated
+            url: "https://upload.wikimedia.org/wikipedia/commons/..."
+            sha256: "<64 hex chars>"
+            bytes: <int>
+            license: "CC BY-SA 3.0"
+            attribution: "<author, source page URL>"
+            camera: "Canon EOS 5D Mark III"      # null for real_ai
+            notes: "EXIF intact, no resize, straight from camera"
+      required_axes:
+        real_camera:
+          count: ">= 12"
+          criteria: "JPEG, EXIF Make/Model present, PixelXDimension equal to the actual decoded width (i.e. NOT resized), from at least 4 distinct camera models"
+          why: "validates cfa_periodicity, exif_consistency, qtable_fingerprint and the noise-residual detector. A resized image has no CFA structure left, so the not-resized criterion is not optional."
+        real_ai:
+          count: ">= 12"
+          criteria: "images from named generative models. The two existing GPT-4o receipts count toward this but are not sufficient -- two samples from one model measures nothing about generalisation."
+          why: "validates spectral_peaks, cfa_periodicity (absence of structure) and entropy"
+        real_c2pa_signed:
+          count: ">= 2"
+          criteria: "at least one image carrying a valid C2PA manifest and one whose manifest fails validation"
+          why: "validates the S09 C2PA rewrite. If you cannot source one, the c2pa detector's acceptance falls back to asserting graceful handling of manifest ABSENCE, and you record the gap explicitly in docs/corpus.md rather than pretending coverage exists."
+
+  - n: 4
+    action: >
+      Populate MANIFEST.yaml. This is a DISCOVERY step, not a copy step: do not
+      write a URL you have not fetched. The Wikimedia Commons API below was
+      verified working on 2026-08-28 and returns the direct file URL plus the
+      license string.
+    commands: |
+      # verified-working query shape; -- returns url, size, mime, dimensions and license
+      curl -s -H 'User-Agent: image-tamper-detector-corpus/1.0' \
+        "https://commons.wikimedia.org/w/api.php?action=query&titles=File:<NAME>&prop=imageinfo&iiprop=url%7Csize%7Cmime%7Cextmetadata&format=json"
+      # discovery by category, e.g. Category:Photographs_by_camera :
+      curl -s -H 'User-Agent: image-tamper-detector-corpus/1.0' \
+        "https://commons.wikimedia.org/w/api.php?action=query&generator=categorymembers&gcmtitle=Category:Photographs_by_camera&gcmlimit=50&gcmtype=file&prop=imageinfo&iiprop=url%7Csize%7Cmime%7Cextmetadata&format=json"
+    procedure:
+      - "for each candidate: download it, compute sha256 over the bytes, decode it, and CHECK the criteria (JPEG, EXIF Make present, EXIF PixelXDimension == actual width). Reject candidates that fail; do not record aspirational entries."
+      - "record the license verbatim from extmetadata.LicenseShortName. Accept only CC0, CC BY, CC BY-SA or Public Domain. Record the attribution."
+      - "strip the ?utm_source= query string from the URL before recording it"
+      - "if fewer than the required count can be sourced, record the SHORTFALL in docs/corpus.md and reduce the affected detectors' acceptance to what the available images can actually support. DO NOT pad the manifest with images that fail the criteria."
+
+  - n: 5
+    action: "Write scripts/fetch_corpus.py."
+    edit:
+      create: scripts/fetch_corpus.py
+      requirements:
+        - "reads data/corpus/MANIFEST.yaml, downloads each entry to data/corpus/real/<id>.<ext>, and VERIFIES the sha256 against the manifest"
+        - "a checksum mismatch is a hard error, never a warning -- an unverified image silently changing is a silently changing benchmark"
+        - "skip files already present with the correct checksum, so re-running is cheap"
+        - "--check mode: verify existing files without downloading, exit non-zero on any mismatch or missing file"
+        - "polite: set a descriptive User-Agent, and rate-limit to at most 2 requests per second"
+        - "data/corpus/real/ goes in .gitignore; the manifest is the committed artifact"
+
+  - n: 6
+    action: "Write scripts/benchmark.py -- the harness every later stage is gated on."
+    edit:
+      create: scripts/benchmark.py
+      output_schema: "plan/reference/api-contract.yaml -> benchmark_output_schema. THIS SHAPE IS MANDATORY AND LITERAL: the acceptance blocks of S06, S07, S08, S09, S10 and S12 index these exact key paths. Inventing a different shape breaks every downstream gate."
+      requirements:
+        - "CLI: python scripts/benchmark.py --out benchmarks/<name>.json [--detectors id,id] [--corpus synthetic|real|all]"
+        - "runs the S04 registry over every corpus image and records, per image per detector: state, score, flagged, every metric, and duration_ms"
+        - "computes per detector: TPR, FPR, precision, recall, F1, ROC AUC, and mean duration -- restricted to images where state==APPLICABLE"
+        - "counts and reports NOT_APPLICABLE and ERROR separately. A detector that is not_applicable on 90% of the corpus is not a good detector, and averaging it away hides that."
+        - "for detectors with produces_map, compute mask IoU against the generator's ground-truth mask"
+        - "TIER SEPARATION IS MANDATORY: every metric computed on data/corpus/synthetic is tagged tier=A; every metric computed on data/corpus/real is tagged tier=A only for the axes listed in the detector's validated_by, and tier=B otherwise. Metrics from data/corpus/external are ALWAYS tier=B."
+        - "if data/corpus/real/ is absent, skip those metrics with a clear message and exit 0 -- absence of optional data is not a benchmark failure"
+        - "if data/corpus/external/ is absent, skip silently -- it is Tier B by definition"
+        - "output JSON with sort_keys=True so two runs diff cleanly"
+        - "also emit benchmarks/<name>.md, a short human-readable table, for the stage reports"
+        - "implement ROC AUC directly with numpy (rank-based Mann-Whitney formulation, about 6 lines). DO NOT add scikit-learn back as a dependency for one function -- S01 just removed it."
+
+  - n: 7
+    action: "Generate, fetch, and record the baseline."
+    commands: |
+      .venv/bin/python scripts/make_corpus.py --seed 20260828 --out data/corpus/synthetic
+      .venv/bin/python scripts/fetch_corpus.py
+      mkdir -p benchmarks
+      .venv/bin/python scripts/benchmark.py --out benchmarks/baseline-S05.json --corpus all
+      cp benchmarks/baseline-S05.json benchmarks/REFERENCE.json
+
+  - n: 8
+    action: >
+      Write docs/corpus.md: what each family tests, which detector each axis
+      validates, what the corpus CANNOT test, any shortfall from step 4, and the
+      exact commands to regenerate everything. Include the synthetic validity
+      limits verbatim -- the next agent must not quietly start validating CFA
+      against generated splices.
+
+  - n: 9
+    action: "Commit. Verify the generated bytes are NOT in the commit."
+    commands: |
+      git add -A
+      git status --porcelain | grep -E 'data/corpus/(synthetic|real)/.*\.(jpg|png)$' && { echo "generated images must not be committed"; exit 1; }
+      git commit -m "S05: deterministic synthetic corpus, checksum-verified real-image manifest, benchmark harness"
+
+acceptance:
+  - check: "the generator is deterministic -- two runs produce byte-identical output"
+    command: |
+      .venv/bin/python scripts/make_corpus.py --seed 20260828 --out /tmp/c1 >/dev/null &&
+      .venv/bin/python scripts/make_corpus.py --seed 20260828 --out /tmp/c2 >/dev/null &&
+      diff -r /tmp/c1 /tmp/c2
+  - check: "a different seed produces different output -- proves the seed is actually wired in"
+    command: |
+      .venv/bin/python scripts/make_corpus.py --seed 99 --out /tmp/c3 >/dev/null &&
+      ! diff -rq /tmp/c1 /tmp/c3 >/dev/null
+  - check: "corpus size and class balance meet the minimum"
+    command: |
+      .venv/bin/python -c "
+      import json,sys
+      d=json.load(open('data/corpus/synthetic/index.json'))
+      a=sum(1 for e in d['entries'] if e['label']=='authentic')
+      m=sum(1 for e in d['entries'] if e['label']=='manipulated')
+      assert a>=40 and m>=60, (a,m)
+      print('authentic',a,'manipulated',m)"
+  - check: "every manipulated entry has a non-empty ground-truth mask"
+    command: |
+      .venv/bin/python -c "
+      import json,sys,numpy as np
+      from PIL import Image
+      d=json.load(open('data/corpus/synthetic/index.json'))
+      for e in d['entries']:
+          if e['label']!='manipulated' or e['family'].startswith('double_compress'): continue
+          m=np.array(Image.open(e['mask']).convert('L'))
+          assert m.max()>0, e['path']
+      print('masks ok')"
+  - check: "all six manipulation families are present"
+    command: |
+      .venv/bin/python -c "
+      import json
+      fams={e['family'] for e in json.load(open('data/corpus/synthetic/index.json'))['entries']}
+      need={'authentic_recompress','splice','copy_move','double_compress_aligned','double_compress_shifted','local_retouch','resize_then_save'}
+      assert need<=fams, need-fams
+      print(sorted(fams))"
+  - check: "every manifest entry verifies against its recorded sha256"
+    command: ".venv/bin/python scripts/fetch_corpus.py --check"
+  - check: "every manifest entry carries a permissive license and an attribution"
+    command: |
+      .venv/bin/python -c "
+      import yaml
+      ok={'CC0','CC BY 2.0','CC BY 3.0','CC BY 4.0','CC BY-SA 2.0','CC BY-SA 3.0','CC BY-SA 4.0','Public domain','PD'}
+      m=yaml.safe_load(open('data/corpus/MANIFEST.yaml'))
+      for e in m['images']:
+          assert any(e['license'].startswith(p) for p in ok), e
+          assert e.get('attribution'), e
+      print(len(m['images']),'entries, licenses ok')"
+  - check: "real_camera entries are genuinely unresized -- EXIF dimensions match decoded dimensions"
+    command: |
+      .venv/bin/python -c "
+      import yaml
+      from PIL import Image
+      m=yaml.safe_load(open('data/corpus/MANIFEST.yaml'))
+      n=0
+      for e in m['images']:
+          if e['axis']!='real_camera': continue
+          import glob; p=glob.glob(f\"data/corpus/real/{e['id']}.*\")[0]
+          im=Image.open(p); ex=im.getexif()
+          assert ex.get(0xA002) in (None, im.width), (e['id'], ex.get(0xA002), im.width)
+          n+=1
+      assert n>=12, f'only {n} real_camera entries'
+      print(n,'unresized camera originals')"
+  - check: "the benchmark runs end to end and produces both outputs"
+    command: ".venv/bin/python scripts/benchmark.py --out /tmp/bench.json --corpus all && test -s /tmp/bench.json && test -s /tmp/bench.md"
+  - check: "the benchmark is deterministic on unchanged code"
+    command: ".venv/bin/python scripts/benchmark.py --out /tmp/b1.json --corpus synthetic && .venv/bin/python scripts/benchmark.py --out /tmp/b2.json --corpus synthetic && cmp /tmp/b1.json /tmp/b2.json"
+  - check: "the benchmark degrades gracefully when the real corpus is absent"
+    command: "mv data/corpus/real /tmp/real_bak && .venv/bin/python scripts/benchmark.py --out /tmp/b3.json --corpus all; rc=$?; mv /tmp/real_bak data/corpus/real; exit $rc"
+  - check: "every metric is tagged with its tier"
+    command: |
+      .venv/bin/python -c "
+      import json
+      d=json.load(open('benchmarks/REFERENCE.json'))
+      for det,v in d['detectors'].items():
+          for mset in v['metric_sets']:
+              assert mset['tier'] in ('A','B'), (det,mset)
+      print('tiers ok')"
+  - check: "scikit-learn was not re-added"
+    command: "! grep -qi scikit-learn requirements.txt requirements-dev.txt"
+  - check: "generated image bytes are not tracked by git"
+    command: "! git ls-files | grep -E '^data/corpus/(synthetic|real)/.*\\.(jpg|jpeg|png)$'"
+  - check: "the benchmark output contains every key path the later stages index -- this is the gate that stops S06-S12 KeyErroring"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      b = json.load(open('benchmarks/REFERENCE.json'))
+      for k in ('generated_at','corpus','detectors','per_family_mean_score','per_family_mean_iou','fused'):
+          assert k in b, f'missing top-level key {k}'
+      for did, v in b['detectors'].items():
+          assert v['metric_sets'], did
+          for ms in v['metric_sets']:
+              for k in ('corpus','tier','n','n_applicable','n_not_applicable','n_error','auc','mean_duration_ms'):
+                  assert k in ms, (did, k)
+              assert ms['tier'] in ('A','B'), (did, ms['tier'])
+      if b['corpus']['real_corpus_present']:
+          assert 'per_axis_mean_score' in b
+      idx = json.load(open('data/corpus/synthetic/index.json'))
+      assert 'entries' in idx and idx['entries']
+      for e in idx['entries']:
+          for k in ('id','path','mask','label','family','source_image'):
+              assert k in e, (e.get('id'), k)
+      print('all consumed key paths present')
+      PY
+  - check: "docs/corpus.md states the synthetic validity limits"
+    command: "grep -qi 'cannot' docs/corpus.md && grep -qi 'CFA\\|sensor provenance' docs/corpus.md"
+
+benchmark_report:
+  - metric: "current detector performance on the corpus"
+    note: >
+      benchmarks/REFERENCE.json is the number every later stage compares
+      against. Expect the current three detectors to score POORLY -- their
+      thresholds were fitted to four images and ELA's arithmetic was only just
+      corrected in S03. A weak baseline here is the correct outcome and is not
+      a reason to retune anything in this stage.
+
+constraints:
+  - "DO NOT tune any detector, threshold or weight in this stage. Building the instrument and adjusting the thing being measured in the same stage destroys the measurement."
+  - "DO NOT modify anything under backend/. This stage is scripts, data and docs only."
+  - "DO NOT read, move or overwrite anything in data/samples/. Read-only."
+  - "DO NOT commit generated image bytes. Commit index.json, the sidecars and MANIFEST.yaml."
+  - "DO NOT add a dependency for ROC AUC. Six lines of numpy."
+  - "DO NOT record a manifest URL you have not actually fetched and checksummed."
+  - "DO NOT set an absolute AUC floor as an acceptance criterion anywhere in this plan. See plan.yaml acceptance_tiers.why_this_split -- tuning against a corpus this repo generates and then asserting a floor against it is circular."
+
+rollback: "git checkout main && git branch -D plan/S05 && rm -rf data/corpus benchmarks"
+
+artifacts:
+  - scripts/make_corpus.py
+  - scripts/fetch_corpus.py
+  - scripts/benchmark.py
+  - data/corpus/MANIFEST.yaml
+  - data/corpus/synthetic/index.json
+  - benchmarks/REFERENCE.json
+  - docs/corpus.md

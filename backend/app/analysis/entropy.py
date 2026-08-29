@@ -9,6 +9,7 @@ by Fred Rohrer (https://blog.frohrer.com/detecting-ai-generated-images-using-ent
 import numpy as np
 import cv2
 from pathlib import Path
+import json
 import io
 from typing import Tuple, Optional, Union
 from dataclasses import dataclass
@@ -25,16 +26,21 @@ class EntropyFeatures:
     uniformity_mask: np.ndarray  # Mask of pixels with uniform entropy patterns
     color_consistency_mask: np.ndarray  # Mask of pixels with consistent color but varying entropy
 
+def _legacy_threshold() -> float:
+    calibration = json.loads(Path(__file__).with_name("calibration.json").read_text())
+    return float(calibration["legacy"]["entropy"]["matching_threshold"])
+
+
 class EntropyAnalyzer:
-    def __init__(self, 
+    def __init__(self,
                  radius: int = 4,  # Balanced radius for local entropy calculation
                  tolerance: float = 0.12,  # Tolerance for entropy matching
-                 matching_threshold: float = 0.35,  # Threshold for AI detection
+                 matching_threshold: float | None = None,  # Threshold for AI detection
                  uniformity_threshold: float = 0.2,  # Threshold for local uniformity
                  color_consistency_threshold: float = 0.15):  # Threshold for color consistency
         """
         Initialize Entropy analyzer for AI-generated image detection.
-        
+
         Args:
             radius: Radius for the local entropy calculation window
             tolerance: Tolerance for considering entropy values similar across channels
@@ -42,6 +48,7 @@ class EntropyAnalyzer:
             uniformity_threshold: Threshold for local entropy uniformity
             color_consistency_threshold: Threshold for color consistency in local regions
         """
+        matching_threshold = _legacy_threshold() if matching_threshold is None else matching_threshold
         if radius < 1:
             raise ValueError("Radius must be at least 1")
         if not 0 < tolerance < 1:
@@ -52,7 +59,7 @@ class EntropyAnalyzer:
             raise ValueError("Uniformity threshold must be between 0 and 1")
         if not 0 < color_consistency_threshold < 1:
             raise ValueError("Color consistency threshold must be between 0 and 1")
-            
+
         self.radius = radius
         self.tolerance = tolerance
         self.matching_threshold = matching_threshold
@@ -60,7 +67,7 @@ class EntropyAnalyzer:
         self.color_consistency_threshold = color_consistency_threshold
         self.kernel_size = 2 * radius + 1
         self.selem = disk(radius)  # Structural element for entropy calculation
-        
+
     def _normalize_entropy(self, entropy_map: np.ndarray) -> np.ndarray:
         """Normalize entropy map to uint8 range."""
         # Scale to 0-255 range
@@ -71,23 +78,23 @@ class EntropyAnalyzer:
         else:
             normalized = np.zeros_like(entropy_map, dtype=np.uint8)
         return normalized
-        
+
     def _compute_color_consistency(self, image: np.ndarray) -> np.ndarray:
         """Compute mask of regions with consistent colors but varying entropy."""
         # Convert to float32 for calculations
         img_float = image.astype(np.float32) / 255.0
-        
+
         # Calculate local color statistics
         mean_color = cv2.blur(img_float, (self.kernel_size, self.kernel_size))
         mean_color2 = cv2.blur(img_float * img_float, (self.kernel_size, self.kernel_size))
-        
+
         # Compute local color variance for each channel
         var_color = mean_color2 - mean_color * mean_color
         std_color = np.sqrt(np.maximum(var_color, 0))
-        
+
         # Average standard deviation across channels
         avg_std_color = np.mean(std_color, axis=2)
-        
+
         # Create color consistency mask
         color_consistency_mask = avg_std_color < self.color_consistency_threshold
         return color_consistency_mask
@@ -96,31 +103,31 @@ class EntropyAnalyzer:
         """Compute mask of regions with uniform entropy patterns."""
         # Stack entropy maps
         entropy_stack = np.stack(entropy_maps, axis=-1)
-        
+
         # Compute mean entropy across channels
         mean_entropy = np.mean(entropy_stack, axis=-1).astype(np.float32)
-        
+
         # Use OpenCV's blur for fast local mean computation
         local_mean = cv2.blur(mean_entropy, (self.kernel_size, self.kernel_size))
         local_mean2 = cv2.blur(mean_entropy * mean_entropy, (self.kernel_size, self.kernel_size))
-        
+
         # Compute local variance and standard deviation
         local_var = local_mean2 - local_mean * local_mean
         local_std = np.sqrt(np.maximum(local_var, 0))
-        
+
         # Normalize local standard deviation
         local_std = self._normalize_entropy(local_std)
-        
+
         # Create uniformity mask with stricter threshold for AI detection
         uniformity_mask = local_std < (self.uniformity_threshold * 255)
-        
+
         # Apply morphological operations to clean up the mask
         kernel = np.ones((3, 3), np.uint8)
         uniformity_mask = cv2.morphologyEx(uniformity_mask.astype(np.uint8), cv2.MORPH_CLOSE, kernel)
         uniformity_mask = cv2.morphologyEx(uniformity_mask, cv2.MORPH_OPEN, kernel)
-        
+
         return uniformity_mask.astype(bool)
-        
+
     def _load_image_from_bytes(self, image_bytes: bytes) -> np.ndarray:
         """Load an image from bytes."""
         try:
@@ -133,20 +140,20 @@ class EntropyAnalyzer:
         except Exception as e:
             raise ValueError(f"Error loading image from bytes: {e}")
 
-    def analyze(self, image_input: Union[str, Path, bytes]) -> Tuple[np.ndarray, EntropyFeatures]:
+    def analyze(self, image_input: Union[str, Path, bytes, np.ndarray]) -> Tuple[np.ndarray, EntropyFeatures]:
         """
         Analyze an image using entropy-based detection.
-        
+
         Args:
             image_input: Can be one of:
                 - Path to the image file (str or Path)
                 - Bytes of the image file (bytes)
-            
+
         Returns:
             Tuple containing:
                 - Original image as RGB numpy array
                 - EntropyFeatures object containing analysis results
-                
+
         Raises:
             FileNotFoundError: If image file doesn't exist
             ValueError: If image can't be processed
@@ -164,44 +171,50 @@ class EntropyAnalyzer:
                 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
             elif isinstance(image_input, bytes):
                 image_rgb = self._load_image_from_bytes(image_input)
+            elif isinstance(image_input, np.ndarray):
+                image_rgb = image_input.copy()
+                if image_rgb.ndim == 2:
+                    image_rgb = cv2.cvtColor(image_rgb, cv2.COLOR_GRAY2RGB)
+                elif image_rgb.ndim == 3 and image_rgb.shape[2] == 4:
+                    image_rgb = image_rgb[..., :3]
             else:
-                raise ValueError("Invalid input type. Must be string, Path, or bytes")
-            
+                raise ValueError("Invalid input type. Must be string, Path, bytes, or numpy array")
+
             # Convert to uint8 if necessary
             if image_rgb.dtype != np.uint8:
                 image_rgb = cv2.convertScaleAbs(image_rgb)
-            
+
             # Calculate local entropy for each channel
             entropy_red = filters.rank.entropy(image_rgb[..., 0], self.selem)
             entropy_green = filters.rank.entropy(image_rgb[..., 1], self.selem)
             entropy_blue = filters.rank.entropy(image_rgb[..., 2], self.selem)
-            
+
             # Normalize entropy maps to uint8
             entropy_red = self._normalize_entropy(entropy_red)
             entropy_green = self._normalize_entropy(entropy_green)
             entropy_blue = self._normalize_entropy(entropy_blue)
-            
+
             # Compare entropy across channels
             entropy_diff_rg = np.abs(entropy_red - entropy_green)
             entropy_diff_rb = np.abs(entropy_red - entropy_blue)
             entropy_diff_gb = np.abs(entropy_green - entropy_blue)
-            
+
             # Create mask where entropy differences are within tolerance
             tolerance_scaled = self.tolerance * 255
             matching_mask = (
-                (entropy_diff_rg < tolerance_scaled) & 
-                (entropy_diff_rb < tolerance_scaled) & 
+                (entropy_diff_rg < tolerance_scaled) &
+                (entropy_diff_rb < tolerance_scaled) &
                 (entropy_diff_gb < tolerance_scaled)
             )
-            
+
             # Compute uniformity mask
             uniformity_mask = self._compute_uniformity_mask([
                 entropy_red, entropy_green, entropy_blue
             ])
-            
+
             # Compute color consistency mask
             color_consistency_mask = self._compute_color_consistency(image_rgb)
-            
+
             return image_rgb, EntropyFeatures(
                 entropy_red=entropy_red,
                 entropy_green=entropy_green,
@@ -210,54 +223,54 @@ class EntropyAnalyzer:
                 uniformity_mask=uniformity_mask,
                 color_consistency_mask=color_consistency_mask
             )
-            
+
         except Exception as e:
             raise ValueError(f"Error during entropy analysis: {e}")
-            
-    def detect_ai_generated(self, 
+
+    def detect_ai_generated(self,
                           image_input: Union[str, Path, bytes],
                           overlay_alpha: float = 0.6) -> Tuple[bool, np.ndarray, float]:
         """
         Detect if an image is likely AI-generated and return visualization.
-        
+
         Args:
             image_input: Can be one of:
                 - Path to the image file (str or Path)
                 - Bytes of the image file (bytes)
             overlay_alpha: Transparency of the visualization overlay (0-1)
-            
+
         Returns:
             Tuple containing:
                 - Boolean indicating if image is likely AI-generated
                 - Visualization with suspicious regions highlighted in red over grayscale
                 - Proportion of pixels with matching entropy
-                
+
         Raises:
             FileNotFoundError: If image file doesn't exist
             ValueError: If image can't be processed
         """
         # Analyze the image
         image_rgb, features = self.analyze(image_input)
-        
+
         # Calculate proportion of matching pixels with uniform entropy and consistent color
         suspicious_regions = (
-            features.matching_mask & 
-            features.uniformity_mask & 
+            features.matching_mask &
+            features.uniformity_mask &
             features.color_consistency_mask
         )
         matching_proportion = float(np.mean(suspicious_regions))
-        
+
         # AI-generated images tend to have lower proportions of matching entropy patterns
         is_ai_generated = matching_proportion < self.matching_threshold
-        
+
         # Convert original image to grayscale while preserving 3 channels for overlay
         grayscale = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
         visualization = cv2.cvtColor(grayscale, cv2.COLOR_GRAY2BGR)  # Note: Using BGR here
-        
+
         # Create overlay for suspicious regions (bright red highlight in BGR)
         overlay = np.zeros_like(visualization)
         overlay[suspicious_regions] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
-        
+
         # Blend overlay with grayscale image
         # Use additive blending to make red regions more visible
         visualization = cv2.addWeighted(
@@ -267,8 +280,8 @@ class EntropyAnalyzer:
             overlay_alpha,
             0
         )
-        
+
         # Enhance red channel in suspicious regions to make it more prominent
         visualization[suspicious_regions] = [0, 0, 255]  # BGR format: Red = [0, 0, 255]
-        
-        return is_ai_generated, visualization, matching_proportion 
+
+        return is_ai_generated, visualization, matching_proportion

@@ -1,0 +1,349 @@
+# ==============================================================================
+# image-tamper-detector :: master implementation plan
+# ==============================================================================
+# AUDIENCE: autonomous coding agents. NOT written for humans.
+# Every stage file referenced below is a self-contained work order.
+#
+# READ THIS FILE COMPLETELY BEFORE EXECUTING ANY STAGE.
+# ==============================================================================
+
+plan_version: 1
+created: "2026-08-28"
+repo_root_marker: "backend/app/main.py"   # verify CWD by asserting this path exists
+
+# ------------------------------------------------------------------------------
+# 0. NON-NEGOTIABLE GLOBAL RULES
+# ------------------------------------------------------------------------------
+global_rules:
+  - id: R1
+    rule: >
+      NEVER invent a version number, a URL, a library API, a file path, or a
+      numeric threshold. Every such value you need is either (a) written
+      literally in a stage file, (b) written literally in
+      plan/reference/versions.lock.yaml, or (c) obtained by running a command
+      that a stage file gives you. If a value you need is in none of those
+      places, STOP and emit a BLOCKED report (see reporting.blocked_format).
+      Do not guess and continue.
+  - id: R2
+    rule: >
+      Execute stages in an order consistent with the `depends_on` DAG in
+      `stages` below. A stage may not begin until every stage in its
+      depends_on list has status `passed` in plan/STATUS.yaml.
+  - id: R3
+    rule: >
+      A stage is complete ONLY when its `acceptance` block's commands all exit
+      0. Prose is never evidence of completion. Do not mark a stage passed on
+      the basis of reading the code and believing it correct.
+  - id: R4
+    rule: >
+      Stay inside the stage's `files_allowed` glob list. Touching a file
+      outside that list is a stage failure, even if the change seems
+      beneficial. If you believe an out-of-scope change is required, emit a
+      BLOCKED report naming the file and the reason.
+  - id: R5
+    rule: >
+      Do not change any numeric detection threshold except in a stage whose
+      `constraints` explicitly permits it. Thresholds are calibrated against
+      the benchmark and drift silently otherwise.
+  - id: R6
+    rule: >
+      One git commit per stage, on a branch named `plan/<stage_id>`, message
+      prefix `<stage_id>: `. Each stage's step 1 branches from `main`.
+      WHEN AND ONLY WHEN every acceptance command of the stage has exited 0,
+      FAST-FORWARD `main` to the stage branch:
+        git checkout main && git merge --ff-only plan/<stage_id>
+      This is what makes the previous stage's artifacts -- scripts/benchmark.py,
+      baseline/features.before.json, data/corpus/MANIFEST.yaml,
+      benchmarks/REFERENCE.json -- present on disk for the next stage. Without
+      the fast-forward, every stage would branch from a `main` that has none of
+      them and the plan cannot execute. Do not push unless the stage says to.
+  - id: R6b
+    rule: >
+      ARTIFACT PRECONDITION. Before step 2 of any stage, assert that every
+      `artifacts:` entry declared by each of its `depends_on` stages exists on
+      disk. If one is missing, the previous stage was not fast-forwarded to
+      main (see R6) -- emit a BLOCKED report naming the missing path rather than
+      regenerating it, because regenerating a baseline silently destroys the
+      comparison it exists to provide.
+  - id: R7
+    rule: >
+      Never delete or overwrite anything under `data/samples/` — those are the
+      only real seed images in the repo and cannot be regenerated.
+  - id: R8
+    rule: >
+      All shell commands assume CWD = repository root and an ACTIVE virtualenv
+      at `.venv` (created in S00). Prefix every python/pytest invocation with
+      `.venv/bin/` explicitly rather than relying on PATH.
+  - id: R9
+    rule: >
+      Determinism: any script that samples randomness MUST accept and default
+      a fixed seed (`--seed 20260828`). Benchmark numbers that change between
+      two runs on unchanged code are a bug, not noise.
+
+# ------------------------------------------------------------------------------
+# 1. STAGE FILE SCHEMA
+# ------------------------------------------------------------------------------
+# Every file in plan/stages/*.yaml conforms EXACTLY to this schema. Keys marked
+# required MUST be present. Agents may rely on this shape.
+stage_file_schema:
+  id:               {type: string, required: true,  desc: "matches filename prefix, e.g. S03"}
+  title:            {type: string, required: true}
+  depends_on:       {type: "list[string]", required: true, desc: "stage ids; empty list allowed"}
+  objective:        {type: string, required: true, desc: "one paragraph, what 'done' means"}
+  context:          {type: "list[string]", required: true, desc: "verified facts about current repo state; each is a claim already checked against the code, safe to rely on"}
+  files_allowed:    {type: "list[string]", required: true, desc: "glob patterns; the ONLY files this stage may create/modify/delete"}
+  steps:            {type: "list[object]", required: true, desc: "ordered; each has `n`, `action`, and either `commands` or `edit`"}
+  acceptance:       {type: "list[object]", required: true, desc: "each has `check` (human label) and `command` (literal shell, exit 0 == pass)"}
+  benchmark_report: {type: "list[object]", required: false, desc: "TIER B. Informational only. MUST NOT gate the stage."}
+  constraints:      {type: "list[string]", required: true, desc: "explicit prohibitions for this stage"}
+  rollback:         {type: string, required: true, desc: "literal command(s) to restore pre-stage state"}
+  artifacts:        {type: "list[string]", required: false, desc: "files this stage is expected to produce"}
+
+# ------------------------------------------------------------------------------
+# 2. ACCEPTANCE TIERS  (critical -- read before writing any test)
+# ------------------------------------------------------------------------------
+acceptance_tiers:
+  tier_a:
+    name: "Gating"
+    definition: >
+      Deterministic, fully offline, runnable on a clean checkout with only the
+      pinned dependencies. Exit code decides pass/fail. Lives in the
+      `acceptance:` block. Sources of truth allowed: unit tests on constructed
+      inputs, the fixed-seed synthetic corpus, committed baseline JSON files,
+      and the checksum-verified images listed in data/corpus/MANIFEST.yaml.
+  tier_b:
+    name: "Reported"
+    definition: >
+      Any measurement against an external corpus that requires a manual
+      acquisition step (registration, Kaggle login, multi-GB download), or any
+      metric produced by the optional learned model. Lives in
+      `benchmark_report:`. The benchmark script MUST skip these cleanly with a
+      non-zero-free message when the data is absent. A Tier B number MUST NEVER
+      appear in an acceptance command.
+  why_this_split: >
+      The synthetic corpus is generated by code in this repo. Tuning a detector
+      against it and then asserting an absolute AUC floor is circular reasoning:
+      an agent would pass trivially while real-world accuracy stays unmeasured.
+      Tier A therefore asserts DIRECTIONAL and REGRESSION properties (this
+      detector localizes the region the generator actually pasted; no other
+      detector's score moved by more than epsilon) rather than absolute skill.
+  synthetic_validity_limits:
+    can_be_synthesized:
+      detectors: ["ela", "double_jpeg", "jpeg_ghosts", "qtable", "copy_move"]
+      why: "these measure PROCESSING HISTORY -- what was done TO the file -- and a generator reproduces that faithfully"
+    cannot_be_synthesized:
+      detectors: ["prnu", "cfa", "spectral"]
+      why: >
+        re-splicing one Unsplash JPEG produces no genuine Bayer interpolation
+        structure and no genuine sensor noise. These detectors MUST be validated
+        against the genuine-camera and genuine-AI images fetched by checksum in
+        data/corpus/MANIFEST.yaml (see S05), never against generated splices.
+
+# ------------------------------------------------------------------------------
+# 3. LOCKED DECISIONS  (do not relitigate; these were decided by the repo owner)
+# ------------------------------------------------------------------------------
+decisions:
+  - id: D1
+    decision: "Target Python 3.14"
+    rationale: >
+      Local interpreter is 3.14.7. Verified on 2026-08-28 that every required
+      package publishes a cp314 or abi3 wheel: numpy 2.5.2, scipy 1.18.1,
+      scikit-image 0.26.0, pillow 12.3.0, PyWavelets 1.9.0 (cp314);
+      opencv-python-headless 4.14.0.94 (cp37-abi3); c2pa-python 0.37.8
+      (py3-none); onnxruntime 1.29.0 (cp314). Dockerfile moves 3.12 -> 3.14.
+  - id: D2
+    decision: "opencv-python-headless 4.14.0.94, NOT opencv 5.x"
+    rationale: >
+      opencv-python-headless 5.0.0.93 exists and has abi3 wheels, but OpenCV 5
+      carries breaking API changes across the cv2 surface this repo uses.
+      Staying on the 4.x line is a deliberate deferral. `headless` (not plain
+      `opencv-python`) because the server has no GUI; this also removes the
+      libgl1-mesa-glx / libglib2.0-0 apt packages from the Dockerfile.
+  - id: D3
+    decision: "Frontend migrates to Chakra UI v3 (NOT dropped for plain CSS)"
+    rationale: "repo owner selected this option explicitly on 2026-08-28"
+  - id: D4
+    decision: "Biome replaces ESLint (and prettier) for lint + format"
+    rationale: "repo owner instruction on 2026-08-28"
+  - id: D5
+    decision: "Learned model runs on onnxruntime, NOT torch"
+    rationale: >
+      VERIFIED 2026-08-28: torch 2.13.0 publishes wheels only up to cp313 — no
+      cp314 wheel exists. Depending on torch would force the whole project back
+      to Python 3.13 and contradict D1. onnxruntime 1.29.0 has cp314 wheels.
+  - id: D6
+    decision: "The learned detector is onnx-community/Deep-Fake-Detector-v2-Model-ONNX, NOT TruFor"
+    rationale: >
+      VERIFIED 2026-08-28: TruFor's license reads 'used, reproduced and modified
+      only for informational and nonprofit purposes' — incompatible with this
+      repo's MIT license — it ships no ONNX export, and it publishes no direct
+      weight download URL. It is therefore not agent-executable and not legally
+      usable here. The chosen substitute is Apache-2.0, ships ONNX artifacts,
+      and is fully specified in plan/reference/detector-catalog.yaml.
+  - id: D7
+    decision: "External labelled corpora (CASIA v2, IMD2020, Columbia) are Tier B only"
+    rationale: >
+      All are auth-walled (Kaggle login) or require registration. A stage an
+      agent cannot execute offline is exactly the guesswork this plan forbids.
+  - id: D8
+    decision: "Detector fusion replaces `is_tampered = any([...])`"
+    rationale: >
+      OR-ing N noisy independent detectors compounds the false-positive rate
+      multiplicatively. With 11 detectors this makes every image 'tampered'.
+
+# ------------------------------------------------------------------------------
+# 4. SHARED REFERENCE FILES
+# ------------------------------------------------------------------------------
+reference_files:
+  - path: plan/reference/versions.lock.yaml
+    contents: >
+      Every dependency version, empirically resolved from PyPI/npm on
+      2026-08-28, with the wheel-tag evidence that proves Python-3.14
+      installability. S01 and S02 copy pins from here VERBATIM.
+  - path: plan/reference/detector-catalog.yaml
+    contents: >
+      One entry per detector (existing and new): module path, class name,
+      algorithm specification precise enough to implement without reading a
+      paper, literature citation, expected signal direction, which corpus axis
+      validates it, and its declared failure modes.
+  - path: plan/reference/api-contract.yaml
+    contents: >
+      The target HTTP response schema and the confidence-score semantics that
+      every detector must satisfy. S04 implements it; S06-S12 conform to it.
+
+# ------------------------------------------------------------------------------
+# 5. STAGE DAG
+# ------------------------------------------------------------------------------
+# Execution order must satisfy depends_on. Where two stages have all deps met,
+# either order is acceptable; they do not touch overlapping files.
+stages:
+  - id: S00
+    file: stages/S00-bootstrap-and-baseline.yaml
+    title: "Create py3.14 venv, record ACTUAL pre-upgrade state, capture numeric baseline"
+    depends_on: []
+    blocking: true
+
+  - id: S01
+    file: stages/S01-backend-dependencies.yaml
+    title: "Prune 6 unused backend deps, pin the rest to verified versions, diff the baseline"
+    depends_on: [S00]
+    blocking: true
+
+  - id: S02
+    file: stages/S02-frontend-dependencies.yaml
+    title: "React 19, Chakra UI v3, Vite 8, TypeScript 7, Biome replaces ESLint"
+    depends_on: [S00]
+
+  - id: S03
+    file: stages/S03-backend-correctness-and-security.yaml
+    title: "Fix uint8 wraparound in ELA, unblock the event loop, close the upload trust boundary, fix CORS"
+    depends_on: [S01]
+    blocking: true
+
+  - id: S04
+    file: stages/S04-detector-interface-and-scoring.yaml
+    title: "Detector protocol + registry; coherent P(tampered) confidence semantics; versioned API"
+    depends_on: [S03]
+    blocking: true
+
+  - id: S05
+    file: stages/S05-corpus-and-benchmark.yaml
+    title: "Deterministic synthetic corpus generator, checksum-verified real-image manifest, benchmark harness"
+    depends_on: [S04]
+    blocking: true
+
+  - id: S06
+    file: stages/S06-detectors-jpeg-family.yaml
+    title: "Quantization-table fingerprinting, double-JPEG/Benford, JPEG ghosts"
+    depends_on: [S05]
+
+  - id: S07
+    file: stages/S07-detector-copy-move.yaml
+    title: "Copy-move forgery localization via SIFT + RANSAC affine clustering"
+    depends_on: [S05]
+
+  - id: S08
+    file: stages/S08-detectors-sensor-and-spectral.yaml
+    title: "CFA/demosaicing periodicity, FFT spectral peaks, PRNU rework"
+    depends_on: [S05]
+
+  - id: S09
+    file: stages/S09-detectors-metadata.yaml
+    title: "EXIF consistency; rewrite the dead+broken C2PA analyzer against the 0.37 API"
+    depends_on: [S05]
+
+  - id: S10
+    file: stages/S10-fusion-and-calibration.yaml
+    title: "Replace any() with a weighted, calibrated fusion score; per-detector reliability weights"
+    depends_on: [S06, S07, S08, S09]
+    blocking: true
+
+  - id: S11
+    file: stages/S11-frontend-ux.yaml
+    title: "UX rework: single analyse action, progressive results, overlay compare, explainability, a11y"
+    depends_on: [S02, S10]
+
+  - id: S12
+    file: stages/S12-detector-learned-onnx.yaml
+    title: "OPTIONAL opt-in ONNX learned detector; degrades cleanly when weights absent"
+    depends_on: [S10]
+
+  - id: S13
+    file: stages/S13-ops-ci-and-docker.yaml
+    title: "CI, Docker on py3.14 headless, healthcheck, structured logging, docs truthfulness pass"
+    depends_on: [S10, S11]
+
+  - id: S14
+    file: stages/S14-remove-legacy-endpoints.yaml
+    title: "Remove the deprecated /analyze/* endpoints once the frontend has moved off them"
+    depends_on: [S11, S13]
+
+# ------------------------------------------------------------------------------
+# 5b. SELF-VALIDATION
+# ------------------------------------------------------------------------------
+validator:
+  path: plan/validate.py
+  run: "python3 plan/validate.py    # requires PyYAML"
+  when: "before executing any stage, and again after editing any plan file"
+  checks: >
+    every plan yaml parses; every referenced stage file exists with a matching
+    id; every stage carries the keys stage_file_schema marks required;
+    depends_on agrees between plan.yaml and the stage file and names real ids;
+    the DAG is acyclic; every acceptance entry has both check and command; no
+    benchmark_report entry carries a command; and every shell snippet in
+    acceptance[*].command and steps[*].commands parses under `bash -n`.
+  note: >
+    Exit 0 means the plan is internally consistent. It says nothing about
+    whether the code is correct -- that is what each stage's acceptance block is
+    for.
+
+# ------------------------------------------------------------------------------
+# 6. PROGRESS TRACKING
+# ------------------------------------------------------------------------------
+status_file:
+  path: plan/STATUS.yaml
+  created_by: S00
+  format: |
+    # one entry per stage (S00..S14), updated at stage start and stage end
+    S00: {status: passed|failed|in_progress|blocked, branch: plan/S00, commit: <sha>, notes: "<=200 chars}
+  rule: >
+    Update the entry to in_progress BEFORE the first edit of a stage and to
+    passed ONLY after every acceptance command has exited 0 in a single
+    uninterrupted run. Never set passed from memory of an earlier run.
+
+# ------------------------------------------------------------------------------
+# 7. REPORTING
+# ------------------------------------------------------------------------------
+reporting:
+  blocked_format: |
+    STAGE BLOCKED
+    stage: <id>
+    step: <n>
+    missing_fact: <exactly what value/API/path you could not obtain>
+    commands_tried: <literal commands and their exit codes>
+    why_you_cannot_proceed_safely: <one sentence>
+    DO NOT GUESS A VALUE AND CONTINUE.
+  on_acceptance_failure: >
+    Report the failing acceptance `check` label, the literal command, its exit
+    code, and the shortest decisive line of output. Then either fix and re-run
+    the FULL acceptance block, or roll back. Never partially pass a stage.

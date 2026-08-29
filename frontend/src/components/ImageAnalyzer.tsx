@@ -1,144 +1,187 @@
-import { useState } from 'react';
-import {
-  Box,
-  Button,
-  Card,
-  Grid,
-  HStack,
-  Image,
-  Text,
-  useToast,
-  VStack,
-} from '@chakra-ui/react';
+import { Box, Button, Card, HStack, Image, Text, VStack } from '@chakra-ui/react';
+import { useEffect, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import axios from 'axios';
-import { AnalysisResponse, CombinedAnalysisResponse } from '../types/api';
+import {
+  AnalysisError,
+  analyze,
+  errorMessage,
+  getDetectors,
+  validateImageDimensions,
+} from '../api/client';
+import type { AnalysisResponse, DetectorInfo } from '../types/api';
 import AnalysisResults from './AnalysisResults';
 
-type AnalysisType = 'ela' | 'prnu' | 'entropy' | 'combined';
-
 export default function ImageAnalyzer() {
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [results, setResults] = useState<AnalysisResponse | CombinedAnalysisResponse | null>(null);
-  const toast = useToast();
+  const [file, setFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [detectors, setDetectors] = useState<DetectorInfo[]>([]);
+  const [results, setResults] = useState<AnalysisResponse | null>(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [history, setHistory] = useState<AnalysisResponse[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const onDrop = (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0];
-    if (file) {
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
+  useEffect(() => {
+    const controller = new AbortController();
+    void getDetectors(controller.signal)
+      .then((response) => setDetectors(response.detectors))
+      .catch((reason: unknown) => {
+        if (!(reason instanceof AnalysisError) || reason.kind !== 'aborted')
+          setError(errorMessage(reason));
+      });
+    return () => {
+      controller.abort();
+      abortRef.current?.abort();
+    };
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl],
+  );
+
+  const chooseFile = async (nextFile: File) => {
+    setError('');
+    try {
+      await validateImageDimensions(nextFile);
+      setPreviewUrl((oldUrl) => {
+        if (oldUrl) URL.revokeObjectURL(oldUrl);
+        return URL.createObjectURL(nextFile);
+      });
+      setFile(nextFile);
       setResults(null);
+      setProgress(0);
+    } catch (reason) {
+      setError(errorMessage(reason));
     }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
     accept: {
       'image/jpeg': ['.jpg', '.jpeg'],
       'image/png': ['.png'],
+      'image/webp': ['.webp'],
+      'image/tiff': ['.tif', '.tiff'],
     },
     maxFiles: 1,
+    multiple: false,
+    onDrop: (acceptedFiles) => {
+      const nextFile = acceptedFiles[0];
+      if (nextFile) void chooseFile(nextFile);
+    },
   });
 
-  const analyzeImage = async (type: AnalysisType) => {
-    if (!selectedImage) return;
-
-    const formData = new FormData();
-    formData.append('file', selectedImage);
-
+  const runAnalysis = async () => {
+    if (!file || loading) return;
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setLoading(true);
+    setError('');
+    setProgress(0);
     try {
-      setIsAnalyzing(true);
-      const response = await axios.post(`/analyze/${type}`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await analyze(file, {
+        includeMaps: true,
+        signal: controller.signal,
+        onUploadProgress: setProgress,
       });
-      setResults(response.data);
-    } catch (error) {
-      toast({
-        title: 'Analysis failed',
-        description: 'There was an error analyzing the image. Please try again.',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
+      setResults(response);
+      setHistory((previous) =>
+        [response, ...previous.filter((item) => item.image.sha256 !== response.image.sha256)].slice(
+          0,
+          5,
+        ),
+      );
+    } catch (reason) {
+      if (!(reason instanceof AnalysisError) || reason.kind !== 'aborted')
+        setError(errorMessage(reason));
     } finally {
-      setIsAnalyzing(false);
+      if (abortRef.current === controller) abortRef.current = null;
+      setLoading(false);
     }
   };
 
   return (
-    <VStack spacing={6} align="stretch">
-      <Card>
-        <Box
-          {...getRootProps()}
-          p={6}
-          border="2px dashed"
-          borderColor={isDragActive ? 'blue.500' : 'gray.200'}
-          borderRadius="lg"
-          textAlign="center"
-          cursor="pointer"
-          transition="all 0.2s"
-          _hover={{ borderColor: 'blue.500' }}
-        >
-          <input {...getInputProps()} />
-          <Text>
-            {isDragActive
-              ? 'Drop the image here...'
-              : 'Drag and drop an image here, or click to select'}
-          </Text>
-        </Box>
-      </Card>
-
-      {imagePreview && (
-        <Grid templateColumns={{ base: '1fr', md: '1fr 1fr' }} gap={6}>
-          <Card>
-            <VStack spacing={4}>
-              <Image
-                src={imagePreview}
-                alt="Selected image"
-                maxH="400px"
-                objectFit="contain"
-              />
-              <HStack spacing={4} wrap="wrap" justify="center">
-                <Button
-                  onClick={() => analyzeImage('ela')}
-                  isLoading={isAnalyzing}
-                  loadingText="Analyzing"
-                >
-                  ELA Analysis
-                </Button>
-                <Button
-                  onClick={() => analyzeImage('prnu')}
-                  isLoading={isAnalyzing}
-                  loadingText="Analyzing"
-                >
-                  PRNU Analysis
-                </Button>
-                <Button
-                  onClick={() => analyzeImage('entropy')}
-                  isLoading={isAnalyzing}
-                  loadingText="Analyzing"
-                >
-                  Entropy Analysis
-                </Button>
-                <Button
-                  onClick={() => analyzeImage('combined')}
-                  isLoading={isAnalyzing}
-                  loadingText="Analyzing"
-                  colorScheme="green"
-                >
-                  Combined Analysis
-                </Button>
+    <VStack align="stretch" gap={6}>
+      <Card.Root variant="outline">
+        <Card.Body>
+          <VStack align="stretch" gap={4}>
+            <Box
+              {...getRootProps()}
+              role="button"
+              tabIndex={0}
+              borderWidth="2px"
+              borderStyle="dashed"
+              borderColor={isDragActive ? 'signal' : 'line'}
+              borderRadius="md"
+              p={{ base: 8, md: 12 }}
+              textAlign="center"
+              cursor="pointer"
+            >
+              <input {...getInputProps()} aria-label="Choose image file" />
+              <Text fontWeight="bold">
+                {isDragActive ? 'Drop the image here' : 'Drop an image here or choose a file'}
+              </Text>
+              <Text color="muted" fontSize="sm" mt={2}>
+                JPEG, PNG, WebP, or TIFF. Maximum 12 MB.
+              </Text>
+            </Box>
+            {error && (
+              <Text role="alert" color="signal">
+                {error}
+              </Text>
+            )}
+            {file && (
+              <HStack justify="space-between" align="center" wrap="wrap" gap={3}>
+                <Text fontFamily="mono" fontSize="sm">
+                  {file.name} · {Math.round(file.size / 1024)} KB
+                </Text>
+                <HStack>
+                  <Button onClick={() => void runAnalysis()} loading={loading} disabled={loading}>
+                    Analyze image
+                  </Button>
+                  {loading && (
+                    <Button variant="outline" onClick={() => abortRef.current?.abort()}>
+                      Cancel
+                    </Button>
+                  )}
+                </HStack>
               </HStack>
-            </VStack>
-          </Card>
+            )}
+            {loading && (
+              <Text aria-live="polite" color="muted">
+                Uploading and analyzing{progress ? ` · ${progress}% uploaded` : '…'}
+              </Text>
+            )}
+          </VStack>
+        </Card.Body>
+      </Card.Root>
 
-          {results && <AnalysisResults results={results} />}
-        </Grid>
+      {previewUrl && (
+        <Image
+          src={previewUrl}
+          alt="Selected image preview"
+          maxH="420px"
+          w="100%"
+          objectFit="contain"
+          borderRadius="md"
+        />
       )}
+      {results && previewUrl && (
+        <AnalysisResults results={results} originalUrl={previewUrl} detectors={detectors} />
+      )}
+      {history.length > 0 && (
+        <Text color="muted" fontSize="sm" aria-label="Analysis history">
+          This session has {history.length} saved result{history.length === 1 ? '' : 's'}.
+        </Text>
+      )}
+      <Text fontSize="xs" color="muted">
+        This tool provides probabilistic forensic signals, not proof of an image’s origin or editing
+        history.
+      </Text>
     </VStack>
   );
-} 
+}

@@ -1,0 +1,16 @@
+# Working-tree implementation status; no stage commits are created in this run.
+S00: {status: passed, branch: main, commit: null, notes: "pyenv 3.13.13 runtime, baseline artifacts, and plan validation recorded."}
+S01: {status: passed, branch: main, commit: null, notes: "Pinned backend dependencies and dev requirements."}
+S02: {status: passed, branch: main, commit: null, notes: "Frontend dependency migration completed."}
+S03: {status: passed, branch: main, commit: null, notes: "Upload validation, bounded analysis, CORS, rate limiting, and ELA arithmetic fixed."}
+S04: {status: passed, branch: main, commit: null, notes: "Versioned API, detector protocol, registry, and failure isolation implemented."}
+S05: {status: passed, branch: main, commit: null, notes: "Deterministic synthetic corpus and benchmark contract implemented; real corpus remains intentionally incomplete."}
+S06: {status: passed, branch: main, commit: null, notes: "JPEG-family detectors implemented and registered."}
+S07: {status: passed, branch: main, commit: null, notes: "Copy-move detector implemented and registered."}
+S08: {status: passed, branch: main, commit: null, notes: "CFA, spectral, and noise-residual semantics implemented."}
+S09: {status: passed, branch: main, commit: null, notes: "EXIF and C2PA detectors implemented with no-manifest semantics."}
+S10: {status: passed, branch: main, commit: null, notes: "NumPy calibration and weighted-logit fusion fitted to the deterministic corpus."}
+S11: {status: passed, branch: main, commit: null, notes: "Frontend uses v1 API with upload, progress, errors, history, and evidence overlay."}
+S12: {status: passed, branch: main, commit: null, notes: "Optional pinned ONNX learned detector passes absent-model and installed-model checks."}
+S13: {status: passed, branch: main, commit: null, notes: "CI, non-root Docker image, healthcheck, logging, and truthful docs verified."}
+S14: {status: passed, branch: main, commit: null, notes: "Legacy routes removed from routing, return 410 pointers via middleware, and dead proxies removed; container API smoke passed."}

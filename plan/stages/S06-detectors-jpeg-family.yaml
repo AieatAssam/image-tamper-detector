@@ -1,0 +1,183 @@
+id: S06
+title: "Quantization-table fingerprinting, double-JPEG/Benford, JPEG ghosts"
+depends_on: [S05]
+
+objective: >
+  Add the three detectors that read an image's COMPRESSION HISTORY. These are
+  the highest value-per-line additions in the plan: they need no model, no new
+  dependency, and they answer a question none of the existing three detectors
+  ask -- "was this file written by the device it claims, and how many times has
+  it been compressed?". The synthetic corpus validates all three faithfully,
+  because compression history is exactly what a generator can reproduce.
+
+context:
+  - "Full algorithm specifications are in plan/reference/detector-catalog.yaml under new.qtable_fingerprint, new.double_jpeg_benford and new.jpeg_ghosts. Implement those specs. They are detailed enough that you do not need to read the cited papers."
+  - "S04 provides the Detector protocol, the registry, ImageContext (which decodes the image ONCE and shares the derived arrays), and to_probability(). Use all four."
+  - "S05 provides data/corpus/synthetic with the double_compress_aligned, double_compress_shifted, splice and authentic_recompress families, which are precisely the ground truth these three detectors need."
+  - "No new Python dependency is required. PIL exposes quantization tables as Image.quantization; cv2.dct and np.fft cover the rest."
+
+files_allowed:
+  - "backend/app/analysis/qtable.py"
+  - "backend/app/analysis/double_jpeg.py"
+  - "backend/app/analysis/ghosts.py"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/analysis/calibration.json"
+  - "backend/tests/test_qtable.py"
+  - "backend/tests/test_double_jpeg.py"
+  - "backend/tests/test_ghosts.py"
+  - "benchmarks/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch. Record the pre-stage benchmark so regression can be proven, not assumed."
+    commands: |
+      git checkout main && git checkout -b plan/S06
+      .venv/bin/python scripts/benchmark.py --out benchmarks/pre-S06.json --corpus all
+
+  - n: 2
+    action: >
+      Implement QuantizationTableDetector per catalog new.qtable_fingerprint.
+      Key implementation notes, all verifiable rather than assumed:
+        - PIL exposes the tables as `Image.open(p).quantization`, a dict
+          {table_index: [64 ints]} in ZIGZAG order. Confirm the ordering
+          empirically by round-tripping a known-quality save before relying on it.
+        - The dict is EMPTY or absent for non-JPEG. That is the
+          NOT_APPLICABLE case, not a score of 0.
+        - The libjpeg scaling formula is: scale = 5000/Q for Q<50 else 200-2Q;
+          value = clamp((base*scale + 50)/100, 1, 255), with `base` the Annex K
+          table. Embed the two Annex K tables (luminance and chrominance) as
+          literal 64-element constants with a comment citing ITU-T T.81 Annex K.
+        - Report libjpeg_distance (the minimum sum of absolute differences over
+          Q in 1..100), estimated_quality (the argmin), and table_sha256.
+      Signal: libjpeg_distance == 0 means a standard software encoder wrote this
+      file. On its own that is weak. It becomes strong when combined with an EXIF
+      camera Make, which is why S09's exif detector and this one are fused rather
+      than either being decisive alone.
+    constraints:
+      - "DO NOT bundle a camera quantization-table database. Report the fingerprint and the distance; matching against a table corpus is a separate, later concern and would need a licensed dataset."
+
+  - n: 3
+    action: >
+      Implement DoubleJpegDetector per catalog new.double_jpeg_benford.
+      Both sub-tests (generalised Benford fit and coefficient-histogram
+      periodicity) are required; report each metric separately as well as the
+      aggregate, because they fail on different families -- the periodicity test
+      is much stronger on grid-ALIGNED recompression, the Benford test survives
+      misalignment better. The corpus has both families precisely so you can see
+      that split.
+    notes:
+      - "PIL does not expose raw DCT coefficients. Recompute them: YCbCr, Y plane, crop to a multiple of 8, 8x8 blocks, cv2.dct on float32 minus 128."
+      - "skip images whose smaller side is below 256px and report NOT_APPLICABLE -- too few blocks for a stable histogram"
+      - "guard against divide-by-zero when a coefficient position is entirely zero, which happens on flat images"
+
+  - n: 4
+    action: >
+      Implement JpegGhostDetector per catalog new.jpeg_ghosts.
+      MANDATORY performance guard: downscale the longest side to at most 1024
+      before the 26-point quality sweep. Twenty-six full-resolution JPEG
+      round-trips on the 8640x5760 landscape sample would take minutes and would
+      make the combined endpoint unusable. Measure and report duration_ms; the
+      acceptance below caps it.
+
+  - n: 5
+    action: >
+      Register all three, and add provisional entries to calibration.json with
+      version bumped and threshold/scale chosen from the OBSERVED distribution
+      on the synthetic corpus. Document in the JSON that these are
+      distribution-derived provisional values, not fitted weights, and that S10
+      replaces them.
+
+  - n: 6
+    action: "Write the three test modules. Every assertion below is Tier A: deterministic, offline, no network."
+    test_requirements:
+      qtable:
+        - "an image saved by PIL at quality 90 yields libjpeg_distance == 0 -- construct it in the test, do not rely on a fixture"
+        - "the same image re-saved at a different quality yields a DIFFERENT table_sha256"
+        - "a PNG yields state == NOT_APPLICABLE, and score is None (NOT 0.0, and NOT flagged)"
+        - "estimated_quality is within +/-2 of the quality the test actually saved at, across q in {60,75,85,95}"
+      double_jpeg:
+        - "across the synthetic corpus, the mean periodicity score on double_compress_aligned is strictly greater than on authentic_recompress -- this is the directional assertion, and it is what makes an inverted implementation impossible to merge"
+        - "same directional assertion for the Benford divergence on double_compress_shifted"
+        - "a 128x128 image yields NOT_APPLICABLE"
+        - "a uniformly flat gray image does not raise and does not produce NaN"
+      ghosts:
+        - "on the splice family, the number of distinct spatially-coherent q0 modes is greater than on authentic_recompress"
+        - "duration on the largest corpus image stays under the cap asserted below"
+        - "the returned q0 map has the same aspect ratio as the input"
+    constraints:
+      - "Assert DIRECTION and SEPARATION between families, never an absolute AUC floor. See plan.yaml acceptance_tiers.why_this_split."
+
+  - n: 7
+    action: "Benchmark and prove no regression."
+    commands: |
+      .venv/bin/python scripts/benchmark.py --out benchmarks/post-S06.json --corpus all
+
+  - n: 8
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S06: add quantization-table, double-JPEG/Benford and JPEG-ghost detectors"'
+
+acceptance:
+  - check: "the three detector test modules pass"
+    command: ".venv/bin/python -m pytest backend/tests/test_qtable.py backend/tests/test_double_jpeg.py backend/tests/test_ghosts.py -q"
+  - check: "all three are registered and appear in the API"
+    command: ".venv/bin/python -c \"from backend.app.analysis.registry import get_all; ids=set(get_all()); assert {'qtable','double_jpeg','jpeg_ghosts'} <= ids, ids; print(sorted(ids))\""
+  - check: "score/flag coherence still holds for every detector including the new ones"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q"
+  - check: "NO REGRESSION: no pre-existing detector's AUC dropped by more than 0.02 on any corpus"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json,sys
+      pre=json.load(open('benchmarks/pre-S06.json'))['detectors']
+      post=json.load(open('benchmarks/post-S06.json'))['detectors']
+      bad=[]
+      for d in pre:
+          for ms in pre[d]['metric_sets']:
+              new=[m for m in post[d]['metric_sets'] if m['corpus']==ms['corpus']]
+              if not new: continue
+              if ms['auc'] - new[0]['auc'] > 0.02:
+                  bad.append((d, ms['corpus'], ms['auc'], new[0]['auc']))
+      assert not bad, bad
+      print('no regression')
+      PY
+  - check: "the new detectors actually SEPARATE the families they target (directional, not absolute)"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      b=json.load(open('benchmarks/post-S06.json'))
+      f=b['per_family_mean_score']
+      assert f['double_jpeg']['double_compress_aligned'] > f['double_jpeg']['authentic_recompress'], f['double_jpeg']
+      assert f['jpeg_ghosts']['splice'] > f['jpeg_ghosts']['authentic_recompress'], f['jpeg_ghosts']
+      print('separation ok')
+      PY
+  - check: "JPEG ghosts respects its performance cap on the largest sample (8640x5760)"
+    command: |
+      .venv/bin/python - <<'PY'
+      import time
+      from backend.app.analysis.registry import get
+      from backend.app.analysis.base import ImageContext
+      ctx = ImageContext.from_path('data/samples/original/landscape_original.jpg')
+      t=time.perf_counter(); get(['jpeg_ghosts'])['jpeg_ghosts'].run(ctx); dt=time.perf_counter()-t
+      assert dt < 8.0, f'jpeg_ghosts took {dt:.1f}s -- the downscale guard is missing or ineffective'
+      print(f'{dt:.2f}s')
+      PY
+  - check: "no new dependency was added"
+    command: "git diff main...HEAD --name-only | grep -qE 'requirements' && exit 1 || exit 0"
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+constraints:
+  - "DO NOT modify backend/app/main.py. If adding a detector requires touching main.py, S04's registry is broken -- report that as a BLOCKED finding instead of working around it."
+  - "DO NOT change the threshold or scale of any EXISTING detector. Only add new entries to calibration.json."
+  - "DO NOT add a Python dependency. Everything needed is in numpy, cv2 and PIL."
+  - "DO NOT set an absolute AUC floor in any acceptance check."
+  - "DO NOT let any detector return score 0.0 for NOT_APPLICABLE. It must be None with state NOT_APPLICABLE, or it silently votes 'authentic' in fusion."
+  - "DO NOT skip the ghosts downscale guard 'for accuracy'. An analysis endpoint that takes minutes is a broken endpoint."
+
+rollback: "git checkout main && git branch -D plan/S06"
+
+artifacts:
+  - backend/app/analysis/qtable.py
+  - backend/app/analysis/double_jpeg.py
+  - backend/app/analysis/ghosts.py
+  - benchmarks/post-S06.json

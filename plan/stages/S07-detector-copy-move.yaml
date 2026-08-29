@@ -1,0 +1,141 @@
+id: S07
+title: "Copy-move forgery localization via SIFT + RANSAC affine clustering"
+depends_on: [S05]
+
+objective: >
+  Add the one detector that directly targets the repo's own tampered sample.
+  data/samples/tampered/landscape_copy_paste.jpg was made by copying a region
+  of landscape_original.jpg into another part of the same image. Because source
+  and destination share identical compression history and identical sensor
+  noise, ELA and the noise-residual detector are structurally blind to it --
+  every statistic they measure matches. The giveaway is purely geometric.
+
+context:
+  - "Full specification in plan/reference/detector-catalog.yaml under new.copy_move."
+  - "cv2.SIFT_create() lives in the OpenCV main modules from 4.4.0 onward (the patent expired). opencv-python-headless 4.14.0.94 is pinned, so it is available. DO NOT add opencv-contrib-python."
+  - "S05's copy_move corpus family varies offset, scale (1.0 and 1.1), rotation (0 and 5 degrees) and feathering, and emits a mask covering BOTH the source and destination regions. That mask is the localisation ground truth."
+  - "The critical failure mode is textureless regions: SIFT finds no keypoints in sky or blank paper, so the detector cannot see a paste there. Reporting that as 'clean' produces a confident false negative on exactly the images it cannot analyse."
+
+files_allowed:
+  - "backend/app/analysis/copy_move.py"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/analysis/calibration.json"
+  - "backend/tests/test_copy_move.py"
+  - "benchmarks/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch and record the pre-stage benchmark."
+    commands: |
+      git checkout main && git checkout -b plan/S07
+      .venv/bin/python scripts/benchmark.py --out benchmarks/pre-S07.json --corpus all
+
+  - n: 2
+    action: >
+      Implement CopyMoveDetector per the catalog spec. The four details that
+      decide whether this works at all:
+        (a) SELF-matching, so the nearest neighbour of every descriptor is
+            itself. Use knnMatch with k=3, not k=2, and discard the self-match.
+        (b) Discard matches whose two keypoints are within min_offset=32px of
+            each other, or every keypoint matches its own neighbourhood and the
+            result is noise.
+        (c) Cluster the (dx,dy) OFFSET vectors, not the keypoints. A genuine
+            copy-move produces a dense cluster of near-identical offsets. Use a
+            grid hash at 8px resolution; keep clusters with >= 8 members.
+        (d) Verify each cluster with cv2.estimateAffinePartial2D(method=cv2.RANSAC,
+            ransacReprojThreshold=3.0) and keep it only if inliers >= 8.
+            estimateAffinePartial2D (4 DOF: rotation, uniform scale, translation)
+            is the right model here -- full estimateAffine2D has enough freedom
+            to fit noise.
+      Downscale the longest side to at most 1600 before detection; the 8640x5760
+      sample otherwise produces tens of thousands of keypoints and an O(n^2)
+      match. Scale the output mask back to full resolution.
+
+  - n: 3
+    action: >
+      Implement the three-valued outcome correctly. This is the single most
+      important part of this stage:
+        - fewer than MIN_KEYPOINTS (use 100) detected  -> NOT_APPLICABLE,
+          reason "insufficient texture for keypoint matching", score None
+        - keypoints found, no verified cluster          -> APPLICABLE, low score
+        - >= 1 verified cluster                          -> APPLICABLE, high score
+      Conflating the first two is how this detector ships confident false
+      negatives on smooth images.
+
+  - n: 4
+    action: "Register, add a provisional calibration entry, and produce the visualisation: both convex hulls outlined, joined by an arrow showing the offset."
+
+  - n: 5
+    action: "Tests."
+    test_requirements:
+      - "CONSTRUCTED POSITIVE: build a 512x512 image of random texture in the test, copy a 96x96 block to a known offset, and assert the detector finds a cluster whose recovered translation matches the known offset within 8px. Deterministic, no fixture, no corpus."
+      - "CONSTRUCTED NEGATIVE: the same random-texture image WITHOUT the copy yields no verified cluster."
+      - "TEXTURELESS: a uniform gray image yields state == NOT_APPLICABLE with reason mentioning keypoints -- NOT a clean verdict."
+      - "REAL SAMPLE: data/samples/tampered/landscape_copy_paste.jpg is flagged, and data/samples/original/landscape_original.jpg is not. Note this is n=1 each and is a sanity check, not evidence of skill."
+      - "LOCALISATION: across the corpus copy_move family, mean mask IoU against the ground truth exceeds mean IoU on the splice family -- a directional assertion that the detector is finding the right thing, not just flagging."
+      - "ROTATION/SCALE: the corpus entries with 5-degree rotation and 1.1 scale are still detected, proving estimateAffinePartial2D is doing its job."
+
+  - n: 6
+    action: "Benchmark and commit."
+    commands: |
+      .venv/bin/python scripts/benchmark.py --out benchmarks/post-S07.json --corpus all
+      git add -A && git commit -m "S07: add SIFT+RANSAC copy-move forgery detector"
+
+acceptance:
+  - check: "copy-move tests pass"
+    command: ".venv/bin/python -m pytest backend/tests/test_copy_move.py -q"
+  - check: "registered"
+    command: ".venv/bin/python -c \"from backend.app.analysis.registry import get_all; assert 'copy_move' in get_all()\""
+  - check: "the repo's own copy-paste sample is detected and the original is not"
+    command: ".venv/bin/python -m pytest backend/tests/test_copy_move.py -q -k real_sample"
+  - check: "a textureless image reports NOT_APPLICABLE, not a clean verdict"
+    command: ".venv/bin/python -m pytest backend/tests/test_copy_move.py -q -k textureless"
+  - check: "localisation beats chance on the family it targets"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      b=json.load(open('benchmarks/post-S07.json'))
+      iou=b['per_family_mean_iou']['copy_move']
+      assert iou['copy_move'] > iou['splice'], iou
+      assert iou['copy_move'] > 0.1, iou
+      print('iou', iou)
+      PY
+  - check: "no regression in any pre-existing detector (same script as S06)"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      pre=json.load(open('benchmarks/pre-S07.json'))['detectors']
+      post=json.load(open('benchmarks/post-S07.json'))['detectors']
+      bad=[(d,ms['corpus']) for d in pre for ms in pre[d]['metric_sets']
+           for n in post[d]['metric_sets'] if n['corpus']==ms['corpus'] and ms['auc']-n['auc']>0.02]
+      assert not bad, bad; print('no regression')
+      PY
+  - check: "runs within budget on the largest sample"
+    command: |
+      .venv/bin/python - <<'PY'
+      import time
+      from backend.app.analysis.registry import get
+      from backend.app.analysis.base import ImageContext
+      ctx=ImageContext.from_path('data/samples/tampered/landscape_copy_paste.jpg')
+      t=time.perf_counter(); get(['copy_move'])['copy_move'].run(ctx); dt=time.perf_counter()-t
+      assert dt < 15.0, f'{dt:.1f}s -- the 1600px downscale guard is missing'
+      print(f'{dt:.2f}s')
+      PY
+  - check: "opencv-contrib was not added"
+    command: "! grep -qi 'opencv-contrib' requirements.txt"
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+constraints:
+  - "DO NOT add opencv-contrib-python. SIFT is in the main modules."
+  - "DO NOT return a 'clean' verdict when keypoints were insufficient."
+  - "DO NOT use estimateAffine2D (6 DOF) -- it overfits noise. Use estimateAffinePartial2D."
+  - "DO NOT modify main.py or any other detector."
+  - "DO NOT set an absolute AUC floor."
+
+rollback: "git checkout main && git branch -D plan/S07"
+
+artifacts:
+  - backend/app/analysis/copy_move.py
+  - backend/tests/test_copy_move.py

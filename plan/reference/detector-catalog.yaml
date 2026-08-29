@@ -1,0 +1,441 @@
+# ==============================================================================
+# detector-catalog.yaml -- specification of every detector, existing and new
+# ==============================================================================
+# Each entry is precise enough to implement WITHOUT reading the cited paper.
+# The citation is provenance, not required reading.
+#
+# `signal_direction` tells you which way the raw statistic moves for a
+# manipulated image. Get this wrong and the confidence score inverts silently.
+#
+# `validated_by` names the corpus axis (see S05) that can legitimately test the
+# detector. A detector whose validated_by is `real_camera` CANNOT be tested
+# against generated splices -- see plan.yaml acceptance_tiers.
+# ==============================================================================
+
+catalog_version: 1
+
+# ------------------------------------------------------------------------------
+# EXISTING DETECTORS (reworked, not rewritten from scratch)
+# ------------------------------------------------------------------------------
+existing:
+
+  ela:
+    module: backend/app/analysis/ela.py
+    class: ELAAnalyzer
+    stage_owner: S03
+    status: "implemented; contains a verified arithmetic defect"
+    principle: >
+      JPEG is lossy at a fixed quantisation. Re-encoding an already-compressed
+      region at a known quality changes it LESS than a region that was pasted in
+      from a differently-compressed source. The per-pixel magnitude of that
+      difference (the 'error level') is therefore spatially uniform in an
+      authentic JPEG and spatially discontinuous around a splice.
+    known_defect:
+      id: ELA-1
+      severity: CRITICAL
+      location: "ela.py, in analyze(), the line `ela = np.abs(high_array - low_array)`"
+      description: >
+        high_array and low_array are both dtype uint8 (they come from
+        np.array(PIL.Image)). NumPy unsigned integer subtraction wraps modulo
+        256. When low > high, e.g. high=10 low=20, the result is 246, not -10.
+        np.abs() on an already-unsigned array is a no-op and cannot recover the
+        sign. Roughly half of all pixel differences are therefore replaced by
+        their 256-complement. Every downstream feature (edge_discontinuity,
+        texture_variance, noise_consistency, compression_artifacts) and every
+        tuned threshold is computed on corrupted data.
+      fix: "cv2.absdiff(high_array, low_array) -- saturating, dtype-preserving, exactly the intended semantics"
+      forbidden_fix: "np.abs(high.astype(np.int16) - low.astype(np.int16)) is numerically correct but changes dtype; if you use it you MUST cast back to uint8 before cv2 calls"
+      proof_command: |
+        .venv/bin/python -c "
+        import numpy as np
+        a=np.array([[10]],dtype=np.uint8); b=np.array([[20]],dtype=np.uint8)
+        assert np.abs(a-b)[0,0] == 246, 'wraparound not reproduced'
+        import cv2; assert cv2.absdiff(a,b)[0,0] == 10
+        print('ELA-1 confirmed')"
+    signal_direction: "manipulated -> HIGHER edge_discontinuity, HIGHER compression_artifacts"
+    validated_by: [synthetic_splice, synthetic_recompress]
+    citation: "N. Krawetz, 'A Picture's Worth: Digital Image Analysis and Forensics', Black Hat DC 2008"
+    failure_modes:
+      - "meaningless on PNG and any never-JPEG-compressed source (the analyzer re-encodes to JPEG first, manufacturing an error level that reflects nothing about the file's history)"
+      - "a globally re-saved JPEG has uniform error level even when spliced"
+
+  prnu:
+    module: backend/app/analysis/prnu.py
+    class: PRNUAnalyzer
+    stage_owner: S08
+    status: "implemented; measures local variance of a noise residual, which is NOT PRNU"
+    principle_true_prnu: >
+      Every CMOS/CCD sensor has a fixed multiplicative gain pattern from silicon
+      manufacturing variation. It is a per-CAMERA fingerprint. Genuine PRNU
+      attribution requires a REFERENCE fingerprint estimated from ~50 flat-field
+      images from the SAME camera, then correlating the query image's residual
+      against it (peak-to-correlation-energy). This repo has no reference
+      fingerprints and cannot do that.
+    what_it_actually_does: >
+      Extracts a wavelet/Gaussian denoising residual and reports the mean LOCAL
+      VARIANCE of that residual, thresholded at 300. That is a blind
+      noise-inconsistency statistic, not PRNU. It is a legitimate forensic cue
+      -- a spliced region often carries different noise energy -- but it must
+      not be presented to users as camera-sensor attribution.
+    required_action_S08:
+      - "rename the public concept to `noise_residual_inconsistency` in API output and UI copy; the module may keep the prnu.py filename"
+      - "keep a `prnu_reference` code path ONLY if a reference fingerprint is supplied; otherwise report capability as unavailable rather than faking it"
+      - "the threshold 300 was chosen to make the two GPT-4o receipt samples pass; it is fitted to n=2 and must be recalibrated in S10"
+    signal_direction: "manipulated/AI -> HIGHER local variance of the residual"
+    validated_by: [real_camera, real_ai]
+    citation: "J. Lukas, J. Fridrich, M. Goljan, 'Digital Camera Identification from Sensor Pattern Noise', IEEE TIFS 2006"
+    failure_modes:
+      - "destroyed by resizing, heavy JPEG recompression, and denoising"
+      - "cannot distinguish 'different camera' from 'edited'"
+
+  entropy:
+    module: backend/app/analysis/entropy.py
+    class: EntropyAnalyzer
+    stage_owner: S04
+    status: "implemented; decision logic is coherent, confidence mapping is not"
+    principle: >
+      Computes a local Shannon entropy map per RGB channel over a disk
+      footprint, then finds pixels where (a) the three channels' entropies agree
+      within `tolerance`, (b) the local entropy field is uniform, and (c) colour
+      is locally consistent. Natural photographs contain a high proportion of
+      such pixels; the claim is that generated images contain fewer.
+    verified_logic: "is_ai_generated = matching_proportion < matching_threshold (0.35). Lower proportion => more likely AI. This direction is CORRECT."
+    known_defect:
+      id: ENT-1
+      severity: HIGH
+      description: >
+        The endpoint returns confidence_score = 1 - matching_proportion
+        UNCONDITIONALLY. An authentic image with matching_proportion 0.40
+        reports is_tampered=false AND confidence 0.60. The number is not a
+        confidence in the returned verdict. See api-contract.yaml.
+    signal_direction: "AI-generated -> LOWER matching_proportion"
+    validated_by: [real_ai, real_camera]
+    citation: "F. Rohrer, 'Detecting AI-Generated Images Using Entropy Analysis', https://blog.frohrer.com/detecting-ai-generated-images-using-entropy-analysis/"
+    failure_modes:
+      - "single-blog-post heuristic with no peer review; treat its weight in fusion as low until S10 calibrates it"
+      - "smooth authentic images (sky, studio backdrop) trigger it"
+
+  c2pa:
+    module: backend/app/analysis/c2pa.py
+    class: C2PAAnalyzer
+    stage_owner: S09
+    status: "DEAD CODE AND BROKEN -- never imported by main.py, and written against a removed API"
+    verified_facts:
+      - "grep for 'c2pa' in backend/app/main.py returns nothing: no endpoint exposes it"
+      - "backend/tests/test_c2pa.py exists but its pass/fail state is UNKNOWN (no venv existed to run it)"
+      - "c2pa.Reader.from_file, reader.get_active_manifest and manifest.validate are all absent from c2pa-python 0.37.8"
+    principle: >
+      C2PA is a signed, tamper-evident provenance manifest embedded in the file.
+      Unlike every other detector here it is DECLARATIVE, not statistical: a
+      valid manifest is strong positive evidence about origin, and a broken
+      signature is strong evidence of post-signing modification. Absence of a
+      manifest means nothing at all -- most images have none.
+    critical_semantics:
+      - "NO MANIFEST != TAMPERED. The current code emits severity 'high' / 'no_manifest' for this, which is wrong and will dominate a naive fusion. Absence must map to `unknown`, weight 0."
+      - "A manifest asserting c2pa.created by a generative tool is a POSITIVE identification of AI generation, not a heuristic. Weight it accordingly in S10."
+    validated_by: [real_c2pa_signed, real_camera]
+    citation: "C2PA Specification 2.x, https://c2pa.org/specifications/ ; python bindings https://github.com/contentauth/c2pa-python"
+
+# ------------------------------------------------------------------------------
+# NEW DETECTORS
+# ------------------------------------------------------------------------------
+new:
+
+  qtable_fingerprint:
+    module: backend/app/analysis/qtable.py
+    class: QuantizationTableDetector
+    stage_owner: S06
+    priority: 1
+    rationale: "cheapest high-signal detector in the whole plan: pure metadata read, no pixel maths, microseconds"
+    principle: >
+      A JPEG file carries its own quantisation tables in the DQT marker. Camera
+      manufacturers, phone ISPs and editing software each use characteristic
+      tables. libjpeg's standard tables scaled by a quality factor are what
+      Photoshop 'Save for Web', GIMP, ImageMagick and Python PIL emit; camera
+      firmware tables are usually distinguishable from them. An image claiming
+      EXIF Make=Canon whose DQT matches the libjpeg q=90 standard table was
+      re-saved by software.
+    implementation:
+      read_tables: "PIL: `img = Image.open(path); tables = img.quantization` -> dict {0: [64 ints], 1: [64 ints], ...} in ZIGZAG order. Present only for JPEG; absent/empty for PNG."
+      estimate_quality: >
+        For each table, compare against the libjpeg baseline luminance/chrominance
+        tables (Annex K of ITU-T T.81) scaled by the standard formula:
+          scale = 5000/Q for Q<50 else 200-2*Q
+          value = clamp((base*scale + 50)/100, 1, 255)
+        Report the Q in 1..100 minimising sum of absolute differences, and
+        report that minimum distance as `libjpeg_distance`.
+      decision: >
+        libjpeg_distance == 0 -> table is EXACTLY a standard libjpeg table ->
+        the file was written by generic software, NOT by camera firmware.
+        Combine with EXIF Make/Model from the exif detector: a camera Make plus
+        an exact libjpeg table is a strong re-save indicator.
+      table_fingerprint: "sha256 of the concatenated tables, hex -- lets the app group images by encoder without shipping a database"
+    signal_direction: "re-saved by software -> libjpeg_distance == 0 while EXIF claims a camera"
+    validated_by: [synthetic_recompress, real_camera]
+    citation: "H. Farid, 'Digital Image Ballistics from JPEG Quantization', Dartmouth TR2006-583; ITU-T T.81 Annex K"
+    failure_modes: ["not applicable to PNG/WebP", "some camera firmwares do use standard tables"]
+    constraints:
+      - "DO NOT ship a bundled camera-table database in this stage. Report the fingerprint and the libjpeg distance; matching against a table corpus is a later, separate concern."
+
+  double_jpeg_benford:
+    module: backend/app/analysis/double_jpeg.py
+    class: DoubleJpegDetector
+    stage_owner: S06
+    priority: 2
+    principle: >
+      An image compressed once has DCT coefficient magnitudes whose leading
+      digits follow a generalised Benford distribution. Compressing a second
+      time with a DIFFERENT quantisation step imposes a periodic comb on the
+      coefficient histogram: bins that are multiples of the second quantiser get
+      over-populated and neighbours get emptied. That periodicity is visible as
+      a peak in the DFT of the coefficient histogram, and as a departure from
+      Benford in the first-digit distribution.
+    implementation:
+      dct_extraction: >
+        Do NOT try to read raw DCT coefficients through PIL -- it does not
+        expose them. Instead recompute: convert to YCbCr, take the Y plane,
+        crop to a multiple of 8, split into non-overlapping 8x8 blocks, apply
+        cv2.dct on each block cast to float32 minus 128.
+      benford_test: >
+        For a fixed set of AC coefficient positions (use the 20 lowest-frequency
+        AC positions in zigzag order, indices 1..20), pool |coefficient| over all
+        blocks, discard zeros, take the leading decimal digit d in 1..9, and
+        compare the empirical distribution to the generalised Benford model
+          p(d) = N * log10(1 + 1/(s + d^q))
+        Fit N, s, q by least squares per coefficient position. Report the
+        chi-square divergence. Single-compressed images fit closely; double
+        compressed images do not.
+      periodicity_test: >
+        For each of the same AC positions, build a histogram of integer
+        coefficient values over range [-50, 50], take np.fft.rfft of the
+        histogram, and measure the ratio of the largest non-DC magnitude to the
+        mean magnitude. A ratio above the calibrated threshold indicates a
+        periodic comb, i.e. recompression.
+      output: "per-position scores plus an aggregate; also a block-level map so the frontend can localise"
+    signal_direction: "recompressed -> HIGHER chi-square divergence, HIGHER periodicity ratio"
+    validated_by: [synthetic_recompress]
+    citation: >
+      D. Fu, Y.Q. Shi, W. Su, 'A generalized Benford's law for JPEG coefficients
+      and its applications in image forensics', SPIE 2007;
+      T. Bianchi, A. Piva, 'Image Forgery Localization via Block-Grained
+      Analysis of JPEG Artifacts', IEEE TIFS 2012
+    failure_modes: ["blind to recompression at the SAME quality/alignment", "needs a reasonably sized image; skip below 256x256"]
+
+  jpeg_ghosts:
+    module: backend/app/analysis/ghosts.py
+    class: JpegGhostDetector
+    stage_owner: S06
+    priority: 3
+    principle: >
+      Re-save the image at every quality q in a sweep and measure the per-pixel
+      squared difference from the original. A region that was originally
+      compressed at quality q0 shows a LOCAL MINIMUM in that difference when
+      q == q0. If the image contains a spliced region carrying a different q0,
+      two spatially separate minima appear at two different q -- the 'ghost'.
+    implementation:
+      sweep: "q from 50 to 100 step 2 (26 points). For each q: re-encode with cv2.imencode('.jpg', img, [cv2.IMWRITE_JPEG_QUALITY, q]), decode, compute per-pixel mean squared difference across channels."
+      smoothing: "average the difference map over BxB spatial blocks with B=16 to suppress content-dependent noise"
+      normalisation: "for each block, min-max normalise its 26-point difference curve to [0,1] so that content brightness does not dominate"
+      decision: "argmin over q per block gives a q0 map. Report the number of distinct modes in the q0 histogram and the spatial coherence of each mode. >1 well-separated spatially-coherent mode => splice."
+      cost_control: "MANDATORY: downscale the longest side to <=1024 before the sweep. 26 full-resolution JPEG round-trips is otherwise the slowest operation in the app."
+    signal_direction: "spliced -> multiple distinct spatially-coherent q0 modes"
+    validated_by: [synthetic_splice]
+    citation: "H. Farid, 'Exposing Digital Forgeries from JPEG Ghosts', IEEE TIFS 4(1), 2009"
+    failure_modes: ["requires the spliced region to be reasonably large", "useless if the composite was flattened at a low quality that destroys both histories"]
+
+  copy_move:
+    module: backend/app/analysis/copy_move.py
+    class: CopyMoveDetector
+    stage_owner: S07
+    priority: 1
+    rationale: "directly targets data/samples/tampered/landscape_copy_paste.jpg, which both ELA and the noise detector handle poorly because the source and destination share identical compression and sensor history"
+    principle: >
+      In a copy-move forgery the pasted content came from the SAME image, so it
+      matches the source region in every statistic that ELA and PRNU measure.
+      The giveaway is geometric: two distinct regions of the image are
+      near-identical up to an affine transform.
+    implementation:
+      keypoints: >
+        cv2.SIFT_create() -- available in the opencv main modules since 4.4.0
+        (the patent expired); do NOT reach for opencv-contrib. Detect on the
+        grayscale image, downscaled so the longest side is <= 1600.
+      matching: >
+        Match each descriptor against ALL OTHERS IN THE SAME IMAGE
+        (self-matching). Use cv2.BFMatcher.knnMatch with k=3 rather than k=2,
+        because the nearest neighbour of a keypoint is itself. Discard matches
+        whose spatial distance between the two keypoints is below
+        min_offset=32px -- otherwise every keypoint matches its own
+        neighbourhood. Apply Lowe's ratio test at 0.75 to the remaining pairs.
+      clustering: >
+        Compute the offset vector (dx,dy) for every surviving match. Genuine
+        copy-move produces a dense cluster of near-identical offsets. Cluster
+        offsets with cv2.partition or a simple grid hash at 8px resolution;
+        keep clusters with >= 8 members.
+      verification: >
+        For each surviving cluster run cv2.estimateAffinePartial2D with
+        method=cv2.RANSAC, ransacReprojThreshold=3.0. Keep the cluster only if
+        the inlier count is >= 8. The inlier keypoints' convex hulls are the two
+        regions to highlight.
+      output: "a binary mask marking both source and destination regions, the affine matrix, and the inlier count"
+    signal_direction: "copy-move present -> >=1 verified affine cluster"
+    validated_by: [synthetic_copymove]
+    citation: >
+      I. Amerini et al., 'A SIFT-Based Forensic Method for Copy-Move Attack
+      Detection and Transformation Recovery', IEEE TIFS 6(3), 2011
+    failure_modes:
+      - "fails on smooth/textureless pasted regions (sky, blank paper) where SIFT finds no keypoints -- this is a real limit, report it as low-confidence rather than as 'clean'"
+      - "heavy post-blur on the paste reduces descriptor similarity"
+    constraints:
+      - "MUST report `insufficient_keypoints` as a distinct outcome from `no_forgery_found`. Conflating them produces confident false negatives on exactly the images this detector cannot see."
+
+  cfa_periodicity:
+    module: backend/app/analysis/cfa.py
+    class: CfaDetector
+    stage_owner: S08
+    priority: 2
+    rationale: "one of the few detectors that is genuinely strong on fully-synthetic images such as the GPT-4o receipt samples"
+    principle: >
+      A single-sensor camera captures one colour per pixel behind a Bayer colour
+      filter array and INTERPOLATES the other two. Interpolated pixels are, by
+      construction, smoother than acquired pixels. This leaves a 2x2-periodic
+      variance pattern in the second derivative of each colour plane. A
+      rendered, generated, or heavily resampled image has no such pattern.
+    implementation:
+      residual: "for each colour plane, compute the interpolation residual as the plane minus its bilinear re-interpolation from the plane's own Bayer-subsampled positions, for each of the 4 possible Bayer phases"
+      statistic: >
+        Partition pixels into the 4 positions of the 2x2 lattice. Compute the
+        variance of the residual within each position class over sliding
+        WxW windows (W=32). For a genuine demosaiced image, two of the four
+        classes have systematically lower variance than the other two. Report
+        the ratio  mean(var of the 2 lowest classes) / mean(var of the 2 highest).
+      decision: "ratio near 1.0 => NO CFA structure => not straight-from-sensor. Ratio well below 1.0 => CFA present."
+      phase_selection: "test all 4 Bayer phases, keep the phase giving the strongest ratio"
+      localisation: "the per-window ratio map is directly a tamper map: an inserted region loses CFA structure the surrounding image retains"
+    signal_direction: "synthetic / resampled / spliced -> ratio closer to 1.0 (CFA structure absent)"
+    validated_by: [real_camera, real_ai]
+    critical_note: >
+      THIS DETECTOR CANNOT BE VALIDATED ON THE SYNTHETIC CORPUS. Splicing one
+      Unsplash JPEG into itself does not create or destroy Bayer structure in a
+      way that mirrors reality. Its Tier A acceptance MUST use the
+      checksum-verified real_camera and real_ai images from data/corpus/MANIFEST.yaml.
+    citation: >
+      A.C. Popescu, H. Farid, 'Exposing Digital Forgeries in Color Filter Array
+      Interpolated Images', IEEE TSP 53(10), 2005;
+      P. Ferrara et al., 'Image Forgery Localization via Fine-Grained Analysis
+      of CFA Artifacts', IEEE TIFS 7(5), 2012
+    failure_modes:
+      - "destroyed by any downscaling, so it is only meaningful on full-resolution originals -- CHECK image dimensions against EXIF and report `not_applicable` if the file was resized"
+      - "Foveon/monochrome sensors and multi-shot pixel-shift modes have no CFA"
+
+  spectral_peaks:
+    module: backend/app/analysis/spectral.py
+    class: SpectralPeakDetector
+    stage_owner: S08
+    priority: 3
+    principle: >
+      GAN and diffusion decoders build images by repeated upsampling
+      (transposed convolution or nearest/bilinear upsample + conv). Every such
+      layer replicates the spectrum periodically, leaving a regular lattice of
+      peaks in the magnitude spectrum of the image's HIGH-PASS RESIDUAL. Natural
+      images have a smooth, roughly power-law spectrum with no such lattice.
+    implementation:
+      residual: "high-pass the grayscale image: residual = gray.astype(float32) - cv2.GaussianBlur(gray, (0,0), sigmaX=1.0). Using the residual rather than the image itself removes the dominant low-frequency content that would otherwise swamp the peaks."
+      spectrum: "window with a 2-D Hann window (np.hanning outer product) to stop edge discontinuities producing cross artifacts, then np.fft.fft2, np.fft.fftshift, magnitude, log1p"
+      radial_flattening: "compute the azimuthal average as a function of radius and subtract it, so what remains is only the ANISOTROPIC/periodic part"
+      peak_statistic: "report max over the flattened spectrum divided by its standard deviation, excluding a radius-5 disc around DC. Also report the count of local maxima exceeding 4 sigma."
+      resize_guard: "resize to a fixed 512x512 before the FFT so the peak lattice positions are comparable across images"
+    signal_direction: "GAN/diffusion generated -> HIGHER peak-to-sigma ratio, MORE >4-sigma maxima"
+    validated_by: [real_ai, real_camera]
+    critical_note: "like cfa_periodicity, MUST NOT be validated on the synthetic splice corpus"
+    citation: >
+      X. Zhang, S. Karaman, S.-F. Chang, 'Detecting and Simulating Artifacts in
+      GAN Fake Images', WIFS 2019;
+      R. Durall, M. Keuper, J. Keuper, 'Watch your Up-Convolution: CNN Based
+      Generative Deep Neural Networks are Failing to Reproduce Spectral
+      Distributions', CVPR 2020
+    failure_modes:
+      - "modern diffusion models with learned upsamplers leave much weaker peaks than 2019-era GANs -- do not expect this alone to be decisive"
+      - "JPEG recompression at low quality adds its own 8x8 lattice; MUST exclude the frequencies corresponding to the JPEG block grid (multiples of N/8) before computing the statistic, or every JPEG reads as generated"
+
+  exif_consistency:
+    module: backend/app/analysis/exif.py
+    class: ExifConsistencyDetector
+    stage_owner: S09
+    priority: 1
+    principle: >
+      Metadata is trivially forgeable and its ABSENCE proves nothing, but its
+      INTERNAL INCONSISTENCY is meaningful: editors rewrite some fields and not
+      others, and most of them do not regenerate the embedded thumbnail.
+    checks:
+      - id: EX1
+        name: thumbnail_mismatch
+        desc: >
+          The strongest EXIF check by a wide margin. Extract the embedded JPEG
+          thumbnail, decode it, resize the full image to the thumbnail's
+          dimensions, and compare. Most editors update the main image and leave
+          the original thumbnail intact, so a visible edit is often still
+          present in un-edited form in the thumbnail. Report both a global
+          similarity score and a per-region difference map -- the map is
+          directly a tamper localisation.
+        access: "Pillow: Image.open(p).getexif().get_ifd(0x5100)  # IFD1, the thumbnail IFD. If Pillow does not expose the thumbnail bytes on this build, use piexif.load(path)['thumbnail']."
+      - id: EX2
+        name: software_tag
+        desc: "EXIF Software (0x0131) / ProcessingSoftware (0x000B) naming an editor (Photoshop, GIMP, Lightroom, Snapseed) is direct evidence of processing. Report the literal string; do not maintain a hardcoded blocklist beyond a small documented set."
+      - id: EX3
+        name: missing_camera_block
+        desc: "Make/Model/DateTimeOriginal/ExposureTime all absent while the file is a JPEG with camera-like dimensions. Weight LOW: social platforms strip EXIF wholesale."
+      - id: EX4
+        name: datetime_disagreement
+        desc: "DateTimeOriginal (0x9003) vs DateTimeDigitized (0x9004) vs DateTime (0x0132). DateTime later than DateTimeOriginal indicates a re-save."
+      - id: EX5
+        name: dimension_disagreement
+        desc: "EXIF PixelXDimension/PixelYDimension vs the actual decoded size. A mismatch means the file was resized after capture -- which also invalidates cfa_periodicity, so this check GATES that detector."
+    signal_direction: "edited -> thumbnail mismatch, editor Software tag, datetime disagreement"
+    validated_by: [real_camera, synthetic_recompress]
+    citation: "no single paper; see the ExifTool documentation for tag semantics, https://exiftool.org/TagNames/EXIF.html"
+    failure_modes: ["absence proves nothing", "trivially forged by anyone who cares", "many platforms strip all EXIF"]
+    constraints:
+      - "NEVER map 'no EXIF' to tampered. It maps to `unknown`, weight 0."
+
+  learned_onnx:
+    module: backend/app/analysis/learned.py
+    class: LearnedDetector
+    stage_owner: S12
+    priority: OPTIONAL
+    status: "opt-in extra; MUST degrade to `unavailable` when weights are absent"
+    model:
+      huggingface_repo: "onnx-community/Deep-Fake-Detector-v2-Model-ONNX"
+      license: "apache-2.0"
+      artifact: "onnx/model_quantized.onnx"
+      alternative_artifacts: ["onnx/model.onnx (full fp32)", "onnx/model_fp16.onnx", "onnx/model_int8.onnx", "onnx/model_uint8.onnx"]
+      verified_on: "2026-08-28 via https://huggingface.co/api/models/onnx-community/Deep-Fake-Detector-v2-Model-ONNX"
+    preprocessing:
+      source: "verified from the repo's preprocessor_config.json and config.json, NOT inferred"
+      architecture: "ViTForImageClassification, image_size 224"
+      steps:
+        - "convert to RGB"
+        - "resize to 224x224 with PIL resample=2 (BILINEAR) -- the config's `resample` value is literally 2"
+        - "rescale: multiply by rescale_factor 0.00392156862745098 (i.e. 1/255)"
+        - "normalise: (x - mean) / std with image_mean [0.5,0.5,0.5] and image_std [0.5,0.5,0.5]"
+        - "transpose HWC -> CHW, add batch dim, dtype float32"
+    labels:
+      source: "config.json id2label, verified"
+      mapping: {0: "Realism", 1: "Deepfake"}
+      note: "P(tampered) = softmax(logits)[1]. Verify the output tensor is logits, not probabilities, by checking that the two values do not sum to 1."
+    constraints:
+      - "This model was trained for FACE deepfakes. It is NOT a general splice detector and it is NOT a receipt/document forgery detector. Its fusion weight must be low and its scope must be stated in the UI. Do not present it as a general-purpose oracle."
+      - "REJECTED ALTERNATIVE: TruFor / Noiseprint++. License is nonprofit-use-only (incompatible with this repo's MIT), no ONNX export, no direct weight URL. See plan.yaml decision D6."
+      - "NEVER add torch. See versions.lock.yaml optional_learned_model.torch."
+
+# ------------------------------------------------------------------------------
+# DELIBERATELY NOT IN SCOPE
+# ------------------------------------------------------------------------------
+rejected:
+  - name: "SynthID detection"
+    reason: "Google's SynthID verification is not available as a public library or API that this project can call. Any implementation would be fabricated."
+  - name: "TruFor / Noiseprint++ / Comprint"
+    reason: "see decision D6 -- license and distribution both block it"
+  - name: "Full PRNU camera attribution"
+    reason: "requires ~50 flat-field reference images per camera. Out of scope for a stateless upload endpoint. Documented in the prnu entry above."
+  - name: "Lighting / shadow geometry consistency"
+    reason: "requires user-annotated correspondences to be reliable; the automatic variants are not robust enough to gate on"

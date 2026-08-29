@@ -1,0 +1,4 @@
+# Optional extra. Never install this for the default application.
+-r requirements.txt
+onnxruntime==1.29.0
+huggingface-hub==1.29.0

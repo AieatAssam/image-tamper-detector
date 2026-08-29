@@ -1,0 +1,261 @@
+id: S03
+title: "Fix uint8 wraparound in ELA, unblock the event loop, close the upload trust boundary, fix CORS"
+depends_on: [S01]
+
+objective: >
+  Repair the verified defects in the existing backend without adding any new
+  detector and without touching any detection threshold. Each fix below was
+  confirmed against the code, not inferred. The stage's value is that after it,
+  the numbers the rest of the plan calibrates against are computed on
+  uncorrupted data.
+
+context:
+  - "VERIFIED DEFECT ELA-1 (critical): ela.py analyze() computes `ela = np.abs(high_array - low_array)` where both operands are uint8 arrays from np.array(PIL.Image). NumPy unsigned subtraction wraps modulo 256, and np.abs on an unsigned array is a no-op. Roughly half of all differences are replaced by their 256-complement. All four ELA features and all four ELA thresholds are computed on corrupted data."
+  - "VERIFIED: all four analyze_* handlers in main.py are `async def` yet call fully synchronous OpenCV/NumPy/Pillow code. Every request blocks the single event loop thread for its whole duration."
+  - "VERIFIED: main.py has no upload size limit, no format allowlist, and no PIL.Image.MAX_IMAGE_PIXELS setting. nginx.conf caps bodies at 10M but uvicorn on :8000 is directly reachable in development and inside the current container."
+  - "VERIFIED: CORSMiddleware is configured with allow_origins=['*'] AND allow_credentials=True, an invalid combination per the CORS specification."
+  - "VERIFIED: /analyze/combined calls encode_image_to_base64 six times, producing each of the three visualisations twice in one response. The frontend reads only the nested copy."
+  - "VERIFIED: ela.py contains 11 bare print() calls including a 'Violations detected:' debug block that runs on every single request."
+  - "VERIFIED: backend/app/api/endpoints.py, backend/app/utils/helpers.py and backend/app/utils/__init__.py are 0 bytes. project_plan.md's directory listing presents them as real modules."
+  - "VERIFIED: project_plan.md ticks 'Implement rate limiting [x]' and slowapi is in requirements.txt, but main.py contains no limiter. S01 removed slowapi as unused. The documentation claim is false."
+  - "VERIFIED: data/samples/original/README.md documents portrait_original.jpg, document_original.jpg and receipt_original.jpg, none of which exist on disk."
+
+files_allowed:
+  - "backend/app/main.py"
+  - "backend/app/analysis/ela.py"
+  - "backend/app/analysis/prnu.py"
+  - "backend/app/analysis/entropy.py"
+  - "backend/app/config.py"
+  - "backend/app/api/endpoints.py"
+  - "backend/app/utils/helpers.py"
+  - "backend/tests/**"
+  - "requirements.txt"
+  - "requirements-dev.txt"
+  - "project_plan.md"
+  - "README.md"
+  - "data/samples/original/README.md"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch, and first PROVE the ELA defect with a runnable assertion rather than taking this file's word for it."
+    commands: |
+      git checkout main && git checkout -b plan/S03
+      .venv/bin/python -c "
+      import numpy as np, cv2
+      a=np.array([[10]],dtype=np.uint8); b=np.array([[20]],dtype=np.uint8)
+      assert np.abs(a-b)[0,0]==246, 'wraparound NOT reproduced -- re-verify before changing ela.py'
+      assert cv2.absdiff(a,b)[0,0]==10
+      print('ELA-1 confirmed: np.abs(uint8 - uint8) yields 246 where 10 is correct')"
+
+  - n: 2
+    action: >
+      Fix ELA-1. Replace `ela = np.abs(high_array - low_array)` with
+      `ela = cv2.absdiff(high_array, low_array)`. cv2.absdiff saturates
+      correctly, preserves uint8, and is exactly the intended semantics.
+      Add a regression test FIRST (step 3), watch it fail, then apply the fix.
+    edit:
+      file: backend/app/analysis/ela.py
+      change: "np.abs(high_array - low_array)  ->  cv2.absdiff(high_array, low_array)"
+      forbidden: "do not change the adaptive scaling block that follows, and do not change any threshold in detect_tampering()"
+
+  - n: 3
+    action: "Add the regression test that fails on the old code and passes on the new."
+    edit:
+      create: backend/tests/test_ela_absdiff.py
+      requirements:
+        - "construct two uint8 arrays where the second exceeds the first in some pixels and the first exceeds the second in others"
+        - "assert the ELA difference for a known pixel pair equals the true absolute difference, not its 256-complement"
+        - "additionally: build a synthetic image in memory, run ELAAnalyzer().analyze() on it, and assert the returned ELA array has no value that could only arise from wraparound (i.e. assert max(ela) is consistent with the known max difference of the constructed input)"
+
+  - n: 4
+    action: >
+      Record the corrected numbers. Re-run scripts/capture_baseline.py to
+      baseline/features.after_ela_fix.json and append a section to
+      baseline/DRIFT.md showing how the four ELA features moved once the
+      arithmetic was correct. THIS IS IMPORTANT: the existing thresholds
+      (0.45 / 2000.0 / 25.0 / 100.0) were tuned against corrupted values and are
+      now almost certainly wrong. Do NOT retune them here -- record the drift
+      and let S10 recalibrate against a real corpus.
+    commands: |
+      .venv/bin/python scripts/capture_baseline.py --out baseline/features.after_ela_fix.json
+
+  - n: 5
+    action: >
+      Replace all 11 print() calls in backend/app/analysis/ with logging at
+      DEBUG level via `logger = logging.getLogger(__name__)`. The 'Violations
+      detected' block in ela.py runs on every request and writes to stdout.
+    commands: "grep -rn 'print(' backend/app/ | wc -l   # expect 11 before, 0 after"
+
+  - n: 6
+    action: "Create backend/app/config.py holding every tunable as an environment-backed setting. No magic numbers scattered across main.py."
+    edit:
+      create: backend/app/config.py
+      requirements:
+        - "use pydantic_settings.BaseSettings if available in the pinned pydantic, otherwise a frozen dataclass reading os.environ -- check which before writing"
+        - "MAX_UPLOAD_BYTES: int = 12_000_000"
+        - "MAX_IMAGE_PIXELS: int = 50_000_000"
+        - "ALLOWED_FORMATS: frozenset = {'JPEG','PNG','WEBP','TIFF'}"
+        - "ALLOWED_ORIGINS: list[str] = ['http://localhost:5173','http://localhost:8000']  # comma-separated env override"
+        - "MAX_CONCURRENT_ANALYSES: int = 4"
+        - "RATE_LIMIT_PER_MINUTE: int = 30"
+        - "ANALYSIS_TIMEOUT_SECONDS: int = 60"
+
+  - n: 7
+    action: >
+      Close the upload trust boundary in main.py, per api-contract.yaml
+      input_validation rules IV1-IV4. THIS IS A SECURITY BOUNDARY -- do not
+      simplify any of it away.
+    requirements:
+      - "IV1: reject bodies over MAX_UPLOAD_BYTES with HTTP 413. Read the upload in chunks via `while chunk := await file.read(65536)` accumulating a length counter and aborting past the cap, so a 2GB upload is not fully buffered before rejection."
+      - "IV2: set PIL.Image.MAX_IMAGE_PIXELS = settings.MAX_IMAGE_PIXELS at module import in main.py. Pillow only WARNS by default; without setting this, a 200KB PNG declaring 60000x60000 allocates roughly 10GB on decode."
+      - "IV3: determine format by decoding, never from the filename or the client's Content-Type. Image.open(BytesIO(b)) then .verify(), then REOPEN (verify() leaves the file object unusable), then check img.format in ALLOWED_FORMATS."
+      - "IV4: any decoder exception becomes HTTP 415 with a clear message, never a 500 and never a raw exception string echoed to the client."
+      - "the current handlers do `raise HTTPException(status_code=500, detail=str(e))` which leaks internal exception text including file paths to the client. Log the detail server-side; return a generic message."
+
+  - n: 8
+    action: >
+      Unblock the event loop. Convert all four handlers to plain `def`, OR keep
+      `async def` and wrap each analyzer call in
+      starlette.concurrency.run_in_threadpool. Choose ONE approach and apply it
+      to all four consistently. Add an asyncio.Semaphore(MAX_CONCURRENT_ANALYSES)
+      guarding the analysis section so N concurrent large uploads cannot exhaust
+      memory.
+
+  - n: 9
+    action: "Fix CORS per api-contract.yaml cors: origins from settings, allow_credentials=False, allow_methods ['GET','POST']."
+
+  - n: 10
+    action: >
+      Stop double-encoding the visualisations in /analyze/combined. Encode each
+      of the three exactly once. Keep the response shape otherwise identical --
+      the frontend reads the NESTED copy (ela_result.visualization_base64), so
+      the nested one is the one to keep; the three top-level
+      *_visualization_base64 fields become null and are marked deprecated in
+      the model docstring. Do not restructure the response beyond this; the new
+      shape is S04's job.
+
+  - n: 11
+    action: >
+      Resolve the rate limiting contradiction. Implement a simple in-process
+      limiter -- a per-IP sliding window in a dict, RATE_LIMIT_PER_MINUTE from
+      config, returning HTTP 429 with a Retry-After header. Do NOT re-add
+      slowapi: a single dependency-free middleware of about 20 lines covers a
+      single-process deployment, and slowapi was just removed as unused.
+      Mark the limitation honestly with a comment:
+        # single-process only; use a shared store if this ever runs multi-worker
+      If you instead decide not to implement it, you MUST delete the false
+      '[x] Implement rate limiting' claim from project_plan.md. One or the
+      other. Carrying the false claim forward is not an option.
+
+  - n: 12
+    action: >
+      Delete the three 0-byte placeholder modules backend/app/api/endpoints.py,
+      backend/app/utils/helpers.py and the now-empty backend/app/api/ and
+      backend/app/utils/ packages, unless a later stage needs them. Check:
+      S04 introduces backend/app/analysis/registry.py, not app/api/. So delete.
+      Then correct the directory listing in project_plan.md so it stops
+      describing modules that do not exist.
+
+  - n: 13
+    action: >
+      Documentation truthfulness pass, limited to claims this stage can settle.
+      In data/samples/original/README.md, mark portrait_original.jpg,
+      document_original.jpg and receipt_original.jpg as NOT PRESENT (S05 will
+      supply real replacements via the checksum manifest). In README.md, remove
+      or qualify any claim of a capability that does not exist. Do not rewrite
+      the READMEs wholesale -- that is S13.
+
+  - n: 14
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S03: fix ELA uint8 wraparound, unblock event loop, close upload trust boundary, fix CORS"'
+
+acceptance:
+  - check: "the ELA wraparound regression test passes"
+    command: ".venv/bin/python -m pytest backend/tests/test_ela_absdiff.py -q"
+  - check: "no np.abs over a uint8 subtraction remains anywhere in the analysis package"
+    command: "! grep -rnE 'np\\.abs\\([a-zA-Z_]+ *- *[a-zA-Z_]+\\)' backend/app/analysis/"
+  - check: "no print() remains in application code"
+    command: "! grep -rn 'print(' backend/app/"
+  - check: "PIL decompression-bomb limit is set"
+    command: "grep -q 'MAX_IMAGE_PIXELS' backend/app/main.py && grep -q 'MAX_IMAGE_PIXELS' backend/app/config.py"
+  - check: "oversized upload is rejected with 413, not 500 and not 200"
+    command: |
+      .venv/bin/python - <<'PY'
+      from fastapi.testclient import TestClient
+      from backend.app.main import app
+      c = TestClient(app)
+      big = b'\xff\xd8\xff\xe0' + b'\x00' * 20_000_000
+      r = c.post('/analyze/ela', files={'file': ('big.jpg', big, 'image/jpeg')})
+      assert r.status_code == 413, f'expected 413, got {r.status_code}'
+      print('413 ok')
+      PY
+  - check: "a non-image body is rejected with 415, not 500"
+    command: |
+      .venv/bin/python - <<'PY'
+      from fastapi.testclient import TestClient
+      from backend.app.main import app
+      c = TestClient(app)
+      r = c.post('/analyze/ela', files={'file': ('x.jpg', b'this is not an image at all', 'image/jpeg')})
+      assert r.status_code == 415, f'expected 415, got {r.status_code}'
+      print('415 ok')
+      PY
+  - check: "CORS reads its origins from config, does not use a wildcard, and does not allow credentials"
+    command: |
+      .venv/bin/python - <<'PY'
+      from starlette.middleware.cors import CORSMiddleware
+      from backend.app.main import app
+      from backend.app.config import settings
+      mw = [m for m in app.user_middleware if m.cls is CORSMiddleware]
+      assert mw, 'CORSMiddleware not installed'
+      kw = mw[0].kwargs
+      assert '*' not in kw['allow_origins'], kw['allow_origins']
+      assert kw['allow_credentials'] is False, kw['allow_credentials']
+      assert list(kw['allow_origins']) == list(settings.ALLOWED_ORIGINS), (kw['allow_origins'], settings.ALLOWED_ORIGINS)
+      assert set(kw['allow_methods']) <= {'GET','POST'}, kw['allow_methods']
+      print('cors ok:', kw['allow_origins'])
+      PY
+  - check: "handlers no longer block the event loop"
+    command: "! grep -E 'async def analyze_' backend/app/main.py || grep -q 'run_in_threadpool' backend/app/main.py"
+  - check: "internal exception text is not returned to clients"
+    command: "! grep -n 'detail=str(e)' backend/app/main.py"
+  - check: "combined response encodes each visualisation exactly once -- asserted as a property of the response, not by counting source lines"
+    command: |
+      .venv/bin/python - <<'PY'
+      from fastapi.testclient import TestClient
+      from backend.app.main import app
+      c = TestClient(app)
+      with open('data/samples/tampered/landscape_copy_paste.jpg','rb') as f:
+          r = c.post('/analyze/combined', files={'file': ('x.jpg', f.read(), 'image/jpeg')})
+      assert r.status_code == 200, r.status_code
+      d = r.json()
+      for k in ('ela_visualization_base64','prnu_visualization_base64','entropy_visualization_base64'):
+          assert d[k] is None, f'{k} must be null; the nested copy is authoritative'
+      nested = [d[k]['visualization_base64'] for k in ('ela_result','prnu_result','entropy_result')]
+      assert all(v for v in nested), 'nested visualisations must be present'
+      assert len(set(nested)) == 3, 'the three visualisations must differ'
+      print('each visualisation encoded once')
+      PY
+  - check: "the empty placeholder modules are gone"
+    command: "! test -f backend/app/api/endpoints.py && ! test -f backend/app/utils/helpers.py"
+  - check: "the rate-limiting claim is now true OR removed"
+    command: "grep -q 'RATE_LIMIT' backend/app/main.py || ! grep -q '\\[x\\] Implement rate limiting' project_plan.md"
+  - check: "full suite still runs; no NEW failure relative to the S01 recording"
+    command: ".venv/bin/python -m pytest backend/tests -q --tb=short"
+  - check: "ELA drift from the arithmetic fix is recorded, not silently absorbed"
+    command: "test -f baseline/features.after_ela_fix.json && grep -qi 'ela' baseline/DRIFT.md"
+
+constraints:
+  - "DO NOT change any detection threshold: not 0.45, 2000.0, 25.0, 100.0 (ela.py detect_tampering), not 300 (prnu variance_threshold in main.py and tests), not 0.35/0.12/0.2/0.15 (entropy.py __init__). Fixing ELA-1 WILL make the existing ELA thresholds wrong. That is expected, it is recorded in DRIFT.md, and S10 fixes it with a real corpus. Retuning by hand against 4 images here would bake in overfitting that is then very hard to detect."
+  - "DO NOT add a new detector, a new endpoint, or a new response field. S04 owns the API shape."
+  - "DO NOT re-add slowapi."
+  - "DO NOT rewrite the analysis algorithms. Only the specific defects listed above."
+  - "DO NOT touch backend/app/analysis/c2pa.py -- S09 owns it."
+  - "DO NOT weaken any of IV1-IV4 for convenience. These are trust-boundary checks on attacker-controlled bytes."
+
+rollback: "git checkout main && git branch -D plan/S03"
+
+artifacts:
+  - backend/app/config.py
+  - backend/tests/test_ela_absdiff.py
+  - baseline/features.after_ela_fix.json

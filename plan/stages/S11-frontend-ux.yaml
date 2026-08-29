@@ -1,0 +1,163 @@
+id: S11
+title: "UX rework: one analyse action, progressive results, overlay compare, explainability, a11y"
+depends_on: [S02, S10]
+
+objective: >
+  Rebuild the interface around the question a user actually has -- "is this
+  image real?" -- instead of around the four algorithms the backend happens to
+  implement. Adopt the /api/v1 contract, show the fused verdict first and the
+  per-detector evidence second, and make every number on screen explicable.
+
+context:
+  - "VERIFIED UX defects in the current ImageAnalyzer.tsx and AnalysisResults.tsx:"
+  - "  U1: four buttons labelled ELA / PRNU / Entropy / Combined force the user to already know digital forensics. Almost nobody uploading an image knows which to press."
+  - "  U2: URL.createObjectURL(file) is called on every drop and NEVER revoked. Each new image leaks a blob URL for the session's lifetime."
+  - "  U3: every failure produces the same toast, 'There was an error analyzing the image. Please try again.' A 413 too-large, a 415 wrong-format and a 500 are indistinguishable to the user, and only one of them is worth retrying."
+  - "  U4: isAnalyzing is a single boolean shared by all four buttons, so every button shows a spinner when any one is pressed."
+  - "  U5: no way to compare the visualisation against the original. The overlay is shown as a separate image at maxH 300px with no toggle, no opacity control and no zoom, which makes a heatmap nearly useless."
+  - "  U6: <Progress> (a div) is rendered inside <Text> (a p) in two places -- invalid HTML."
+  - "  U7: the confidence bar shows no numeric value and no explanation of what the number means; combined with the inverted ELA score fixed in S04, users were reading a meaningless bar."
+  - "  U8: no client-side size or dimension check, so a 200MB file is uploaded in full only to be rejected."
+  - "  U9: results are replaced on each run with no way to compare two analyses."
+  - "  U10: no empty state, no explanation of what the tool does or of its limits."
+  - "S10 supplies fusion.contributions, per-detector reason strings, thresholds and limitations, and GET /api/v1/detectors. The UI should render what the API says rather than hardcoding a detector list -- that is what makes S12 a backend-only change."
+  - "S02 already migrated the stack to React 19 / Chakra v3 / Vite 8 / Biome. This stage is UX only; do not re-do dependency work here."
+
+files_allowed:
+  - "frontend/src/**"
+  - "frontend/index.html"
+  - "frontend/package.json"
+  - "frontend/vite.config.ts"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: "git checkout main && git checkout -b plan/S11"
+
+  - n: 2
+    action: >
+      Regenerate frontend/src/types/api.ts from the live OpenAPI schema rather
+      than hand-writing it, so the types cannot drift from the backend.
+    commands: |
+      .venv/bin/uvicorn backend.app.main:app --port 8000 &
+      sleep 3 && curl -s http://localhost:8000/openapi.json -o /tmp/openapi.json && kill %1
+      # generate types from /tmp/openapi.json into frontend/src/types/api.ts
+    note: >
+      If you add a codegen tool for this, it must be a devDependency, pinned
+      exactly, and its version resolved with `npm view <name> version` at the
+      time you add it -- do not write a version from memory. If you would rather
+      not add a tool, hand-write the types but add a test that fetches
+      /openapi.json and asserts every response field in the schema is present in
+      the TypeScript interface.
+
+  - n: 3
+    action: "Build the API layer: frontend/src/api/client.ts."
+    requirements:
+      - "one analyze(file, opts) calling POST /api/v1/analyze, and getDetectors() calling GET /api/v1/detectors"
+      - "axios with an explicit timeout and onUploadProgress wired to the UI"
+      - "map HTTP status to a distinct typed error: 413 -> FileTooLarge (state the limit), 415 -> UnsupportedFormat (list the accepted formats), 429 -> RateLimited (surface Retry-After), 5xx -> ServerError (retryable), network -> Offline. This fixes U3."
+      - "AbortController so navigating away or picking a new image cancels the in-flight request"
+
+  - n: 4
+    action: >
+      Rework the primary flow. ONE primary action: 'Analyse image'. It calls
+      /api/v1/analyze with all detectors. Advanced users get a collapsed
+      'Choose detectors' disclosure populated from GET /api/v1/detectors --
+      never a hardcoded list. Fixes U1 and U4.
+    requirements:
+      - "per-detector loading state driven by the response, not one global boolean"
+      - "if include_maps is false the first response returns fast; fetch the maps in a second call only when the user opens a detector's detail. Decide this from the S10 duration_ms benchmark: if the full analysis is under about 2 seconds, skip the two-phase complexity entirely and say so in your stage report."
+
+  - n: 5
+    action: "Result presentation, in this order."
+    requirements:
+      - "VERDICT FIRST: the fused verdict as a plain-language sentence plus the score, using the five bands from api-contract.yaml. 'Inconclusive' must look visibly different from both 'authentic' and 'manipulated' -- not a middling colour on the same scale, because a shrug is a different kind of answer, not a weak yes."
+      - "WHY: render fusion.contributions as a ranked list of what pushed the verdict up and down, each with the detector's own `reason` string."
+      - "EVIDENCE: one collapsible card per detector showing state, score against its threshold, the reason, the metrics, and the detector's `limitations` from the API. A NOT_APPLICABLE detector must be visibly distinct from a clean one and must say why it could not speak. This is the UI half of the three-valued outcome; collapsing it back to a binary here undoes S04's work."
+      - "COMPARE: replace the static visualisation image with an overlay viewer -- original underneath, heatmap on top, an opacity slider, and a swipe divider. Add zoom and pan. Fixes U5, and it is the single change that makes the heatmaps actually usable."
+      - "show the numeric score next to every bar, and a tooltip defining it as 'estimated probability this image was manipulated'. Fixes U7."
+
+  - n: 6
+    action: "Fix U2, U6, U8, U9, U10."
+    requirements:
+      - "U2: revoke the previous object URL in a useEffect cleanup whenever the selected file changes or the component unmounts"
+      - "U6: <Progress.Root> must not be nested inside a <Text>. Use a Box or a fragment."
+      - "U8: client-side pre-check of file size against the server limit and of image dimensions against MAX_IMAGE_PIXELS, with a clear message BEFORE upload. This is a courtesy, NOT a security control -- the server checks from S03 remain authoritative and must not be relaxed."
+      - "U9: keep the last N analyses in memory with a thumbnail strip so two images can be compared. In-memory only; no persistence."
+      - "U10: an empty state that says what the tool does, and a permanent, non-dismissible note that these are probabilistic signals and not proof. Given what this application claims to detect, overstating certainty is the most damaging thing the UI can do."
+
+  - n: 7
+    action: "Accessibility. Biome's a11y rules are enabled from S02 and must pass clean."
+    requirements:
+      - "the dropzone is keyboard reachable and operable, with a visible focus ring and an aria-label"
+      - "verdict changes are announced via an aria-live=polite region -- a screen reader user must not have to hunt for the result"
+      - "colour is never the only carrier of the verdict: pair every colour with an icon and text"
+      - "every image has a meaningful alt; the overlay viewer's controls are labelled"
+      - "check contrast for the verdict colours in both light and dark themes"
+
+  - n: 8
+    action: "Add dark mode using Chakra v3's colour mode, defaulting to the system preference."
+
+  - n: 9
+    action: "Tests with vitest and @testing-library/react, against a mocked client."
+    test_requirements:
+      - "each of the five error classes renders its own distinct message -- the regression test for U3"
+      - "a NOT_APPLICABLE detector renders visibly differently from a clean one and shows its reason"
+      - "the verdict region has role=status or aria-live"
+      - "picking a second image revokes the first object URL (spy on URL.revokeObjectURL) -- the regression test for U2"
+      - "the detector list renders from a mocked GET /api/v1/detectors, and an unknown detector id in the mock still renders, proving nothing is hardcoded"
+      - "an inconclusive verdict does not render as either authentic or manipulated styling"
+
+  - n: 10
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S11: UX rework -- single analyse action, verdict-first results, overlay compare, a11y"'
+
+acceptance:
+  - check: "typecheck, lint and build all pass"
+    command: "cd frontend && npx tsc --noEmit && npx biome check . && npm run build"
+  - check: "frontend tests pass"
+    command: "cd frontend && npm run test"
+  - check: "the frontend uses the v1 contract"
+    command: "cd frontend && grep -rq '/api/v1/analyze' src/ && grep -rq '/api/v1/detectors' src/"
+  - check: "no hardcoded detector list survives"
+    command: "cd frontend && ! grep -rnE \"'(ela|prnu|entropy)'\\s*,\\s*'\" src/components/"
+  - check: "the four algorithm buttons are gone"
+    command: "cd frontend && ! grep -rn 'ELA Analysis' src/"
+  - check: "the object URL leak is fixed"
+    command: "cd frontend && grep -rq 'revokeObjectURL' src/ && npm run test -- -t revoke"
+  - check: "no div-inside-p remains"
+    command: "cd frontend && ! grep -B2 -A2 '<Progress' src/components/*.tsx | grep -q '<Text'"
+  - check: "error classes are distinguished"
+    command: "cd frontend && npm run test -- -t 'error'"
+  - check: "an aria-live region announces the verdict"
+    command: "cd frontend && grep -rqE 'aria-live|role=\"status\"' src/"
+  - check: "the uncertainty disclaimer is present and not dismissible"
+    command: "cd frontend && grep -rqiE 'not proof|probabilistic|no guarantee' src/"
+  - check: "no dependency was added without an exact pin"
+    command: "cd frontend && ! grep -E '\"[~^][0-9]' package.json"
+  - check: "end to end against a live backend: upload a sample and get a verdict"
+    command: |
+      .venv/bin/uvicorn backend.app.main:app --port 8000 &
+      sleep 4
+      curl -sf -F "file=@data/samples/tampered/landscape_copy_paste.jpg" http://localhost:8000/api/v1/analyze | .venv/bin/python -c "
+      import sys,json; d=json.load(sys.stdin)
+      assert d['verdict'] in ('manipulated','likely_manipulated','inconclusive','likely_authentic','authentic'), d['verdict']
+      assert d['detectors'] and 'fusion' in d
+      print(d['verdict'], round(d['score'],3), len(d['detectors']), 'detectors')"
+      kill %1
+
+constraints:
+  - "DO NOT change anything under backend/. If the UI needs a field the API does not return, that is a backend stage -- report it as BLOCKED rather than working around it client-side."
+  - "DO NOT hardcode the detector list, their names, or their descriptions. Render what /api/v1/detectors returns. This is what keeps S12 a backend-only change."
+  - "DO NOT present a probabilistic score as a definitive determination. No 'FAKE' or 'AUTHENTIC' stamps. This tool's output is evidence, not proof, and the UI is where that distinction is either kept or lost."
+  - "DO NOT hide NOT_APPLICABLE detectors to make the results look tidier. A detector that could not speak is information."
+  - "DO NOT relax or remove the server-side validation from S03 because the client now pre-checks. The client check is a courtesy; the server check is the security boundary."
+  - "DO NOT add a UI dependency without resolving its current version with `npm view <name> version` first."
+
+rollback: "git checkout main && git branch -D plan/S11"
+
+artifacts:
+  - frontend/src/api/client.ts
+  - frontend/src/types/api.ts
+  - frontend/src/components/**

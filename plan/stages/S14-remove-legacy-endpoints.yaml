@@ -1,0 +1,138 @@
+id: S14
+title: "Remove the deprecated /analyze/* endpoints once the frontend has moved off them"
+depends_on: [S11, S13]
+
+objective: >
+  Close the deprecation window opened in S04. Delete the four legacy endpoints,
+  their bespoke response models and the code paths that exist only to serve
+  them, leaving /api/v1 as the sole surface. This stage exists so that the
+  deprecation is a scheduled removal rather than a permanent second API that
+  quietly accumulates its own behaviour.
+
+context:
+  - "S04 introduced /api/v1/analyze and /api/v1/detectors, and kept POST /analyze/ela, /analyze/prnu, /analyze/entropy and /analyze/combined working, each returning its original shape with a `Deprecation: true` response header."
+  - "S04 reimplemented the legacy endpoints as thin wrappers over the registry, so there is one analysis code path and removing the wrappers removes no detection logic."
+  - "S11 migrated the frontend to /api/v1. After S11 nothing in this repository calls the legacy routes."
+  - "S13's nginx.conf proxies /analyze/, /api/ and /healthz. The /analyze/ block becomes dead once the routes are gone."
+  - "The legacy AnalysisResponse and CombinedAnalysisResponse pydantic models in main.py exist solely for these routes."
+
+files_allowed:
+  - "backend/app/main.py"
+  - "backend/app/api/**"
+  - "backend/tests/**"
+  - "nginx.conf"
+  - "frontend/vite.config.ts"
+  - "README.md"
+  - "docs/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch, and first PROVE nothing still calls the legacy routes."
+    commands: |
+      git checkout main && git checkout -b plan/S14
+      ! grep -rn "/analyze/" frontend/src/ || { echo "frontend still calls a legacy route -- S11 is incomplete"; exit 1; }
+      grep -rn "/analyze/" docs/ README.md || true
+
+  - n: 2
+    action: >
+      Confirm the deprecation was actually observable before removing anything.
+      If S04's Deprecation header was never shipped, consumers had no warning
+      and removal is premature -- report BLOCKED rather than proceeding.
+    commands: |
+      .venv/bin/python - <<'PY'
+      from fastapi.testclient import TestClient
+      from backend.app.main import app
+      c = TestClient(app)
+      with open('data/samples/original/landscape_original.jpg','rb') as f:
+          r = c.post('/analyze/ela', files={'file': ('x.jpg', f.read(), 'image/jpeg')})
+      assert r.headers.get('Deprecation') == 'true', r.headers
+      print('deprecation header was shipped; removal is in order')
+      PY
+
+  - n: 3
+    action: >
+      Delete the four route handlers, the AnalysisResponse and
+      CombinedAnalysisResponse models, and any helper that becomes unreachable.
+      Check for unreachable helpers rather than assuming: after deleting the
+      routes, grep each remaining module-level function in main.py for callers.
+
+  - n: 4
+    action: >
+      Return HTTP 410 Gone for the removed paths for one further release, with a
+      body naming the replacement endpoint. A 410 with a pointer is far more
+      useful to an integrator than a 404, and costs four lines.
+
+  - n: 5
+    action: "Remove the now-dead location /analyze/ block from nginx.conf and the '/analyze' proxy entry from frontend/vite.config.ts."
+
+  - n: 6
+    action: "Update the S04 deprecation notes in docs/ and any README example still showing a legacy path."
+
+  - n: 7
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S14: remove the deprecated /analyze/* endpoints; 410 with a pointer to /api/v1"'
+
+acceptance:
+  - check: "the four legacy routes are gone from the app"
+    command: |
+      .venv/bin/python -c "
+      from backend.app.main import app
+      p={r.path for r in app.routes}
+      legacy={'/analyze/ela','/analyze/prnu','/analyze/entropy','/analyze/combined'}
+      assert not (legacy & p), legacy & p
+      assert '/api/v1/analyze' in p and '/healthz' in p, p
+      print('legacy routes removed')"
+  - check: "the removed paths answer 410 with a pointer, not 404"
+    command: |
+      .venv/bin/python - <<'PY'
+      from fastapi.testclient import TestClient
+      from backend.app.main import app
+      c = TestClient(app)
+      for path in ('/analyze/ela','/analyze/prnu','/analyze/entropy','/analyze/combined'):
+          r = c.post(path, files={'file': ('x.jpg', b'x', 'image/jpeg')})
+          assert r.status_code == 410, (path, r.status_code)
+          assert '/api/v1/analyze' in r.text, (path, r.text[:200])
+      print('410 with pointer ok')
+      PY
+  - check: "the legacy response models are gone"
+    command: "! grep -nE 'class (AnalysisResponse|CombinedAnalysisResponse)\\b' backend/app/main.py"
+  - check: "no dead nginx or vite proxy entry remains"
+    command: "! grep -q 'location /analyze/' nginx.conf && ! grep -q \"'/analyze'\" frontend/vite.config.ts"
+  - check: "no source file still references a legacy path"
+    command: "! grep -rn '/analyze/ela\\|/analyze/combined' backend/app/ frontend/src/ README.md"
+  - check: "the frontend still builds and its tests pass"
+    command: "cd frontend && npx tsc --noEmit && npm run test && npm run build"
+  - check: "backend suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+  - check: "end to end still works through the container"
+    command: |
+      docker build -t itd:s14 . &&
+      docker run -d --name itd_s14 -p 18082:80 itd:s14 && sleep 12 &&
+      curl -sf -F "file=@data/samples/tampered/landscape_copy_paste.jpg" http://localhost:18082/api/v1/analyze | grep -q verdict; rc=$?
+      docker rm -f itd_s14 >/dev/null; exit $rc
+  - check: "NO DETECTION REGRESSION: removing routes changed no numbers"
+    command: |
+      .venv/bin/python scripts/benchmark.py --out /tmp/post-S14.json --corpus synthetic
+      .venv/bin/python - <<'PY'
+      import json
+      a=json.load(open('benchmarks/REFERENCE.json'))['detectors']
+      b=json.load(open('/tmp/post-S14.json'))['detectors']
+      bad=[(d,ms['corpus']) for d in a for ms in a[d]['metric_sets']
+           for n in b.get(d,{}).get('metric_sets',[]) if n['corpus']==ms['corpus']
+           and ms['auc'] is not None and n['auc'] is not None and abs(ms['auc']-n['auc'])>0.001]
+      assert not bad, bad
+      print('no numeric change -- this stage is API surface only')
+      PY
+
+constraints:
+  - "DO NOT run this stage until the frontend has actually shipped on /api/v1 and step 1's grep passes. A removal that outpaces its consumers is a breaking change, not a cleanup."
+  - "DO NOT change any detection logic, threshold, calibration value or detector. This stage removes API surface and nothing else -- the final acceptance check asserts exactly that."
+  - "DO NOT return 404 for the removed paths. 410 with a pointer to the replacement."
+  - "DO NOT delete /healthz or anything under /api/v1."
+
+rollback: "git checkout main && git branch -D plan/S14 && docker rmi itd:s14 2>/dev/null || true"
+
+artifacts:
+  - backend/app/main.py
+  - nginx.conf

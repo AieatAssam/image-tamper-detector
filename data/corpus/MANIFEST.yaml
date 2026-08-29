@@ -1,0 +1,14 @@
+version: 1
+# Verified source entry. The remaining required axes are documented as a
+# shortfall in docs/corpus.md rather than represented by aspirational hashes.
+images:
+  - id: cam_001
+    axis: real_camera
+    label: authentic
+    url: "https://upload.wikimedia.org/wikipedia/commons/4/41/Farmers_Market_in_Brazil.jpg"
+    sha256: "4022a484118bad5279bd515457deca80aaf0617091cf1c7aca0a685c573c8f44"
+    bytes: 4120786
+    license: "CC BY-SA 4.0"
+    attribution: "ThatNerdGirl37, Wikimedia Commons, https://commons.wikimedia.org/wiki/File:Farmers_Market_in_Brazil.jpg"
+    camera: "SONY DSC-H300"
+    notes: "JPEG; EXIF Make/Model present. PixelXDimension absent in the source EXIF, so it is not counted as a strict unresized-original proof."

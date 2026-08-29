@@ -1,13 +1,15 @@
 # Image Tamper Detection Web Application - Project Plan
 
 ## Overview
+
+The authoritative implementation plan is [`plan/plan.yaml`](plan/plan.yaml); this legacy checklist is informational.
 A web application that performs multiple image analysis techniques to detect and visualize areas of image manipulation or generation. The application will consist of a FastAPI backend and a simple web frontend.
 
 ## Technology Stack
 
 ### Backend
 - FastAPI (MIT License) - Modern, fast web framework for building APIs
-- Python 3.9+ 
+- Python 3.9+
 - OpenCV (Apache 2.0) - For image processing and ELA
 - NumPy (BSD-3) - For numerical computations
 - scikit-image (BSD-3) - For advanced image processing
@@ -241,4 +243,4 @@ image-tamper-detector/
   - Ensure proper resource allocation
   - Implement health checks
   - Configure logging aggregation
-  - Set up monitoring 
+  - Set up monitoring

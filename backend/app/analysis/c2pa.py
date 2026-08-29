@@ -1,186 +1,184 @@
-"""
-C2PA (Coalition for Content Provenance and Authenticity) metadata analyzer.
-This module analyzes C2PA metadata in images to detect potential tampering or AI generation.
-"""
+"""C2PA provenance detector for c2pa-python 0.37.x."""
 
-from typing import Dict, List, Optional, Any, Tuple
-from pathlib import Path
+from io import BytesIO
 import json
-import c2pa
+from pathlib import Path
+from time import perf_counter
+from typing import Any
+
+from c2pa import Reader
+
+from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext
+
 
 class C2PAAnalyzer:
-    """Analyzer for C2PA metadata in images."""
-    
-    def __init__(self):
-        """Initialize the C2PA analyzer."""
-        self.known_ai_generators = {
-            'dalle', 'midjourney', 'stable diffusion', 'openai',
-            'adobe firefly', 'imagen', 'deepmind'
-        }
-        
-    def _check_manifest_validity(self, manifest) -> List[Dict[str, Any]]:
-        """Check the validity of a C2PA manifest.
-        
-        Args:
-            manifest: The C2PA manifest to check
-            
-        Returns:
-            List of issues found in the manifest
-        """
-        issues = []
-        
-        # Check signature validation
+    """Read signed C2PA manifests without treating missing metadata as a finding."""
+
+    id = "c2pa"
+    name = "C2PA Provenance"
+    family = "metadata"
+    applicable_formats = frozenset({"JPEG", "PNG", "WEBP", "TIFF"})
+    produces_map = False
+    description = "Reads signed Content Credentials and explicit provenance assertions."
+    limitations = [
+        "Most images contain no manifest; absence is not evidence.",
+        "A valid manifest describes the signer’s assertion, not independent truth.",
+    ]
+    threshold = 0.5
+
+    # Fallback only: structured digitalSourceType is the primary AI signal.
+    known_ai_generators = {
+        "dalle", "midjourney", "stable diffusion", "openai",
+        "adobe firefly", "imagen", "deepmind",
+    }
+
+    def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
+        return True, "C2PA inspection supports this image format"
+
+    def run(self, ctx: ImageContext) -> DetectorResult:
+        started = perf_counter()
+        result = self._analyze(ctx.raw_bytes, mime=_mime_for(ctx))
+        return DetectorResult(
+            self.id, result["state"], result["score"], result["flagged"],
+            self.threshold, result["reason"], result["metrics"], None,
+            _duration(started), result.get("error"),
+        )
+
+    def analyze_image(self, image_input: str | Path | bytes) -> dict[str, Any]:
+        """Compatibility API returning the previous ``issues``/``metadata`` shape."""
+        if isinstance(image_input, (str, Path)):
+            path = Path(image_input)
+            if not path.is_file():
+                raise FileNotFoundError(f"File not found: {path}")
+            if path.suffix.lower() not in self.get_supported_formats():
+                raise ValueError(f"Unsupported file format: {path}")
+            result = self._analyze(path.read_bytes(), path=path)
+        elif isinstance(image_input, bytes):
+            result = self._analyze(image_input, mime="image/jpeg")
+        else:
+            raise ValueError("Input must be an image path or bytes")
+        return result
+
+    def _analyze(
+        self, raw: bytes, *, path: Path | None = None, mime: str | None = None
+    ) -> dict[str, Any]:
         try:
-            if not manifest.validate():
-                issues.append({
-                    'type': 'signature_invalid',
-                    'severity': 'high',
-                    'description': 'Invalid or missing digital signature',
-                    'location': 'manifest.signature'
-                })
-        except Exception as e:
-            issues.append({
-                'type': 'signature_validation_error',
-                'severity': 'high',
-                'description': f'Error validating signature: {str(e)}',
-                'location': 'manifest.signature'
-            })
-            
-        return issues
-
-    def _check_ai_generation(self, manifest) -> List[Dict[str, Any]]:
-        """Check for indicators of AI generation in the manifest.
-        
-        Args:
-            manifest: The C2PA manifest to check
-            
-        Returns:
-            List of AI-related issues found
-        """
-        issues = []
-        
-        # Get manifest data
-        manifest_data = manifest.get_active_manifest()
-        if not manifest_data:
-            return issues
-            
-        # Check for AI generation indicators
-        for claim in manifest_data.get('claims', []):
-            # Check software agent
-            software = claim.get('software_agent', '').lower()
-            for ai_gen in self.known_ai_generators:
-                if ai_gen in software:
-                    issues.append({
-                        'type': 'ai_generated',
-                        'severity': 'info',
-                        'description': f'Generated by AI tool: {software}',
-                        'location': f'manifest.claims.{claim.get("id")}.software_agent'
-                    })
-                    
-            # Check for AI generation assertions
-            assertions = claim.get('assertions', [])
-            for assertion in assertions:
-                if 'ai_generated' in str(assertion).lower():
-                    issues.append({
-                        'type': 'ai_generated_assertion',
-                        'severity': 'info',
-                        'description': 'AI generation explicitly declared',
-                        'location': f'manifest.claims.{claim.get("id")}.assertions'
-                    })
-                    
-        return issues
-
-    def _extract_metadata(self, manifest) -> Dict[str, Any]:
-        """Extract relevant metadata from the manifest.
-        
-        Args:
-            manifest: The C2PA manifest to process
-            
-        Returns:
-            Dictionary containing structured metadata
-        """
-        manifest_data = manifest.get_active_manifest()
-        if not manifest_data:
+            reader = Reader(path) if path is not None else Reader(mime or "application/octet-stream", BytesIO(raw))
+            with reader as active_reader:
+                store = json.loads(active_reader.json())
+        except Exception as exc:
+            if _is_missing_manifest(exc):
+                return _not_applicable()
             return {
-                'manifest_version': None,
-                'claims': [],
-                'provenance': []
+                "state": DetectorState.ERROR, "score": None, "flagged": None,
+                "reason": "C2PA manifest could not be read", "metrics": {},
+                "issues": [{"type": "analysis_error", "severity": "error",
+                            "description": "C2PA manifest could not be read",
+                            "location": "manifest"}], "metadata": {},
+                "error": "C2PA reader failure",
             }
-            
+
+        active_id = store.get("active_manifest")
+        manifests = store.get("manifests") or {}
+        manifest = manifests.get(active_id) if isinstance(manifests, dict) else None
+        if not isinstance(manifest, dict):
+            return _not_applicable()
+
+        validation_failed = _validation_failed(store)
+        generator = _generator(manifest)
+        generated = _has_generative_action(manifest)
+        if not generated and generator:
+            generated = any(name in generator.lower() for name in self.known_ai_generators)
+
+        metadata = {
+            "active_manifest": active_id,
+            "claim_generator": generator,
+            "manifest": manifest,
+            "validation_status": store.get("validation_status"),
+            "validation_results": store.get("validation_results"),
+        }
+        issues = []
+        if validation_failed:
+            issues.append({"type": "signature_invalid", "severity": "high",
+                           "description": "C2PA validation failed; post-signing modification is possible",
+                           "location": "manifest.validation"})
+        if generated:
+            issues.append({"type": "ai_generated", "severity": "identification",
+                           "description": "Validated C2PA manifest identifies generative image creation",
+                           "location": "manifest.assertions.c2pa.actions"})
+
+        if validation_failed:
+            score, flagged = 0.95, True
+            reason = "C2PA manifest is present but validation failed"
+        elif generated:
+            score, flagged = 1.0, True
+            suffix = f" by {generator}" if generator else ""
+            reason = f"validated C2PA manifest identifies generative image creation{suffix}"
+        else:
+            score, flagged = 0.05, False
+            reason = "valid C2PA manifest contains no generative creation assertion"
         return {
-            'manifest_version': manifest_data.get('version'),
-            'claims': manifest_data.get('claims', []),
-            'provenance': manifest_data.get('provenance', [])
+            "state": DetectorState.APPLICABLE, "score": score, "flagged": flagged,
+            "reason": reason,
+            "metrics": {"manifest_present": 1.0, "validation_failed": float(validation_failed),
+                        "generative_assertion": float(generated)},
+            "issues": issues, "metadata": metadata,
         }
 
-    def analyze_image(self, image_path: str) -> Dict[str, Any]:
-        """Analyze C2PA metadata in an image and identify potential issues.
-        
-        Args:
-            image_path: Path to the image file to analyze
-            
-        Returns:
-            Dictionary containing:
-                - issues: List of potential problems found
-                - metadata: Structured C2PA metadata from the image
-        """
-        try:
-            # Check if file exists
-            if not Path(image_path).is_file():
-                raise FileNotFoundError(f"File not found: {image_path}")
-                
-            # Check file extension
-            if not any(image_path.lower().endswith(ext) for ext in self.get_supported_formats()):
-                raise ValueError(f"Unsupported file format: {image_path}")
-            
-            # Load the manifest using from_file
-            reader = c2pa.Reader.from_file(image_path)
-            
-            # Check if manifest exists
-            manifest_data = reader.get_active_manifest()
-            if not manifest_data:
-                return {
-                    'issues': [{
-                        'type': 'no_manifest',
-                        'severity': 'high',
-                        'description': 'No C2PA manifest found in image',
-                        'location': 'manifest'
-                    }],
-                    'metadata': {}
-                }
-            
-            # Collect all issues
-            issues = []
-            issues.extend(self._check_manifest_validity(reader))
-            issues.extend(self._check_ai_generation(reader))
-            
-            # Extract metadata
-            metadata = self._extract_metadata(reader)
-            
-            return {
-                'issues': issues,
-                'metadata': metadata
-            }
-            
-        except FileNotFoundError:
-            raise
-        except ValueError:
-            raise
-        except Exception as e:
-            return {
-                'issues': [{
-                    'type': 'analysis_error',
-                    'severity': 'high',
-                    'description': f'Error analyzing C2PA metadata: {str(e)}',
-                    'location': 'manifest'
-                }],
-                'metadata': {}
-            }
+    def get_supported_formats(self) -> list[str]:
+        return [".jpg", ".jpeg", ".png", ".tiff", ".webp"]
 
-    def get_supported_formats(self) -> List[str]:
-        """Get list of image formats supported by the analyzer.
-        
-        Returns:
-            List of supported file extensions
-        """
-        return ['.jpg', '.jpeg', '.png', '.tiff', '.webp'] 
+
+def _not_applicable() -> dict[str, Any]:
+    return {"state": DetectorState.NOT_APPLICABLE, "score": None, "flagged": None,
+            "reason": "no C2PA manifest", "metrics": {}, "issues": [], "metadata": {}}
+
+
+def _is_missing_manifest(exc: Exception) -> bool:
+    text = f"{type(exc).__name__}: {exc}".lower()
+    return "manifestnotfound" in text or "no jumbf" in text or "manifest not found" in text
+
+
+def _validation_failed(store: dict[str, Any]) -> bool:
+    text = json.dumps([store.get("validation_status"), store.get("validation_results")], default=str).lower()
+    return any(token in text for token in ("fail", "invalid", "error"))
+
+
+def _generator(manifest: dict[str, Any]) -> str | None:
+    for key in ("claim_generator", "claimGenerator"):
+        value = manifest.get(key)
+        if isinstance(value, str) and value:
+            return value
+    info = manifest.get("claim_generator_info") or manifest.get("claimGeneratorInfo")
+    items = info if isinstance(info, list) else [info]
+    for item in items:
+        if isinstance(item, dict) and item.get("name"):
+            return str(item["name"])
+    return None
+
+
+def _has_generative_action(value: Any) -> bool:
+    if isinstance(value, dict):
+        source = str(value.get("digitalSourceType", ""))
+        if value.get("action") == "c2pa.created" and (
+            source == "trainedAlgorithmicMedia" or source.endswith("/trainedAlgorithmicMedia")
+        ):
+            return True
+        return any(_has_generative_action(item) for item in value.values())
+    if isinstance(value, list):
+        return any(_has_generative_action(item) for item in value)
+    return False
+
+
+def _mime_for(ctx: ImageContext) -> str:
+    if ctx.raw_bytes.startswith(b"\xff\xd8"):
+        return "image/jpeg"
+    if ctx.raw_bytes.startswith(b"\x89PNG"):
+        return "image/png"
+    if ctx.raw_bytes.startswith((b"II*\x00", b"MM\x00*")):
+        return "image/tiff"
+    return "image/jpeg"
+
+
+def _duration(started: float) -> int:
+    return int((perf_counter() - started) * 1000)

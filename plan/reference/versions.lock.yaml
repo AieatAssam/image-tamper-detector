@@ -1,0 +1,230 @@
+# ==============================================================================
+# versions.lock.yaml -- EMPIRICALLY RESOLVED, DO NOT EDIT FROM MEMORY
+# ==============================================================================
+# Every version below was read from the live PyPI / npm registry on 2026-08-28.
+# The `evidence` field records what was actually observed. Agents copy these
+# pins VERBATIM into requirements.txt / package.json.
+#
+# If you believe a version here is wrong, DO NOT substitute your own. Re-run the
+# `resolution_commands` below and report the discrepancy.
+# ==============================================================================
+
+resolved_on: "2026-08-28"
+resolution_commands:
+  pypi: |
+    curl -s https://pypi.org/pypi/<NAME>/json | python3 -c 'import sys,json;d=json.load(sys.stdin)["info"];print(d["version"], d.get("requires_python"))'
+  pypi_wheel_tags: |
+    curl -s https://pypi.org/pypi/<NAME>/json | python3 -c "
+    import sys,json
+    d=json.load(sys.stdin); v=d['info']['version']
+    print([f['filename'] for f in d['releases'][v] if f['packagetype']=='bdist_wheel'])"
+  npm: "npm view <NAME> version"
+
+python:
+  target: "3.14"
+  local_observed: "3.14.7"
+  docker_base_image: "python:3.14-slim"
+  note: >
+    Dockerfile currently says python:3.12-slim. numpy 2.5.2 and scipy 1.18.1
+    both declare requires_python >=3.12, so 3.12 would still work, but the
+    local dev interpreter is 3.14.7 and every dependency has a cp314/abi3
+    wheel. Pinning one version across venv, Dockerfile and CI removes the
+    current three-way contradiction.
+
+# ------------------------------------------------------------------------------
+backend_keep:
+  numpy:
+    pin: "==2.5.2"
+    was: ">=1.21.0"
+    requires_python: ">=3.12"
+    evidence: "cp314 wheels present (numpy-2.5.2-cp314-cp314-macosx_11_0_arm64.whl et al)"
+    breaking_risk: HIGH
+    breaking_notes: >
+      numpy 2.x removed np.float_, np.int0, np.NaN, np.Inf; changed the
+      promotion rules (NEP 50) so that uint8 arithmetic with a Python int no
+      longer silently upcasts. THIS DIRECTLY AFFECTS backend/app/analysis/*.
+      Expect numeric drift in every threshold. This is why S00 captures a
+      baseline BEFORE upgrading.
+  opencv-python-headless:
+    pin: "==4.14.0.94"
+    was: "opencv-python>=4.5.3"
+    evidence: "wheels are cp37-abi3 (opencv_python_headless-4.14.0.94-cp37-abi3-manylinux_2_28_x86_64.whl) -> installs on cp314"
+    breaking_risk: MEDIUM
+    breaking_notes: >
+      Package RENAMED from opencv-python to opencv-python-headless. Import name
+      is unchanged (`import cv2`). Do NOT install both. See decision D2 for why
+      not 5.0.0.93.
+  pillow:
+    pin: "==12.3.0"
+    was: ">=8.3.1"
+    requires_python: ">=3.10"
+    evidence: "cp314 wheels present"
+    breaking_risk: MEDIUM
+    breaking_notes: >
+      Image.ANTIALIAS and other bare constants were removed in Pillow 10;
+      Image.Resampling.LANCZOS (already used in ela.py) is correct and stays.
+      Verify Image.open() lazy-loading behaviour with the new decoder limits.
+  scipy:
+    pin: "==1.18.1"
+    was: ">=1.7.0"
+    requires_python: ">=3.12"
+    evidence: "scipy-1.18.1-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+    breaking_risk: MEDIUM
+    used_by: "prnu.py (scipy.signal, scipy.interpolate.griddata, scipy.ndimage)"
+  scikit-image:
+    pin: "==0.26.0"
+    was: ">=0.19.0"
+    requires_python: ">=3.11"
+    evidence: "scikit_image-0.26.0-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl"
+    breaking_risk: HIGH
+    breaking_notes: >
+      skimage.filters.rank.entropy and skimage.morphology.disk are used by
+      entropy.py. skimage renamed `selem` -> `footprint` in the rank filters
+      (deprecated 0.19, REMOVED in 0.20). entropy.py stores self.selem but
+      check every call site for a `selem=` keyword argument.
+  PyWavelets:
+    pin: "==1.9.0"
+    was: "(no specifier -- unpinned)"
+    requires_python: ">=3.11"
+    evidence: "pywavelets-1.9.0-cp314-cp314-macosx_11_0_arm64.whl"
+    used_by: "prnu.py (import pywt, wavelet denoising)"
+    breaking_risk: LOW
+  fastapi:
+    pin: "==0.141.1"
+    was: ">=0.104.1"
+    requires_python: ">=3.10"
+    breaking_risk: MEDIUM
+    breaking_notes: "on_event handlers deprecated in favour of lifespan; Query/Path Annotated form now preferred"
+  uvicorn:
+    pin: "==0.52.4"
+    was: ">=0.24.0"
+    breaking_risk: LOW
+    extras: "[standard]"
+  pydantic:
+    pin: "==2.13.5"
+    was: ">=2.5.2"
+    breaking_risk: LOW
+    breaking_notes: "class Config is deprecated -> use model_config = ConfigDict(...). main.py uses class Config in two models."
+  python-multipart:
+    pin: "==0.0.32"
+    was: ">=0.0.6"
+    breaking_risk: LOW
+  c2pa-python:
+    pin: "==0.37.8"
+    was: ">=0.6.0"
+    requires_python: ">=3.10"
+    evidence: "c2pa_python-0.37.8-py3-none-manylinux_2_28_x86_64.whl (pure py3-none, ABI independent)"
+    breaking_risk: CRITICAL
+    breaking_notes: >
+      VERIFIED AGAINST THE OFFICIAL usage.md: the API used by the existing
+      backend/app/analysis/c2pa.py NO LONGER EXISTS.
+        REMOVED: c2pa.Reader.from_file(path)
+        REMOVED: reader.get_active_manifest()
+        REMOVED: manifest.validate()
+      CURRENT API:
+        from c2pa import Reader, Context, Settings
+        with Reader("path/to/file.jpg") as reader: data = json.loads(reader.json())
+        with Reader("image/jpeg", stream) as reader: data = json.loads(reader.json())
+        reader.resource_to_stream(uri, stream)   # thumbnails etc.
+      The JSON manifest store contains keys: `active_manifest` (a string id),
+      `manifests` (map id -> manifest), and `validation_status` /
+      `validation_results` present ONLY when validation problems occurred.
+      Handled by stage S09.
+  pytest:
+    pin: "==9.1.1"
+    was: "(unpinned)"
+    breaking_risk: MEDIUM
+    breaking_notes: "pytest 8+ removed nose-style setup/teardown; asyncio needs an explicit plugin"
+  pytest-xdist:
+    pin: "==3.8.0"
+    extras: "[psutil]"
+
+backend_add:
+  httpx:
+    pin: "==0.28.1"
+    reason: "required by fastapi.testclient.TestClient for the API integration tests added in S04"
+    verify_before_pinning: true
+    verify_command: "curl -s https://pypi.org/pypi/httpx/json | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"info\"][\"version\"])'"
+    note: "THIS PIN IS THE ONE VALUE IN THIS FILE THAT WAS NOT RESOLVED ON 2026-08-28. Run verify_command and use whatever it prints."
+  pytest-cov:
+    pin: "resolve_at_install"
+    verify_command: "curl -s https://pypi.org/pypi/pytest-cov/json | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"info\"][\"version\"])'"
+  piexif:
+    pin: "==1.1.3"
+    reason: "S09 EXIF consistency detector -- reads/writes raw EXIF including the embedded JPEG thumbnail, which Pillow's getexif() does not expose conveniently"
+    note: "Pillow's Image.getexif() covers most needs; piexif is only required for thumbnail extraction. If S09 finds Pillow sufficient, DROP this dependency rather than adding it."
+
+backend_remove:
+  # VERIFIED by: grep -rnE "^\s*(import|from)\s+(tensorflow|matplotlib|sklearn|jose|slowapi|dotenv)" backend/ scripts/
+  # Result on 2026-08-28: NO MATCHES. All six are dead weight.
+  tensorflow:
+    reason: "zero imports anywhere in backend/ or scripts/. ~600MB of Docker image."
+  matplotlib:
+    reason: "zero imports. Visualisations are produced with cv2 only."
+  scikit-learn:
+    reason: "zero imports."
+  python-jose:
+    reason: "zero imports. There is no authentication anywhere in the app."
+  slowapi:
+    reason: >
+      zero imports. NOTE: project_plan.md claims 'Implement rate limiting [x]'
+      and README implies it exists. IT DOES NOT. main.py has no limiter.
+      S03 must either implement rate limiting properly or correct the docs --
+      see S03 constraints. Do not silently carry the false claim forward.
+  python-dotenv:
+    reason: "zero imports. Add back only if S13 introduces real env config."
+
+# ------------------------------------------------------------------------------
+frontend:
+  runtime_observed: {node: "24.17.0", npm: "11.13.0"}
+  dependencies:
+    react:            {pin: "19.2.8",  was: "^18.2.0", breaking_risk: HIGH}
+    react-dom:        {pin: "19.2.8",  was: "^18.2.0", breaking_risk: HIGH}
+    "@chakra-ui/react": {pin: "3.37.0", was: "^2.8.2", breaking_risk: CRITICAL}
+    "@emotion/react": {pin: "11.14.0", was: "^11.11.3", breaking_risk: LOW}
+    axios:            {pin: "1.20.0",  was: "^1.6.7",  breaking_risk: LOW}
+    react-dropzone:   {pin: "20.1.1",  was: "^14.2.3", breaking_risk: HIGH,
+                       note: "6 major versions. Verify the useDropzone() return shape and the `accept` option format before assuming the current call still compiles."}
+    react-icons:      {pin: "5.7.0",   was: "^5.0.1",  breaking_risk: LOW,
+                       note: "currently declared but NOT imported anywhere in src/. Remove unless S11 uses it."}
+  devDependencies:
+    vite:                  {pin: "8.2.2",   was: "^5.0.8", breaking_risk: HIGH}
+    "@vitejs/plugin-react": {pin: "6.1.1",  was: "^4.2.1", breaking_risk: MEDIUM}
+    typescript:            {pin: "7.0.2",   was: "^5.2.2", breaking_risk: HIGH,
+                            note: "TypeScript 7 is the native-port compiler. Stricter defaults and removed legacy flags. Expect tsconfig.json to need rewriting."}
+    "@types/react":        {pin: "19.2.18", was: "^18.2.43"}
+    "@types/react-dom":    {pin: "19.2.5",  was: "^18.2.17"}
+    "@biomejs/biome":      {pin: "2.5.11",  was: "(new)", breaking_risk: NONE}
+    vitest:                {pin: "4.1.11",  was: "(new)"}
+    "@vitest/coverage-v8": {pin: "4.1.11",  was: "(new)"}
+    "@testing-library/react": {pin: "16.3.3", was: "(new)"}
+    jsdom:                 {pin: "30.0.1",  was: "(new)"}
+  frontend_remove:
+    "@emotion/styled":
+      reason: "Chakra UI v3 migration guide instructs `npm uninstall @emotion/styled framer-motion`"
+    framer-motion:
+      reason: "same -- no longer a Chakra v3 peer dependency"
+    eslint:                     {reason: "replaced by Biome (decision D4)"}
+    "@typescript-eslint/eslint-plugin": {reason: "replaced by Biome"}
+    "@typescript-eslint/parser":        {reason: "replaced by Biome"}
+    eslint-plugin-react-hooks:  {reason: "replaced by Biome (biome has a react-hooks rule set)"}
+    eslint-plugin-react-refresh: {reason: "replaced by Biome"}
+
+# ------------------------------------------------------------------------------
+optional_learned_model:
+  # Installed ONLY by S12, and ONLY into the `learned` extra. Never a hard dep.
+  onnxruntime:
+    pin: "==1.29.0"
+    requires_python: ">=3.11"
+    evidence: "onnxruntime-1.29.0-cp314-cp314-manylinux_2_28_x86_64.whl"
+  huggingface-hub:
+    pin: "==1.29.0"
+    requires_python: ">=3.10"
+    reason: "download the ONNX artifact by repo id + revision"
+  torch:
+    status: REJECTED
+    evidence: >
+      torch 2.13.0 publishes 24 wheels; the highest CPython tag is cp313
+      (torch-2.13.0-cp313-cp313-manylinux_2_28_x86_64.whl). NO cp314 wheel
+      exists. Installing torch would force the project back to Python 3.13.
+    consequence: "S12 uses onnxruntime. Do not add torch under any circumstances."

@@ -1,0 +1,143 @@
+id: S09
+title: "EXIF consistency; rewrite the dead+broken C2PA analyzer against the 0.37 API"
+depends_on: [S05]
+
+objective: >
+  Add the declarative evidence layer. Unlike every statistical detector in this
+  plan, metadata and provenance give near-certain answers when present: a valid
+  C2PA manifest asserting a generative action is an identification, not a
+  heuristic. The corresponding hazard is that ABSENCE of metadata is
+  meaningless, and the current C2PA code gets this exactly backwards.
+
+context:
+  - "VERIFIED: backend/app/analysis/c2pa.py is dead code. grep for 'c2pa' in backend/app/main.py returns nothing -- no endpoint has ever exposed it."
+  - "VERIFIED against the official c2pa-python usage documentation: the API the file uses no longer exists in c2pa-python 0.37.8. `c2pa.Reader.from_file(path)`, `reader.get_active_manifest()` and `manifest.validate()` are ALL removed. The current API is `from c2pa import Reader, Context, Settings`; `with Reader(path) as r: data = json.loads(r.json())` or `with Reader('image/jpeg', stream) as r: ...`; plus `r.resource_to_stream(uri, stream)` for embedded resources. The manifest store JSON has keys `active_manifest` (an id string), `manifests` (id -> manifest), and `validation_status` / `validation_results` present only when validation problems occurred."
+  - "VERIFIED CRITICAL SEMANTIC DEFECT: the current code emits {'type':'no_manifest','severity':'high'} when an image has no C2PA manifest. Most images in the world have no manifest. Under any fusion scheme this makes nearly every image suspicious. Absence must map to NOT_APPLICABLE with weight 0."
+  - "backend/tests/test_c2pa.py exists; S01 marked it xfail pending this stage. Un-xfail it here."
+  - "Full EXIF check list: plan/reference/detector-catalog.yaml new.exif_consistency, checks EX1-EX5."
+
+files_allowed:
+  - "backend/app/analysis/exif.py"
+  - "backend/app/analysis/c2pa.py"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/analysis/calibration.json"
+  - "backend/tests/test_exif.py"
+  - "backend/tests/test_c2pa.py"
+  - "requirements.txt"
+  - "benchmarks/**"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch and benchmark."
+    commands: |
+      git checkout main && git checkout -b plan/S09
+      .venv/bin/python scripts/benchmark.py --out benchmarks/pre-S09.json --corpus all
+
+  - n: 2
+    action: >
+      Implement ExifConsistencyDetector with checks EX1-EX5 from the catalog.
+      EX1 (thumbnail mismatch) is by a wide margin the strongest of the five and
+      must be implemented first and well: most editors rewrite the main image
+      and leave the embedded thumbnail untouched, so an edit is often still
+      visible in un-edited form in the thumbnail. Produce BOTH a global
+      similarity score AND a per-region difference map -- that map is a
+      genuine tamper localisation, not just a flag.
+    dependency_decision: >
+      Try Pillow first: `Image.open(p).getexif().get_ifd(0x5100)` exposes IFD1,
+      the thumbnail IFD. If the pinned Pillow 12.3.0 does not give you the
+      thumbnail BYTES through that path, add piexif==1.1.3 (already resolved in
+      versions.lock.yaml backend_add) and use piexif.load(path)['thumbnail'].
+      DECIDE BY RUNNING IT, not by assuming. If Pillow suffices, do NOT add
+      piexif -- one fewer dependency.
+
+  - n: 3
+    action: >
+      Rewrite backend/app/analysis/c2pa.py against the 0.37 API. Delete the
+      existing _check_manifest_validity, _check_ai_generation and
+      _extract_metadata implementations -- they call removed methods and cannot
+      be repaired incrementally.
+    requirements:
+      - "use `with Reader(path) as reader: store = json.loads(reader.json())` inside try/except"
+      - "no manifest present -> state NOT_APPLICABLE, reason 'no C2PA manifest', score None. NEVER severity high, NEVER flagged."
+      - "manifest present and valid -> parse store['manifests'][store['active_manifest']]"
+      - "read validation from store.get('validation_status') / store.get('validation_results'); a FAILED validation on a manifest that IS present is strong evidence of post-signing modification -> high score"
+      - "AI generation: inspect the active manifest's assertions for c2pa.actions entries whose action is 'c2pa.created' with a digitalSourceType of trainedAlgorithmicMedia (the IPTC digital source type vocabulary), and inspect claim_generator / claim_generator_info for known generative tools. A positive here is an IDENTIFICATION, not a heuristic -- surface it as such in `reason`."
+      - "DO NOT keep the hardcoded known_ai_generators set as the primary mechanism. Prefer the structured digitalSourceType assertion; use the name list only as a fallback and document it as such."
+      - "the analyzer must accept BYTES, not only a path, so it fits ImageContext -- use the stream form Reader(mime, stream)"
+
+  - n: 4
+    action: "Register both, add calibration entries. Per api-contract.yaml fusion.weights.prior_constraints, c2pa is the ONE detector permitted a weight large enough to drive the verdict alone -- but only on a POSITIVE, VALIDATED manifest, never on absence."
+
+  - n: 5
+    action: "Tests."
+    test_requirements:
+      exif:
+        - "CONSTRUCTED: write an image with an embedded thumbnail that MATCHES, assert a high similarity; then write one whose thumbnail is of a different image, assert EX1 fires. Build both in the test."
+        - "an image with no EXIF at all returns NOT_APPLICABLE, not flagged. Assert this explicitly -- it is the failure mode that would otherwise flag most of the internet."
+        - "EX2: an image whose Software tag says 'Adobe Photoshop' is flagged and the reason quotes the literal tag value"
+        - "EX5: an image whose EXIF PixelXDimension disagrees with its actual width sets the resized flag that gates the CFA detector"
+      c2pa:
+        - "an image with no manifest (use any data/samples file) returns NOT_APPLICABLE and does NOT raise -- this is the regression test for the semantic defect"
+        - "the analyzer accepts bytes as well as a path"
+        - "if S05 sourced a real_c2pa_signed image: a valid manifest parses and its claim_generator is reported; a manifest failing validation is flagged. If S05 recorded a shortfall on that axis, SKIP these two with an explicit pytest.skip naming the missing corpus axis -- do not fabricate a signed fixture and do not silently drop the tests."
+        - "test_c2pa.py is no longer xfail"
+
+  - n: 6
+    action: "Benchmark and commit."
+    commands: |
+      .venv/bin/python scripts/benchmark.py --out benchmarks/post-S09.json --corpus all
+      git add -A && git commit -m "S09: add EXIF consistency detector; rewrite C2PA analyzer for the 0.37 API"
+
+acceptance:
+  - check: "metadata tests pass and c2pa tests are no longer xfail"
+    command: ".venv/bin/python -m pytest backend/tests/test_exif.py backend/tests/test_c2pa.py -q -rxX && ! .venv/bin/python -m pytest backend/tests/test_c2pa.py -q -rxX 2>&1 | grep -q xfailed"
+  - check: "the removed 0.6-era c2pa API is gone from the codebase"
+    command: "! grep -nE 'Reader\\.from_file|get_active_manifest|manifest\\.validate\\(\\)' backend/app/analysis/c2pa.py"
+  - check: "the current API is actually used"
+    command: "grep -q 'Reader(' backend/app/analysis/c2pa.py && grep -q '\\.json()' backend/app/analysis/c2pa.py"
+  - check: "absence of a manifest is NOT_APPLICABLE, never high severity"
+    command: |
+      .venv/bin/python - <<'PY'
+      from backend.app.analysis.registry import get
+      from backend.app.analysis.base import ImageContext, DetectorState
+      ctx=ImageContext.from_path('data/samples/original/landscape_original.jpg')
+      r=get(['c2pa'])['c2pa'].run(ctx)
+      assert r.state is DetectorState.NOT_APPLICABLE, r
+      assert not r.flagged and r.score is None, r
+      print('c2pa absence handled correctly')
+      PY
+  - check: "absence of EXIF is NOT_APPLICABLE, never flagged"
+    command: ".venv/bin/python -m pytest backend/tests/test_exif.py -q -k no_exif"
+  - check: "the strongest EXIF check, thumbnail mismatch, actually works"
+    command: ".venv/bin/python -m pytest backend/tests/test_exif.py -q -k thumbnail"
+  - check: "both detectors registered"
+    command: ".venv/bin/python -c \"from backend.app.analysis.registry import get_all; ids=set(get_all()); assert {'exif','c2pa'} <= ids, ids\""
+  - check: "piexif was added ONLY if it is actually imported"
+    command: "! grep -q piexif requirements.txt || grep -rq 'import piexif' backend/app/"
+  - check: "no regression"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      pre=json.load(open('benchmarks/pre-S09.json'))['detectors']
+      post=json.load(open('benchmarks/post-S09.json'))['detectors']
+      bad=[(d,ms['corpus']) for d in pre for ms in pre[d]['metric_sets']
+           for n in post[d]['metric_sets'] if n['corpus']==ms['corpus'] and ms['auc']-n['auc']>0.02]
+      assert not bad, bad; print('no regression')
+      PY
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+constraints:
+  - "NEVER map 'no manifest' or 'no EXIF' to tampered. Both are NOT_APPLICABLE with weight 0. This is the specific defect this stage exists to fix; reintroducing it in a different form fails the stage."
+  - "DO NOT keep any part of the old c2pa.py that calls a removed method. Delete, do not patch around."
+  - "DO NOT fabricate a C2PA-signed fixture to make a test pass. Skip with an explicit reason."
+  - "DO NOT add piexif unless you actually import it."
+  - "DO NOT treat metadata as decisive on its own EXCEPT a positive, validated C2PA generative assertion."
+
+rollback: "git checkout main && git branch -D plan/S09"
+
+artifacts:
+  - backend/app/analysis/exif.py
+  - backend/app/analysis/c2pa.py
+  - backend/tests/test_exif.py

@@ -1,0 +1,1700 @@
+{
+  "entries": [
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_000",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_000_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_001",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_001_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_002",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_002_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_003",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_003_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_004",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_004_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_005",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_005_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_006",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_006_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_007",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_007_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_008",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_008_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_008.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_009",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_009_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_009.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_010",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_010_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_010.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_011",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_011_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_011.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_012",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_012_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_012.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_013",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_013_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_013.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_014",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_014_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_014.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_015",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_015_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_015.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_016",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_016_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_016.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_017",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_017_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_017.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_018",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_018_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_018.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_019",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_019_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_019.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_020",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_020_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_020.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_021",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_021_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_021.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_022",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_022_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_022.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_023",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_023_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_023.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_024",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_024_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_024.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_025",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_025_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_025.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_026",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_026_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_026.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_027",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_027_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_027.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_028",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_028_mask.png",
+      "params": {
+        "quality": 70,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_028.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_029",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_029_mask.png",
+      "params": {
+        "quality": 80,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_029.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_030",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_030_mask.png",
+      "params": {
+        "quality": 90,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_030.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "authentic_recompress",
+      "id": "synthetic_authentic_recompress_031",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_authentic_recompress_031_mask.png",
+      "params": {
+        "quality": 95,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_authentic_recompress_031.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_000",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_000_mask.png",
+      "params": {
+        "donor_quality": 80,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 70,
+        "region": [
+          337,
+          106,
+          488,
+          236
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_001",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_001_mask.png",
+      "params": {
+        "donor_quality": 90,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 80,
+        "region": [
+          469,
+          294,
+          658,
+          502
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_002",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_002_mask.png",
+      "params": {
+        "donor_quality": 95,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 90,
+        "region": [
+          477,
+          113,
+          764,
+          369
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_003",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_003_mask.png",
+      "params": {
+        "donor_quality": 70,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 95,
+        "region": [
+          505,
+          139,
+          631,
+          295
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_004",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_004_mask.png",
+      "params": {
+        "donor_quality": 80,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 70,
+        "region": [
+          120,
+          296,
+          313,
+          499
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_005",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_005_mask.png",
+      "params": {
+        "donor_quality": 90,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 80,
+        "region": [
+          44,
+          111,
+          348,
+          367
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_006",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_006_mask.png",
+      "params": {
+        "donor_quality": 95,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 90,
+        "region": [
+          110,
+          316,
+          258,
+          448
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_007",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_007_mask.png",
+      "params": {
+        "donor_quality": 70,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 95,
+        "region": [
+          382,
+          125,
+          577,
+          326
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_008",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_008_mask.png",
+      "params": {
+        "donor_quality": 80,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 70,
+        "region": [
+          150,
+          84,
+          440,
+          340
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_008.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_009",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_009_mask.png",
+      "params": {
+        "donor_quality": 90,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 80,
+        "region": [
+          101,
+          10,
+          246,
+          145
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_009.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_010",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_010_mask.png",
+      "params": {
+        "donor_quality": 95,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 90,
+        "region": [
+          493,
+          160,
+          702,
+          348
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_010.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_011",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_011_mask.png",
+      "params": {
+        "donor_quality": 70,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 95,
+        "region": [
+          382,
+          15,
+          651,
+          271
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_011.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_012",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_012_mask.png",
+      "params": {
+        "donor_quality": 80,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": false,
+        "host_quality": 70,
+        "region": [
+          585,
+          89,
+          713,
+          242
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_012.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "splice",
+      "id": "synthetic_splice_013",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_splice_013_mask.png",
+      "params": {
+        "donor_quality": 90,
+        "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+        "feathered": true,
+        "host_quality": 80,
+        "region": [
+          22,
+          24,
+          232,
+          211
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_splice_013.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_000",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_000_mask.png",
+      "params": {
+        "destination_region": [
+          573,
+          123,
+          723,
+          254
+        ],
+        "feathered": false,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          119,
+          322,
+          269,
+          453
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_001",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_001_mask.png",
+      "params": {
+        "destination_region": [
+          141,
+          158,
+          390,
+          383
+        ],
+        "feathered": false,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          454,
+          186,
+          664,
+          373
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_002",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_002_mask.png",
+      "params": {
+        "destination_region": [
+          0,
+          0,
+          283,
+          256
+        ],
+        "feathered": true,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          234,
+          237,
+          517,
+          493
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_003",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_003_mask.png",
+      "params": {
+        "destination_region": [
+          147,
+          231,
+          317,
+          396
+        ],
+        "feathered": false,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          546,
+          255,
+          688,
+          393
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_004",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_004_mask.png",
+      "params": {
+        "destination_region": [
+          283,
+          190,
+          488,
+          381
+        ],
+        "feathered": false,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          497,
+          77,
+          702,
+          268
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_005",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_005_mask.png",
+      "params": {
+        "destination_region": [
+          427,
+          197,
+          768,
+          506
+        ],
+        "feathered": true,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          44,
+          170,
+          333,
+          426
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_006",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_006_mask.png",
+      "params": {
+        "destination_region": [
+          242,
+          170,
+          377,
+          315
+        ],
+        "feathered": false,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          20,
+          198,
+          155,
+          343
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_007",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_007_mask.png",
+      "params": {
+        "destination_region": [
+          261,
+          166,
+          498,
+          403
+        ],
+        "feathered": false,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          470,
+          120,
+          668,
+          318
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_008",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_008_mask.png",
+      "params": {
+        "destination_region": [
+          89,
+          210,
+          368,
+          466
+        ],
+        "feathered": true,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          420,
+          238,
+          699,
+          494
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_008.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_009",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_009_mask.png",
+      "params": {
+        "destination_region": [
+          51,
+          301,
+          204,
+          485
+        ],
+        "feathered": false,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          591,
+          290,
+          716,
+          447
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_009.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_010",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_010_mask.png",
+      "params": {
+        "destination_region": [
+          12,
+          233,
+          203,
+          438
+        ],
+        "feathered": false,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          452,
+          171,
+          643,
+          376
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_010.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_011",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_011_mask.png",
+      "params": {
+        "destination_region": [
+          452,
+          205,
+          768,
+          512
+        ],
+        "feathered": true,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          4,
+          131,
+          270,
+          387
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_011.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_012",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_012_mask.png",
+      "params": {
+        "destination_region": [
+          524,
+          94,
+          674,
+          225
+        ],
+        "feathered": false,
+        "rotation": 0,
+        "scale": 1.0,
+        "seed": 20260828,
+        "source_region": [
+          190,
+          108,
+          340,
+          239
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_012.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "copy_move",
+      "id": "synthetic_copy_move_013",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_copy_move_013_mask.png",
+      "params": {
+        "destination_region": [
+          118,
+          287,
+          367,
+          512
+        ],
+        "feathered": false,
+        "rotation": 5,
+        "scale": 1.1,
+        "seed": 20260828,
+        "source_region": [
+          143,
+          64,
+          353,
+          251
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_copy_move_013.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_000",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_000_mask.png",
+      "params": {
+        "quality_first": 70,
+        "quality_second": 90,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_001",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_001_mask.png",
+      "params": {
+        "quality_first": 80,
+        "quality_second": 95,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_002",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_002_mask.png",
+      "params": {
+        "quality_first": 90,
+        "quality_second": 70,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_003",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_003_mask.png",
+      "params": {
+        "quality_first": 95,
+        "quality_second": 80,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_004",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_004_mask.png",
+      "params": {
+        "quality_first": 70,
+        "quality_second": 90,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_005",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_005_mask.png",
+      "params": {
+        "quality_first": 80,
+        "quality_second": 95,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_006",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_006_mask.png",
+      "params": {
+        "quality_first": 90,
+        "quality_second": 70,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_007",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_007_mask.png",
+      "params": {
+        "quality_first": 95,
+        "quality_second": 80,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_008",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_008_mask.png",
+      "params": {
+        "quality_first": 70,
+        "quality_second": 90,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_008.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_aligned",
+      "id": "synthetic_double_compress_aligned_009",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_aligned_009_mask.png",
+      "params": {
+        "quality_first": 80,
+        "quality_second": 95,
+        "seed": 20260828,
+        "shift": [
+          0,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_aligned_009.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_000",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_000_mask.png",
+      "params": {
+        "quality_first": 70,
+        "quality_second": 90,
+        "seed": 20260828,
+        "shift": [
+          1,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_001",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_001_mask.png",
+      "params": {
+        "quality_first": 80,
+        "quality_second": 95,
+        "seed": 20260828,
+        "shift": [
+          4,
+          4
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_002",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_002_mask.png",
+      "params": {
+        "quality_first": 90,
+        "quality_second": 70,
+        "seed": 20260828,
+        "shift": [
+          7,
+          3
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_003",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_003_mask.png",
+      "params": {
+        "quality_first": 95,
+        "quality_second": 80,
+        "seed": 20260828,
+        "shift": [
+          1,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_004",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_004_mask.png",
+      "params": {
+        "quality_first": 70,
+        "quality_second": 90,
+        "seed": 20260828,
+        "shift": [
+          4,
+          4
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_005",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_005_mask.png",
+      "params": {
+        "quality_first": 80,
+        "quality_second": 95,
+        "seed": 20260828,
+        "shift": [
+          7,
+          3
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_006",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_006_mask.png",
+      "params": {
+        "quality_first": 90,
+        "quality_second": 70,
+        "seed": 20260828,
+        "shift": [
+          1,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_007",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_007_mask.png",
+      "params": {
+        "quality_first": 95,
+        "quality_second": 80,
+        "seed": 20260828,
+        "shift": [
+          4,
+          4
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_008",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_008_mask.png",
+      "params": {
+        "quality_first": 70,
+        "quality_second": 90,
+        "seed": 20260828,
+        "shift": [
+          7,
+          3
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_008.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "double_compress_shifted",
+      "id": "synthetic_double_compress_shifted_009",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_double_compress_shifted_009_mask.png",
+      "params": {
+        "quality_first": 80,
+        "quality_second": 95,
+        "seed": 20260828,
+        "shift": [
+          1,
+          0
+        ]
+      },
+      "path": "data/corpus/synthetic/synthetic_double_compress_shifted_009.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_000",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_000_mask.png",
+      "params": {
+        "operation": "blur",
+        "region": [
+          366,
+          257,
+          507,
+          396
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_001",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_001_mask.png",
+      "params": {
+        "operation": "brightness",
+        "region": [
+          425,
+          16,
+          621,
+          216
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_002",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_002_mask.png",
+      "params": {
+        "operation": "clone",
+        "region": [
+          117,
+          97,
+          374,
+          353
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_003",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_003_mask.png",
+      "params": {
+        "operation": "median",
+        "region": [
+          578,
+          228,
+          720,
+          366
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_004",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_004_mask.png",
+      "params": {
+        "operation": "blur",
+        "region": [
+          112,
+          198,
+          290,
+          418
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_005",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_005_mask.png",
+      "params": {
+        "operation": "brightness",
+        "region": [
+          411,
+          123,
+          717,
+          379
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_006",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_006_mask.png",
+      "params": {
+        "operation": "clone",
+        "region": [
+          42,
+          224,
+          168,
+          380
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_007",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_007_mask.png",
+      "params": {
+        "operation": "median",
+        "region": [
+          71,
+          100,
+          280,
+          288
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_008",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_008_mask.png",
+      "params": {
+        "operation": "blur",
+        "region": [
+          220,
+          1,
+          516,
+          257
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_008.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_009",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_009_mask.png",
+      "params": {
+        "operation": "brightness",
+        "region": [
+          525,
+          208,
+          667,
+          346
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_009.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_010",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_010_mask.png",
+      "params": {
+        "operation": "clone",
+        "region": [
+          36,
+          43,
+          238,
+          237
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_010.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "local_retouch",
+      "id": "synthetic_local_retouch_011",
+      "label": "manipulated",
+      "mask": "data/corpus/synthetic/synthetic_local_retouch_011_mask.png",
+      "params": {
+        "operation": "median",
+        "region": [
+          36,
+          136,
+          328,
+          392
+        ],
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_local_retouch_011.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_000",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_000_mask.png",
+      "params": {
+        "scale": 0.5,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_000.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_001",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_001_mask.png",
+      "params": {
+        "scale": 0.75,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_001.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_002",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_002_mask.png",
+      "params": {
+        "scale": 0.5,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_002.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_003",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_003_mask.png",
+      "params": {
+        "scale": 0.75,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_003.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_004",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_004_mask.png",
+      "params": {
+        "scale": 0.5,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_004.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_005",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_005_mask.png",
+      "params": {
+        "scale": 0.75,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_005.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_006",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_006_mask.png",
+      "params": {
+        "scale": 0.5,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_006.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    },
+    {
+      "family": "resize_then_save",
+      "id": "synthetic_resize_then_save_007",
+      "label": "authentic",
+      "mask": "data/corpus/synthetic/synthetic_resize_then_save_007_mask.png",
+      "params": {
+        "scale": 0.75,
+        "seed": 20260828
+      },
+      "path": "data/corpus/synthetic/synthetic_resize_then_save_007.jpg",
+      "source_image": "data/samples/original/landscape_original.jpg"
+    }
+  ],
+  "generated_at": "2026-08-28T12:00:00Z",
+  "seed": 20260828
+}

@@ -1,0 +1,183 @@
+id: S13
+title: "CI, Docker on py3.14 headless, healthcheck, structured logging, docs truthfulness pass"
+depends_on: [S10, S11]
+
+objective: >
+  Make the work reproducible by someone who is not the agent that wrote it: a CI
+  pipeline that runs every gate this plan defined, a container that matches the
+  pinned Python, and documentation that describes what the code actually does
+  rather than what an earlier plan hoped it would.
+
+context:
+  - "VERIFIED: there is no CI. No .github/ directory exists. Every acceptance gate in stages S00-S12 is currently enforced only by whichever agent happens to run it."
+  - "VERIFIED: the Dockerfile uses python:3.12-slim while the project targets 3.14 (decision D1), and installs libgl1-mesa-glx and libglib2.0-0 solely because opencv-python (the GUI build) needed them. S01 switched to opencv-python-headless, so both apt packages can go."
+  - "VERIFIED: the Dockerfile runs `npm install`, not `npm ci`, so the container build ignores package-lock.json and can produce a different bundle than local development."
+  - "VERIFIED: the container runs as root and has no HEALTHCHECK."
+  - "VERIFIED: scripts/start-docker.sh backgrounds uvicorn with `&` and then execs nginx. If uvicorn dies, the container stays 'healthy' with a dead backend forever."
+  - "VERIFIED: nginx.conf proxies only location /analyze/. The /api/v1 routes S04 added and the /healthz endpoint are NOT proxied, so the S11 frontend cannot reach the backend in the container at all."
+  - "VERIFIED: logging is logging.basicConfig(level=logging.INFO) with f-string messages; there is no request id and no structure."
+  - "VERIFIED documentation drift, to be corrected here: project_plan.md ticks several unchecked-in-reality items (rate limiting, frontend visualisation, API integration); README.md claims PRNU detects 'images from different source cameras', which S08 established it cannot; README.md's project structure lists hooks/ and public/ directories that do not exist; data/samples/original/README.md documents three files that are not on disk."
+
+files_allowed:
+  - ".github/**"
+  - "Dockerfile"
+  - ".dockerignore"
+  - "nginx.conf"
+  - "scripts/**"
+  - "backend/app/main.py"
+  - "backend/app/logging_config.py"
+  - "README.md"
+  - "project_plan.md"
+  - "docs/**"
+  - "data/samples/**/README.md"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: "git checkout main && git checkout -b plan/S13"
+
+  - n: 2
+    action: "Write .github/workflows/ci.yml."
+    requirements:
+      - "trigger on push and pull_request"
+      - "backend job on ubuntu-latest with actions/setup-python python-version 3.14 -- the SAME version as decision D1, not 'latest' and not a range"
+      - "backend steps: pip install -r requirements-dev.txt; pytest backend/tests -q; then regenerate the synthetic corpus and run scripts/benchmark.py --corpus synthetic"
+      - "THE KEY CI GATE: compare the benchmark output against benchmarks/REFERENCE.json and FAIL if any detector's AUC dropped by more than 0.02. This is the same no-regression check S06-S09 ran by hand; putting it in CI is what stops the eleventh detector from quietly breaking the third."
+      - "frontend job: actions/setup-node 24, npm ci, npx tsc --noEmit, npx biome check ., npm run test, npm run build"
+      - "docker job: build the image and assert /healthz responds inside the running container"
+      - "cache pip and npm"
+      - "the real corpus is NOT fetched in CI -- it is network-dependent and Tier A for only a few detectors. Restrict CI to --corpus synthetic and say so in a comment."
+      - "resolve every action version with `gh api repos/<owner>/<repo>/releases/latest` or by checking the action's repository BEFORE writing it. Do not write an action version from memory."
+
+  - n: 3
+    action: "Rewrite the Dockerfile."
+    requirements:
+      - "base python:3.14-slim, matching decision D1"
+      - "REMOVE libgl1-mesa-glx and libglib2.0-0 -- opencv-python-headless does not need them"
+      - "frontend stage: `npm ci` not `npm install`, so package-lock.json is honoured"
+      - "install from requirements.txt only -- NOT requirements-dev.txt and NOT requirements-learned.txt"
+      - "create and switch to a non-root user; nginx needs its cache and pid paths made writable for that user"
+      - "HEALTHCHECK hitting /healthz through nginx"
+      - "add a .dockerignore covering .venv, node_modules, __pycache__, .git, data/corpus, models, benchmarks -- without it the whole corpus and every model file ends up in the build context"
+      - "record the image size before and after for the S01 benchmark_report"
+
+  - n: 4
+    action: >
+      Fix scripts/start-docker.sh. The current script backgrounds uvicorn and
+      execs nginx, so a dead backend leaves a container that still looks healthy.
+      Either use a tiny supervisor, or trap and exit when either process dies:
+        uvicorn ... & UV=$!
+        nginx -g 'daemon off;' & NG=$!
+        wait -n; kill $UV $NG 2>/dev/null; exit 1
+      Whichever you choose, the container must exit when either process exits.
+
+  - n: 5
+    action: >
+      Fix nginx.conf. Add location blocks for /api/ and /healthz alongside the
+      existing /analyze/. Without them the S11 frontend cannot reach the backend
+      in the container -- the containerised app is currently broken for every
+      route S04 added. Keep client_max_body_size aligned with config.MAX_UPLOAD_BYTES
+      and add a comment noting they must move together.
+
+  - n: 6
+    action: "Structured logging in backend/app/logging_config.py."
+    requirements:
+      - "JSON lines to stdout: timestamp, level, logger, message, request_id, and for analyses the image sha256, per-detector durations, and the verdict"
+      - "a middleware assigning a request id and returning it as an X-Request-ID header, so a user-reported problem can be traced to a log line"
+      - "NEVER log image bytes or the original filename -- the filename is user-supplied and may be sensitive. The sha256 is the identifier."
+      - "log level from an env var, defaulting to INFO"
+
+  - n: 7
+    action: >
+      Documentation truthfulness pass. Every claim in README.md and
+      project_plan.md must be checkable against the code as it now stands.
+    requirements:
+      - "README: replace the feature list with what the eleven detectors actually do; state each one's limitations; remove the PRNU 'different source cameras' claim; fix the project structure listing so it matches the real tree"
+      - "README: add an honest accuracy section quoting the S10 held-out metrics AND stating the corpus is small, partly synthetic and not representative of the open web. Do not report a single headline accuracy number without that context."
+      - "project_plan.md: reconcile every checkbox with reality. Anything ticked that is not implemented gets unticked. Then add a line pointing at plan/ as the current source of truth, since project_plan.md is superseded."
+      - "data/samples/original/README.md: remove or mark the three files that do not exist"
+      - "docs/: an index linking corpus.md, calibration.md and learned-detector.md"
+      - "add a short 'what this tool cannot do' section. Every detector here has documented blind spots; a forensics tool that does not state them invites exactly the overconfident use it should prevent."
+
+  - n: 8
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S13: CI with regression gate, py3.14 headless container, structured logging, docs truthfulness pass"'
+
+acceptance:
+  - check: "the CI workflow is valid YAML and pins python 3.14"
+    command: ".venv/bin/python -c \"import yaml;w=yaml.safe_load(open('.github/workflows/ci.yml'));print(w['name'])\" && grep -q \"3.14\" .github/workflows/ci.yml"
+  - check: "CI enforces the benchmark regression gate"
+    command: "grep -q 'REFERENCE.json' .github/workflows/ci.yml"
+  - check: "the Docker base image matches the pinned Python"
+    command: "grep -q 'python:3.14-slim' Dockerfile"
+  - check: "the opencv GUI apt dependencies are gone"
+    command: "! grep -qE 'libgl1-mesa-glx|libglib2.0-0' Dockerfile"
+  - check: "the frontend build honours the lockfile"
+    command: "grep -q 'npm ci' Dockerfile && ! grep -q 'npm install' Dockerfile"
+  - check: "the container does not run as root and declares a healthcheck"
+    command: "grep -qE '^USER ' Dockerfile && grep -q 'HEALTHCHECK' Dockerfile"
+  - check: "dev and optional requirements are not installed into the image"
+    command: "! grep -qE 'requirements-(dev|learned)\\.txt' Dockerfile"
+  - check: "a .dockerignore exists and excludes the heavy directories"
+    command: "test -f .dockerignore && grep -q node_modules .dockerignore && grep -q 'data/corpus' .dockerignore && grep -q models .dockerignore"
+  - check: "nginx proxies the routes the app actually serves"
+    command: "grep -q 'location /api' nginx.conf && grep -q '/healthz' nginx.conf"
+  - check: "the container exits when either process dies"
+    command: "grep -qE 'wait -n|exec .*supervisor|trap' scripts/start-docker.sh"
+  - check: "the image builds and /healthz answers through nginx inside it"
+    command: |
+      docker build -t itd:s13 . &&
+      docker run -d --name itd_s13 -p 18080:80 itd:s13 && sleep 12 &&
+      curl -sf http://localhost:18080/healthz > /dev/null; rc=$?
+      docker rm -f itd_s13 >/dev/null; exit $rc
+  - check: "an analysis works end to end inside the container"
+    command: |
+      docker run -d --name itd_s13b -p 18081:80 itd:s13 && sleep 12 &&
+      curl -sf -F "file=@data/samples/tampered/landscape_copy_paste.jpg" http://localhost:18081/api/v1/analyze | grep -q verdict; rc=$?
+      docker rm -f itd_s13b >/dev/null; exit $rc
+  - check: "logs are JSON lines carrying a request id"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json, subprocess, sys
+      out = subprocess.run(['.venv/bin/python','-c','''
+      from fastapi.testclient import TestClient
+      from backend.app.main import app
+      c=TestClient(app); r=c.get("/healthz"); assert "X-Request-ID" in r.headers, r.headers
+      '''], capture_output=True, text=True)
+      assert out.returncode==0, out.stderr
+      print('request id header present')
+      PY
+  - check: "no filename is logged"
+    command: "! grep -rnE 'logger\\.(info|warning|error)\\(.*file\\.filename' backend/app/"
+  - check: "the false PRNU camera-attribution claim is gone from the README"
+    command: "! grep -qi 'different source cameras' README.md"
+  - check: "the README documents limitations"
+    command: "grep -qiE 'cannot|limitation|not proof' README.md"
+  - check: "project_plan.md no longer ticks anything unimplemented, and points at plan/"
+    command: "grep -q 'plan/plan.yaml' project_plan.md && (grep -q 'RATE_LIMIT' backend/app/main.py || ! grep -q '\\[x\\] Implement rate limiting' project_plan.md)"
+  - check: "data/samples README no longer describes absent files"
+    command: "! grep -qE 'portrait_original|document_original|receipt_original' data/samples/original/README.md || grep -qi 'not present' data/samples/original/README.md"
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+benchmark_report:
+  - metric: "Docker image size before versus after"
+    note: "S01 removed tensorflow (~600MB) and this stage removes the two mesa/glib apt packages. Record both numbers in the stage report; informational, does not gate."
+
+constraints:
+  - "DO NOT change any detection logic, threshold or calibration value in this stage. It is operational only."
+  - "DO NOT write a GitHub Action version from memory. Look each one up before pinning it."
+  - "DO NOT fetch the real corpus or the ONNX model in CI. Network-dependent steps make CI flaky and both are optional by design."
+  - "DO NOT log image bytes or user-supplied filenames."
+  - "DO NOT paper over a documentation claim by softening the wording when the honest fix is to untick the box."
+  - "DO NOT remove the legacy /analyze/* endpoints here. They need their own scoped stage after the frontend has been on /api/v1 for a release."
+
+rollback: "git checkout main && git branch -D plan/S13 && docker rmi itd:s13 2>/dev/null || true"
+
+artifacts:
+  - .github/workflows/ci.yml
+  - Dockerfile
+  - .dockerignore
+  - nginx.conf
+  - backend/app/logging_config.py

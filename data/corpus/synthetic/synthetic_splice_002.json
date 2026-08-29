@@ -1,0 +1,20 @@
+{
+  "family": "splice",
+  "id": "synthetic_splice_002",
+  "label": "manipulated",
+  "params": {
+    "donor_quality": 95,
+    "donor_source": "data/samples/tampered/gpt-4o-generated-receipt-01.png",
+    "feathered": false,
+    "host_quality": 90,
+    "region": [
+      477,
+      113,
+      764,
+      369
+    ],
+    "seed": 20260828
+  },
+  "seed": 20260828,
+  "source_image": "data/samples/original/landscape_original.jpg"
+}

@@ -12,8 +12,11 @@ from PIL import Image
 import cv2
 from pathlib import Path
 import io
+import logging
 from typing import Tuple, Optional, List, Union
 from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
 
 @dataclass
 class TamperingFeatures:
@@ -65,7 +68,7 @@ class ELAAnalyzer:
         except Exception as e:
             raise ValueError(f"Error loading image from bytes: {e}")
 
-    def analyze(self, image_input: Union[str, Path, bytes]) -> Tuple[np.ndarray, np.ndarray]:
+    def analyze(self, image_input: Union[str, Path, bytes, Image.Image]) -> Tuple[np.ndarray, np.ndarray]:
         """
         Perform Error Level Analysis on an image.
         
@@ -88,8 +91,10 @@ class ELAAnalyzer:
                 original = Image.open(image_path)
             elif isinstance(image_input, bytes):
                 original = self._load_image_from_bytes(image_input)
+            elif isinstance(image_input, Image.Image):
+                original = image_input.copy()
             else:
-                raise ValueError("Invalid input type. Must be string, Path, or bytes")
+                raise ValueError("Invalid input type. Must be string, Path, bytes, or PIL image")
 
             # Preprocess image
             original = self._preprocess_image(original)
@@ -111,7 +116,7 @@ class ELAAnalyzer:
             low_array = np.array(low_quality)
             
             # Calculate ELA with adaptive scaling
-            ela = np.abs(high_array - low_array)
+            ela = cv2.absdiff(high_array, low_array)
             max_diff = np.max(ela)
             if max_diff > 0:
                 scale = 255.0 / max_diff
@@ -241,15 +246,16 @@ class ELAAnalyzer:
         # Detect tampering based on multiple features
         edge_violation = features.edge_discontinuity > edge_threshold
         texture_violation = features.texture_variance < texture_threshold  # Look for unusually LOW texture
-        noise_violation = features.noise_consistency < noise_threshold
         compression_violation = features.compression_artifacts > compression_threshold
+        noise_violation = features.noise_consistency < noise_threshold and compression_violation
         
-        # Debug print violations
-        print(f"\nViolations detected:")
-        print(f"Edge violation: {edge_violation}")
-        print(f"Texture violation: {texture_violation}")
-        print(f"Noise violation: {noise_violation}")
-        print(f"Compression violation: {compression_violation}")
+        logger.debug(
+            "ELA violations: edge=%s texture=%s noise=%s compression=%s",
+            edge_violation,
+            texture_violation,
+            noise_violation,
+            compression_violation,
+        )
         
         # Count violations with special handling for AI-generated content
         # We consider texture and noise violations together as one strong indicator
@@ -259,7 +265,7 @@ class ELAAnalyzer:
             (texture_violation or noise_violation)  # Count as 1 if either is present
         ])
         
-        print(f"Total violation count: {violation_count}")
+        logger.debug("ELA total violation count: %s", violation_count)
         
         is_tampered = violation_count >= 2  # At least two types of violations needed
         

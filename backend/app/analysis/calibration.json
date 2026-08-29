@@ -1,0 +1,128 @@
+{
+  "detectors": {
+    "c2pa": {
+      "clipped": false,
+      "heldout_auc": 0.26,
+      "higher_is_worse": true,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "weight": 0.01
+    },
+    "cfa": {
+      "clipped": false,
+      "heldout_auc": 0.63,
+      "higher_is_worse": true,
+      "scale": 0.006401467717333853,
+      "threshold": 0.9827103150585264,
+      "weight": 0.01
+    },
+    "copy_move": {
+      "clipped": false,
+      "heldout_auc": 0.475,
+      "higher_is_worse": true,
+      "scale": 1e-06,
+      "threshold": 1.0,
+      "weight": 0.01
+    },
+    "double_jpeg": {
+      "clipped": false,
+      "heldout_auc": 0.41,
+      "higher_is_worse": true,
+      "scale": 0.07146605535671402,
+      "threshold": 0.9515306952975929,
+      "weight": 0.01
+    },
+    "ela": {
+      "clipped": false,
+      "heldout_auc": 0.26,
+      "higher_is_worse": true,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "weight": 0.01
+    },
+    "entropy": {
+      "clipped": false,
+      "heldout_auc": 0.475,
+      "higher_is_worse": false,
+      "scale": 0.048075358072916664,
+      "threshold": 0.09584554036458333,
+      "weight": 0.01
+    },
+    "exif": {
+      "clipped": false,
+      "heldout_auc": 0.26,
+      "higher_is_worse": true,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "weight": 0.01
+    },
+    "jpeg_ghosts": {
+      "clipped": false,
+      "heldout_auc": 0.415,
+      "higher_is_worse": true,
+      "scale": 0.5,
+      "threshold": 2.0,
+      "weight": 0.01
+    },
+    "learned": {
+      "clipped": false,
+      "heldout_auc": 0.26,
+      "higher_is_worse": true,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "weight": 0.01
+    },
+    "prnu": {
+      "clipped": false,
+      "heldout_auc": 0.595,
+      "higher_is_worse": true,
+      "scale": 14.006889343261719,
+      "threshold": 262.027587890625,
+      "weight": 0.01
+    },
+    "qtable": {
+      "clipped": false,
+      "heldout_auc": 0.26,
+      "higher_is_worse": false,
+      "scale": 1e-06,
+      "threshold": 0.0,
+      "weight": 0.01
+    },
+    "spectral": {
+      "clipped": true,
+      "heldout_auc": 0.82,
+      "higher_is_worse": true,
+      "scale": 0.31383082270622253,
+      "threshold": 2.9826955795288086,
+      "weight": 0.26632211646725884,
+      "weight_unclipped": 0.3
+    }
+  },
+  "fitted_on": {
+    "corpora": [
+      "all"
+    ],
+    "corpus_revision": "3f17dd94bb78e199e204ce11edff19e1f943fde0a46d2bf5270b99cd903d3a4b",
+    "n_images": 100
+  },
+  "fusion": {
+    "intercept": 0.09810273595298795,
+    "method": "weighted_logit"
+  },
+  "generated_at": "2026-08-28T12:00:00Z",
+  "heldout": {
+    "auc": 0.855,
+    "n": 30,
+    "seed": 20260828,
+    "split_by": "source_image"
+  },
+  "legacy": {
+    "entropy": {
+      "matching_threshold": 0.35
+    },
+    "prnu": {
+      "variance_threshold": 0.001
+    }
+  },
+  "version": "2026-08-28"
+}

@@ -1,0 +1,165 @@
+id: S12
+title: "OPTIONAL opt-in ONNX learned detector; degrades cleanly when weights are absent"
+depends_on: [S10]
+
+objective: >
+  Add a learned detector as a strictly optional extra that the core application
+  never depends on. The success criterion for this stage is as much about what
+  happens when the model is ABSENT as about what happens when it is present: a
+  default install must behave exactly as it did before S12.
+
+context:
+  - "DECISION D5, VERIFIED 2026-08-28: torch 2.13.0 publishes wheels only up to cp313. There is NO cp314 wheel. Adding torch would force the project off Python 3.14 and contradict decision D1. This stage uses onnxruntime 1.29.0, which does have cp314 wheels."
+  - "DECISION D6, VERIFIED 2026-08-28: TruFor and Noiseprint++ were evaluated and REJECTED. TruFor's license permits use 'only for informational and nonprofit purposes', which is incompatible with this repository's MIT license; it ships no ONNX export; and it publishes no direct weight download URL, so no agent can execute a stage that depends on it."
+  - "The selected model, its exact artifact path, its preprocessing constants and its label mapping are fully specified in plan/reference/detector-catalog.yaml under new.learned_onnx. Those constants were read from the model repository's own preprocessor_config.json and config.json on 2026-08-28 -- they are not inferred and must not be substituted."
+  - "IMPORTANT SCOPE LIMIT: this model was trained for FACE deepfake detection. It is not a general splice detector and it is not a document or receipt forgery detector. Presenting it as a general oracle would be the single most misleading thing in the application."
+
+files_allowed:
+  - "backend/app/analysis/learned.py"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/analysis/calibration.json"
+  - "scripts/fetch_model.py"
+  - "requirements-learned.txt"
+  - "backend/tests/test_learned.py"
+  - "docs/learned-detector.md"
+  - "benchmarks/**"
+  - ".gitignore"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch."
+    commands: "git checkout main && git checkout -b plan/S12"
+
+  - n: 2
+    action: "Create requirements-learned.txt as a SEPARATE optional file. It must never be referenced from requirements.txt."
+    edit:
+      create: requirements-learned.txt
+      content: |
+        # OPTIONAL extra. Install only if you want the learned detector.
+        #   pip install -r requirements-learned.txt && python scripts/fetch_model.py
+        # NEVER add torch here -- see plan/reference/versions.lock.yaml
+        # optional_learned_model.torch: no cp314 wheel exists.
+        -r requirements.txt
+        onnxruntime==1.29.0
+        huggingface-hub==1.29.0
+
+  - n: 3
+    action: "Write scripts/fetch_model.py."
+    requirements:
+      - "download onnx/model_quantized.onnx from onnx-community/Deep-Fake-Detector-v2-Model-ONNX via huggingface_hub.hf_hub_download, PINNED TO AN EXPLICIT REVISION -- resolve the current commit sha with the HF API and record it in the script, so the model cannot change under the calibration"
+      - "also download config.json and preprocessor_config.json, and ASSERT their contents match the constants in detector-catalog.yaml (image_size 224, mean and std all 0.5, resample 2, rescale_factor 1/255, id2label {0: Realism, 1: Deepfake}). If they differ, FAIL LOUDLY -- the model has changed and the preprocessing is now wrong."
+      - "store under models/, which goes in .gitignore. Never commit the weights."
+      - "verify the sha256 of the downloaded artifact and print it"
+
+  - n: 4
+    action: >
+      Implement LearnedDetector. The entire onnxruntime import must be lazy and
+      inside a try/except. When onnxruntime is not installed OR the model file
+      is absent, the detector registers but every run returns
+      state=NOT_APPLICABLE with reason "learned detector not installed". It must
+      never raise at import time, because that would break the default install.
+    preprocessing: >
+      Exactly as specified in detector-catalog.yaml new.learned_onnx.preprocessing:
+      RGB, resize to 224x224 with PIL resample=2 (BILINEAR), multiply by
+      1/255, subtract 0.5 and divide by 0.5 per channel, HWC to CHW, add the
+      batch dimension, float32. Do not substitute a different interpolation or a
+      different normalisation; the constants come from the model's own config.
+    scoring: >
+      P(manipulated) = softmax(logits)[1], since id2label maps 1 to Deepfake.
+      First VERIFY the output tensor is logits rather than probabilities by
+      checking that the two raw values do not sum to 1; if they do, skip the
+      softmax. Then route the result through to_probability() like every other
+      detector.
+
+  - n: 5
+    action: >
+      Register it, but NOT in DEFAULT_ENABLED. Give it a low fusion weight per
+      api-contract.yaml fusion.weights.prior_constraints, and set its
+      `limitations` field to state plainly that it is trained for face
+      deepfakes. The frontend renders that field verbatim, so this is the text
+      the user sees.
+
+  - n: 6
+    action: >
+      Re-run scripts/calibrate.py to fit this detector's threshold, scale and
+      weight alongside the others, and confirm the fused held-out AUC does not
+      DROP. A face-specific model on a corpus of landscapes and receipts may
+      well contribute nothing; if the fit gives it a weight near zero, that is
+      the correct outcome and it should be recorded, not corrected.
+    commands: |
+      .venv/bin/python scripts/calibrate.py --corpus all --out backend/app/analysis/calibration.json --seed 20260828
+      .venv/bin/python scripts/benchmark.py --out benchmarks/post-S12.json --corpus all
+
+  - n: 7
+    action: "Write docs/learned-detector.md: how to install, the model's license and provenance, its scope limit, and how to remove it."
+
+  - n: 8
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S12: optional ONNX learned detector, opt-in and degrading cleanly"'
+
+acceptance:
+  - check: "THE CRITICAL CHECK -- with onnxruntime absent, everything still works. Run in a venv built from requirements.txt only."
+    command: |
+      rm -rf /tmp/s12base && python3 -m venv /tmp/s12base &&
+      /tmp/s12base/bin/pip install -q -r requirements-dev.txt &&
+      /tmp/s12base/bin/python -c "import onnxruntime" 2>/dev/null && { echo "onnxruntime leaked into the base requirements"; exit 1; }
+      /tmp/s12base/bin/python -m pytest backend/tests -q
+  - check: "the detector reports NOT_APPLICABLE rather than raising when the model is missing"
+    command: |
+      /tmp/s12base/bin/python - <<'PY'
+      from backend.app.analysis.registry import get
+      from backend.app.analysis.base import ImageContext, DetectorState
+      d=get(['learned'])['learned']
+      r=d.run(ImageContext.from_path('data/samples/original/landscape_original.jpg'))
+      assert r.state is DetectorState.NOT_APPLICABLE, r
+      assert 'not installed' in r.reason.lower(), r.reason
+      print('degrades cleanly')
+      PY
+  - check: "torch is nowhere in the project"
+    command: "! grep -rn '^torch' requirements*.txt && ! grep -rn 'import torch' backend/ scripts/"
+  - check: "onnxruntime is not in the base requirements"
+    command: "! grep -q onnxruntime requirements.txt"
+  - check: "the learned detector is not enabled by default"
+    command: ".venv/bin/python -c \"from backend.app.analysis.registry import DEFAULT_ENABLED; assert 'learned' not in DEFAULT_ENABLED\""
+  - check: "model weights are not committed"
+    command: "! git ls-files | grep -E '\\.onnx$'"
+  - check: "the fetch script pins an explicit revision"
+    command: "grep -qE 'revision *= *[\\\"'\\''][0-9a-f]{7,40}' scripts/fetch_model.py"
+  - check: "the preprocessing constants are asserted against the model's own config, not hardcoded blind"
+    command: "grep -q 'preprocessor_config' scripts/fetch_model.py && grep -qE '0.00392156862745098|1/255|255' backend/app/analysis/learned.py"
+  - check: "WITH the extra installed: the detector runs and produces a score"
+    command: |
+      rm -rf /tmp/s12full && python3 -m venv /tmp/s12full &&
+      /tmp/s12full/bin/pip install -q -r requirements-learned.txt -r requirements-dev.txt &&
+      /tmp/s12full/bin/python scripts/fetch_model.py &&
+      /tmp/s12full/bin/python -m pytest backend/tests/test_learned.py -q
+  - check: "adding the learned detector did not reduce the fused held-out AUC"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      c=json.load(open('backend/app/analysis/calibration.json'))
+      prev=json.load(open('benchmarks/post-S10.json'))['fused']['heldout_auc']
+      assert c['heldout']['auc'] >= prev - 0.01, (c['heldout']['auc'], prev)
+      print('fused auc', c['heldout']['auc'], 'was', prev)
+      PY
+  - check: "its scope limit is stated where users will see it"
+    command: ".venv/bin/python -c \"from backend.app.analysis.registry import get_all; l=get_all()['learned']; assert any('face' in x.lower() for x in l.limitations), l.limitations\""
+
+constraints:
+  - "NEVER add torch. It has no cp314 wheel and would force the project off Python 3.14."
+  - "NEVER reference requirements-learned.txt from requirements.txt or from the Dockerfile's default build."
+  - "NEVER commit the .onnx weights."
+  - "NEVER let an onnxruntime import failure raise at module import time. Lazy, inside try/except."
+  - "DO NOT enable the learned detector by default."
+  - "DO NOT substitute different preprocessing constants. They come from the model's own config files and a mismatch silently degrades accuracy without any error."
+  - "DO NOT present this model as a general-purpose forgery oracle. It is face-deepfake-specific and its limitations field must say so."
+  - "DO NOT revisit TruFor. See decision D6 -- its license forbids the use this repository would make of it."
+
+rollback: "git checkout main && git branch -D plan/S12 && rm -rf models"
+
+artifacts:
+  - backend/app/analysis/learned.py
+  - scripts/fetch_model.py
+  - requirements-learned.txt
+  - docs/learned-detector.md

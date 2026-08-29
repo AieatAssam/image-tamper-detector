@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.14'
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: pytest backend/tests -q
+      - run: python scripts/make_corpus.py --seed 20260828 --out data/corpus/synthetic
+      - run: python scripts/benchmark.py --out /tmp/benchmark.json --corpus synthetic
+      # CI intentionally uses only the deterministic synthetic tier.
+      - run: |
+          python - <<'PY'
+          import json
+          reference = json.load(open('benchmarks/REFERENCE.json'))
+          current = json.load(open('/tmp/benchmark.json'))
+          for detector, data in reference['detectors'].items():
+              old = next((x for x in data['metric_sets'] if x['corpus'] == 'synthetic'), None)
+              new = next((x for x in current['detectors'].get(detector, {}).get('metric_sets', []) if x['corpus'] == 'synthetic'), None)
+              if old and new and old['auc'] is not None and new['auc'] is not None:
+                  assert new['auc'] >= old['auc'] - 0.02, (detector, old['auc'], new['auc'])
+          PY
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npx tsc --noEmit
+        working-directory: frontend
+      - run: npx biome check .
+        working-directory: frontend
+      - run: npm run test
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.3.0
+      - run: docker build -t image-tamper-detector:ci .
+      - run: |
+          docker run -d --name itd-ci -p 18080:80 image-tamper-detector:ci
+          trap 'docker rm -f itd-ci' EXIT
+          for i in $(seq 1 30); do curl -fsS http://localhost:18080/healthz && exit 0; sleep 2; done
+          exit 1

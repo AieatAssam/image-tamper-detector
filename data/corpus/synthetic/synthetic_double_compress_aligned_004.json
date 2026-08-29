@@ -1,0 +1,16 @@
+{
+  "family": "double_compress_aligned",
+  "id": "synthetic_double_compress_aligned_004",
+  "label": "manipulated",
+  "params": {
+    "quality_first": 70,
+    "quality_second": 90,
+    "seed": 20260828,
+    "shift": [
+      0,
+      0
+    ]
+  },
+  "seed": 20260828,
+  "source_image": "data/samples/original/landscape_original.jpg"
+}

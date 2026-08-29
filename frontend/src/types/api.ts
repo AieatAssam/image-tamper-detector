@@ -1,28 +1,64 @@
-export interface AnalysisDetails {
-  method: string;
+export type Verdict =
+  | 'manipulated'
+  | 'likely_manipulated'
+  | 'inconclusive'
+  | 'likely_authentic'
+  | 'authentic';
+
+export type DetectorState = 'applicable' | 'not_applicable' | 'error';
+
+export interface DetectorInfo {
+  id: string;
+  name: string;
+  family: string;
+  applicable_formats: string[];
+  produces_map: boolean;
   description: string;
-  edge_discontinuity?: number;
-  texture_variance?: number;
-  noise_consistency?: number;
-  compression_artifacts?: number;
-  matching_proportion?: number;
+  limitations: string[];
+  enabled: boolean;
+}
+
+export interface DetectorListResponse {
+  detectors: DetectorInfo[];
+}
+
+export interface DetectorResult {
+  id: string;
+  state: DetectorState;
+  flagged: boolean | null;
+  score: number | null;
+  threshold: number;
+  reason: string;
+  metrics: Record<string, number>;
+  visualization_png_base64: string | null;
+  duration_ms: number;
+  error: string | null;
+}
+
+export interface FusionContribution {
+  id: string;
+  weight: number;
+  signed_contribution: number;
+}
+
+export interface FusionResult {
+  method: string;
+  contributions: FusionContribution[];
+  calibration_version: string;
 }
 
 export interface AnalysisResponse {
-  is_tampered: boolean;
-  confidence_score: number;
-  analysis_type: 'ELA' | 'PRNU' | 'Entropy';
-  visualization_base64: string;
-  details: AnalysisDetails;
+  verdict: Verdict;
+  score: number;
+  summary: string;
+  image: {
+    width: number;
+    height: number;
+    format: string;
+    bytes: number;
+    sha256: string;
+  };
+  detectors: DetectorResult[];
+  fusion: FusionResult;
+  warnings: string[];
 }
-
-export interface CombinedAnalysisResponse {
-  is_tampered: boolean;
-  confidence_score: number;
-  ela_result?: AnalysisResponse;
-  prnu_result?: AnalysisResponse;
-  entropy_result?: AnalysisResponse;
-  ela_visualization_base64?: string;
-  prnu_visualization_base64?: string;
-  entropy_visualization_base64?: string;
-} 

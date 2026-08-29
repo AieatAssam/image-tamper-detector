@@ -1,0 +1,181 @@
+id: S10
+title: "Replace any() with a weighted, calibrated fusion score; fit every threshold to the corpus"
+depends_on: [S06, S07, S08, S09]
+
+objective: >
+  Turn ten independent detectors into one trustworthy verdict. This stage is
+  also where every hardcoded threshold in the repo -- 0.45, 2000.0, 25.0, 100.0,
+  300, 0.35 -- is finally replaced by a value fitted to a corpus instead of to
+  four images. Every earlier stage was forbidden from touching thresholds
+  precisely so that this fit is interpretable.
+
+context:
+  - "Every threshold currently in the code was hand-picked against data/samples' four images. The PRNU threshold of 300 was chosen to make two GPT-4o receipts classify correctly. ELA's four thresholds were tuned against values corrupted by the uint8 wraparound that S03 fixed, so they are certainly wrong now."
+  - "S04 left calibration.json marked version 'provisional-S04' with weight 1.0 for everything and a placeholder scale. S06-S09 appended more provisional entries."
+  - "S04's fusion is a placeholder mean of applicable scores, with fusion.method == 'provisional_mean'."
+  - "The full target fusion specification is in plan/reference/api-contract.yaml section `fusion`. Implement that; do not invent a different scheme."
+  - "There are now roughly 10 detectors. is_tampered = any([...]) over 10 noisy detectors marks essentially every image as manipulated -- this is why decision D8 exists."
+
+files_allowed:
+  - "scripts/calibrate.py"
+  - "backend/app/analysis/fusion.py"
+  - "backend/app/analysis/calibration.json"
+  - "backend/app/analysis/registry.py"
+  - "backend/app/main.py"
+  - "backend/app/analysis/*.py"
+  - "backend/tests/**"
+  - "benchmarks/**"
+  - "docs/calibration.md"
+  - "plan/STATUS.yaml"
+
+steps:
+  - n: 1
+    action: "Branch and record the pre-fusion benchmark."
+    commands: |
+      git checkout main && git checkout -b plan/S10
+      .venv/bin/python scripts/benchmark.py --out benchmarks/pre-S10.json --corpus all
+
+  - n: 2
+    action: >
+      Write scripts/calibrate.py. It fits, and writes, every number in
+      calibration.json. Nothing in that file may be hand-typed after this stage.
+    output_schema: "plan/reference/api-contract.yaml -> calibration_schema. Emit exactly that shape; S10 and S12 acceptance index it literally."
+    requirements:
+      - "CLI: python scripts/calibrate.py --corpus all --out backend/app/analysis/calibration.json --seed 20260828"
+      - "STEP A, per-detector threshold and scale: collect each detector's RAW statistic over every image where it is APPLICABLE, together with the ground-truth label. Choose the threshold t maximising Youden's J (TPR - FPR) on the ROC. Choose the scale w as the interquartile range of the raw statistic divided by 2, so that to_probability() saturates over a range the data actually spans rather than an arbitrary one."
+      - "STEP B, fusion weights: fit an L2-regularised logistic regression on the per-detector logit(score) features, with detectors that are NOT_APPLICABLE for an image genuinely OMITTED from that row rather than imputed. Implement the fit with numpy -- plain gradient descent on the regularised log-likelihood is about 25 lines. DO NOT re-add scikit-learn, which S01 removed."
+      - "MANDATORY HELD-OUT SPLIT: fit on a 70 percent split and report metrics on the held-out 30 percent, split by SOURCE IMAGE not by generated file, so that a splice and its own authentic parent never land on opposite sides. Without that grouping the split leaks and every metric is optimistic."
+      - "write into calibration.json: version (an ISO date), fitted_on (the corpus revision and image count), per-detector {threshold, scale, weight, higher_is_worse}, the fusion intercept b0, and the held-out metrics"
+      - "enforce api-contract.yaml fusion.weights.prior_constraints as hard caps AFTER fitting: no detector except c2pa may have a weight large enough that its maximum contribution alone crosses the verdict threshold. If the fit produces one, clip it and RECORD the clipping in the output -- a single detector dominating usually means the corpus has a shortcut, not that the detector is excellent."
+
+  - n: 3
+    action: >
+      Implement backend/app/analysis/fusion.py exactly per api-contract.yaml
+      fusion: weighted sum in LOG-ODDS space, sigmoid at the end, applicable
+      detectors only, verdict bands as specified, and the inconclusive rule
+      (fewer than 3 applicable detectors forces verdict=inconclusive regardless
+      of score). Populate fusion.contributions so the frontend can show WHY.
+
+  - n: 4
+    action: >
+      Delete the placeholder mean from S04 and wire fusion.py into
+      /api/v1/analyze. Also update the legacy /analyze/combined so its
+      is_tampered stops being any([...]) -- derive it from the fused verdict.
+
+  - n: 5
+    action: "Run the calibration and inspect the result before accepting it."
+    commands: |
+      .venv/bin/python scripts/calibrate.py --corpus all --out backend/app/analysis/calibration.json --seed 20260828
+      .venv/bin/python -m json.tool backend/app/analysis/calibration.json | head -60
+      .venv/bin/python scripts/benchmark.py --out benchmarks/post-S10.json --corpus all
+
+  - n: 6
+    action: >
+      Write docs/calibration.md: how to re-run the fit, what each number means,
+      the held-out metrics, which detectors were clipped and why, and an honest
+      statement of what the corpus does and does not establish. Include this
+      sentence or an equivalent: the fitted numbers are valid for images
+      resembling the corpus, and the corpus is small, partly synthetic and not
+      representative of the open web.
+
+  - n: 7
+    action: "Commit."
+    commands: 'git add -A && git commit -m "S10: weighted log-odds fusion; fit all thresholds and weights to the corpus"'
+
+acceptance:
+  - check: "the OR-of-detectors verdict is gone from the entire codebase"
+    command: "! grep -rn 'any(\\[' backend/app/main.py backend/app/analysis/fusion.py"
+  - check: "calibration.json is fitted, not provisional"
+    command: |
+      .venv/bin/python -c "
+      import json
+      c=json.load(open('backend/app/analysis/calibration.json'))
+      assert 'provisional' not in c['version'], c['version']
+      assert c['fitted_on'] is not None
+      assert c['fitted_on']['n_images'] >= 100, c['fitted_on']
+      print(c['version'], c['fitted_on'])"
+  - check: "every registered detector has a fitted entry -- no detector silently defaults"
+    command: |
+      .venv/bin/python -c "
+      import json
+      from backend.app.analysis.registry import get_all
+      c=json.load(open('backend/app/analysis/calibration.json'))['detectors']
+      missing=set(get_all())-set(c)
+      assert not missing, missing
+      assert all(d['weight']!=1.0 or d.get('clipped') for d in c.values()), 'a weight is still the S04 placeholder 1.0'
+      print(len(c),'detectors calibrated')"
+  - check: "no hardcoded threshold literal survives in the analysis modules"
+    command: "! grep -rnE '(edge_threshold|texture_threshold|noise_threshold|compression_threshold|variance_threshold|matching_threshold) *[:=] *[0-9]' backend/app/analysis/*.py | grep -v calibration"
+  - check: "calibration is reproducible from the same seed"
+    command: ".venv/bin/python scripts/calibrate.py --corpus all --out /tmp/cal2.json --seed 20260828 && .venv/bin/python -c \"import json;a=json.load(open('backend/app/analysis/calibration.json'));b=json.load(open('/tmp/cal2.json'));a.pop('generated_at',None);b.pop('generated_at',None);assert a==b\""
+  - check: "held-out metrics were computed on a group split, and are reported"
+    command: |
+      .venv/bin/python -c "
+      import json
+      c=json.load(open('backend/app/analysis/calibration.json'))
+      h=c['heldout']
+      assert h['split_by']=='source_image', h
+      assert 0.0 <= h['auc'] <= 1.0
+      print('heldout auc', h['auc'], 'n', h['n'])"
+  - check: "FUSION BEATS ITS PARTS: the fused held-out AUC is at least as high as the best single detector's held-out AUC. This is a RELATIVE check, not an absolute floor -- it fails only if fusion actively destroys information."
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      c=json.load(open('backend/app/analysis/calibration.json'))
+      best=max(d['heldout_auc'] for d in c['detectors'].values() if d.get('heldout_auc') is not None)
+      assert c['heldout']['auc'] >= best - 0.01, (c['heldout']['auc'], best)
+      print('fused', c['heldout']['auc'], 'best single', best)
+      PY
+  - check: "FALSE POSITIVE CONTROL: the fused verdict on the authentic_recompress and resize_then_save families is not 'manipulated' for more than 10 percent of them. This is the concrete thing any() broke."
+    command: |
+      .venv/bin/python - <<'PY'
+      import json
+      b=json.load(open('benchmarks/post-S10.json'))
+      for fam in ('authentic_recompress','resize_then_save'):
+          fp=b['fused']['family_verdicts'][fam]['manipulated_rate']
+          assert fp <= 0.10, (fam, fp)
+          print(fam, 'fp rate', fp)
+      PY
+  - check: "the inconclusive rule fires when too few detectors apply"
+    command: ".venv/bin/python -m pytest backend/tests/test_contract.py -q -k inconclusive"
+  - check: "no detector except c2pa can single-handedly cross the verdict threshold"
+    command: |
+      .venv/bin/python - <<'PY'
+      import json, math
+      c=json.load(open('backend/app/analysis/calibration.json'))
+      b0=c['fusion']['intercept']
+      for did,d in c['detectors'].items():
+          if did=='c2pa': continue
+          z=b0 + d['weight']*math.log(0.99/0.01)
+          assert 1/(1+math.exp(-z)) < 0.80, (did, d['weight'])
+      print('no single detector dominates')
+      PY
+  - check: "scikit-learn was not re-added for the logistic fit"
+    command: "! grep -qi scikit-learn requirements.txt requirements-dev.txt && ! grep -rq 'from sklearn' scripts/ backend/"
+  - check: "docs/calibration.md states the corpus limitations honestly"
+    command: "grep -qiE 'not representative|limitation|small|synthetic' docs/calibration.md"
+  - check: "full suite green"
+    command: ".venv/bin/python -m pytest backend/tests -q"
+
+benchmark_report:
+  - metric: "per-detector held-out AUC, ranked"
+    note: "expect ELA and entropy to rank low and qtable/copy_move/exif to rank high. If entropy ranks highest, be suspicious of a corpus shortcut before celebrating."
+  - metric: "detector cost: mean duration_ms, ranked"
+    note: "feeds the S11 decision about which detectors to run in a fast first pass"
+
+constraints:
+  - "DO NOT hand-edit calibration.json after the fit. Every number in it is written by scripts/calibrate.py. If a value looks wrong, fix the fitting procedure, not the output."
+  - "DO NOT fit and evaluate on the same images. The grouped held-out split is mandatory and split_by must be source_image."
+  - "DO NOT re-add scikit-learn. The logistic fit is about 25 lines of numpy."
+  - "DO NOT set an absolute AUC floor as an acceptance criterion. Every check above is relative (fusion vs its parts) or a false-positive control, for the reason in plan.yaml acceptance_tiers.why_this_split."
+  - "DO NOT change any detector's ALGORITHM in this stage. Only its threshold, scale and weight. Changing the maths and the calibration together makes both unattributable."
+  - "DO NOT remove the legacy /analyze/* endpoints. S11 migrates the frontend first."
+
+rollback: "git checkout main && git branch -D plan/S10"
+
+artifacts:
+  - scripts/calibrate.py
+  - backend/app/analysis/fusion.py
+  - backend/app/analysis/calibration.json
+  - docs/calibration.md
+  - benchmarks/post-S10.json

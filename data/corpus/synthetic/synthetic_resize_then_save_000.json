@@ -1,0 +1,11 @@
+{
+  "family": "resize_then_save",
+  "id": "synthetic_resize_then_save_000",
+  "label": "authentic",
+  "params": {
+    "scale": 0.5,
+    "seed": 20260828
+  },
+  "seed": 20260828,
+  "source_image": "data/samples/original/landscape_original.jpg"
+}

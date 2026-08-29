@@ -1,7 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
 
-# Start the backend API in the background
-cd /app && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 &
-
-# Start Nginx in the foreground
-nginx -g 'daemon off;' 
+cd /app
+uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 &
+backend_pid=$!
+nginx -g 'daemon off;' &
+nginx_pid=$!
+trap 'kill "$backend_pid" "$nginx_pid" 2>/dev/null || true' EXIT
+wait -n "$backend_pid" "$nginx_pid"
+exit 1

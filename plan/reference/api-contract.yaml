@@ -1,0 +1,322 @@
+# ==============================================================================
+# api-contract.yaml -- the target HTTP surface and scoring semantics
+# ==============================================================================
+# Implemented by S04. Conformed to by S06-S12. The frontend (S11) codes against
+# this and nothing else.
+# ==============================================================================
+
+contract_version: 1
+
+# ------------------------------------------------------------------------------
+# THE CONFIDENCE PROBLEM (read before writing any detector)
+# ------------------------------------------------------------------------------
+confidence_semantics:
+  current_state_is_broken:
+    ela:
+      code: "confidence_score = 1 - min(1.0, features.edge_discontinuity)"
+      decision: "is_tampered = (edge_discontinuity > 0.45) among other violations"
+      defect: >
+        INVERTED. Higher edge_discontinuity makes the image MORE likely to be
+        flagged, but LOWERS the reported confidence. A maximally suspicious
+        image (edge_discontinuity 1.0) reports confidence 0.0.
+    prnu:
+      code: "confidence_score = 0.8 if is_tampered else 0.2"
+      defect: "a constant. Carries no information. Two images either side of the threshold by 0.001 report 0.8 and 0.2."
+    entropy:
+      code: "confidence_score = 1 - matching_proportion"
+      defect: "not conditioned on the verdict; an authentic image reports a high 'confidence' merely because its matching_proportion is low-ish"
+    combined:
+      code: "combined_confidence = mean of the three above; is_tampered = any([...])"
+      defect: >
+        Averages three incommensurate quantities, and ORs three noisy binary
+        detectors so false-positive rates compound. With 11 detectors, any()
+        marks essentially every image as tampered.
+
+  required_definition:
+    rule: >
+      `score` is ALWAYS an estimate of P(manipulated | this detector's evidence),
+      in [0,1]. It MUST be monotonically non-decreasing in the detector's
+      suspicion. `flagged` MUST equal (score >= threshold) for the detector's
+      own calibrated threshold. If those two disagree, the detector is wrong.
+    mapping_recipe: >
+      For a detector whose raw statistic s has a calibrated decision threshold t
+      and a calibrated scale w (both stored in calibration.json, produced by
+      S10), map:
+        higher-s-is-worse:  score = sigmoid((s - t) / w)
+        lower-s-is-worse:   score = sigmoid((t - s) / w)
+      This yields score == 0.5 exactly at the threshold, which makes `flagged`
+      and `score` consistent by construction.
+    forbidden:
+      - "constant scores (the current PRNU 0.8/0.2)"
+      - "any score whose direction is not stated in detector-catalog.yaml signal_direction"
+      - "clamping raw statistics into [0,1] and calling the result a probability"
+
+  three_valued_outcome:
+    rule: >
+      Every detector returns one of THREE states, never two. Collapsing
+      `not_applicable` into `clean` is the single most likely source of
+      confident false negatives in this system.
+    states:
+      applicable:      "the detector ran and produced a score"
+      not_applicable:  "the detector cannot speak about this image (e.g. qtable on a PNG, cfa on a resized image, copy_move with too few keypoints). score is null, weight in fusion is 0."
+      error:           "the detector raised. score is null, weight 0, the error is reported, and the REQUEST STILL SUCCEEDS."
+    consequence: "One detector crashing must never 500 the whole analysis. S04 enforces this."
+
+# ------------------------------------------------------------------------------
+# ENDPOINTS
+# ------------------------------------------------------------------------------
+endpoints:
+  - path: "GET /api/v1/detectors"
+    purpose: "machine-readable list of available detectors, so the frontend never hardcodes the set"
+    response: |
+      {"detectors": [
+        {"id": "ela", "name": "Error Level Analysis", "family": "compression",
+         "applicable_formats": ["jpeg"], "produces_map": true,
+         "description": "...", "limitations": ["..."], "enabled": true}
+      ]}
+  - path: "POST /api/v1/analyze"
+    purpose: "the single analysis entry point; replaces the four /analyze/* endpoints"
+    request:
+      body: "multipart/form-data"
+      fields:
+        file: "required, the image"
+        detectors: "optional, comma-separated ids. Default: all enabled."
+        include_maps: "optional bool, default true. When false, omit every visualization_png_base64 -- lets the frontend poll cheaply."
+    response_schema: |
+      {
+        "verdict": "manipulated" | "likely_manipulated" | "inconclusive" | "likely_authentic" | "authentic",
+        "score": 0.0..1.0,            # fused P(manipulated), see fusion below
+        "summary": "one sentence in plain language, generated from the top contributing detectors",
+        "image": {"width": int, "height": int, "format": "JPEG", "bytes": int, "sha256": "..."},
+        "detectors": [
+          {
+            "id": "ela",
+            "state": "applicable" | "not_applicable" | "error",
+            "flagged": bool | null,
+            "score": 0.0..1.0 | null,
+            "threshold": float,        # the calibrated t, so the UI can show how close it was
+            "reason": "human-readable why, referencing the actual numbers",
+            "metrics": {"edge_discontinuity": 0.61, "...": 0.0},
+            "visualization_png_base64": "..." | null,
+            "duration_ms": int,
+            "error": null | "message"
+          }
+        ],
+        "fusion": {
+          "method": "weighted_logit",
+          "contributions": [{"id": "ela", "weight": 0.15, "signed_contribution": 0.31}],
+          "calibration_version": "2026-08-28"
+        },
+        "warnings": ["image was resized to 2000px for analysis; CFA detector disabled"]
+      }
+  - path: "GET /healthz"
+    purpose: "liveness for Docker/CI. No image processing. Returns 200 and the version."
+
+deprecation:
+  rule: >
+    The existing POST /analyze/ela, /analyze/prnu, /analyze/entropy and
+    /analyze/combined MUST keep working for one release, returning their
+    current shape, with a `Deprecation: true` response header and a log line.
+    S11 moves the frontend to /api/v1/analyze. Remove the old routes only in a
+    later, explicitly-scoped stage -- NOT in S04.
+
+# ------------------------------------------------------------------------------
+# FUSION
+# ------------------------------------------------------------------------------
+fusion:
+  implemented_by: S10
+  method: |
+    Work in log-odds, not probabilities.
+      z = b0 + sum over applicable detectors i of  w_i * logit(clip(score_i, 0.01, 0.99))
+      P(manipulated) = sigmoid(z)
+    Detectors in state not_applicable or error contribute nothing (their term is
+    omitted entirely, NOT treated as score 0.5).
+  weights:
+    storage: "backend/app/analysis/calibration.json, committed, versioned"
+    origin: >
+      Fitted by scripts/calibrate.py on the corpus from S05 using logistic
+      regression with L2 regularisation. NOT hand-picked. The script writes the
+      fitted weights, the per-detector thresholds t, the scales w, and the
+      corpus revision it was fitted on.
+    prior_constraints:
+      - "c2pa: a VALID manifest asserting a generative action is near-conclusive; give it a large weight and document that it can override the statistical detectors"
+      - "learned_onnx: low weight -- it is face-deepfake-specific (see detector-catalog)"
+      - "entropy: low weight -- unreviewed blog heuristic"
+      - "no detector may have a weight so large that it alone crosses the verdict threshold, EXCEPT c2pa"
+  verdict_bands:
+    authentic:          "score < 0.15"
+    likely_authentic:   "0.15 <= score < 0.35"
+    inconclusive:       "0.35 <= score < 0.55"
+    likely_manipulated: "0.55 <= score < 0.80"
+    manipulated:        "score >= 0.80"
+  inconclusive_rule: >
+    If fewer than 3 detectors are in state `applicable`, the verdict is FORCED
+    to `inconclusive` regardless of score. A PNG with no EXIF gives most
+    detectors nothing to work with, and a confident verdict from two weak
+    signals is worse than an honest shrug.
+
+# ------------------------------------------------------------------------------
+# INPUT VALIDATION (trust boundary -- do not simplify away)
+# ------------------------------------------------------------------------------
+input_validation:
+  implemented_by: S03
+  rules:
+    - id: IV1
+      rule: "reject request bodies over MAX_UPLOAD_BYTES (default 12_000_000) with HTTP 413, BEFORE reading the whole body into memory"
+      note: "nginx.conf already caps at 10M, but uvicorn on :8000 is directly reachable in dev and in the current Docker image. The cap must exist in the application."
+    - id: IV2
+      rule: "set PIL.Image.MAX_IMAGE_PIXELS to a finite value (default 50_000_000) at import time in main.py"
+      why: "decompression-bomb defence: a 200KB PNG can declare 60000x60000 and allocate ~10GB on decode. Pillow warns by default but does not raise unless the limit is set."
+    - id: IV3
+      rule: "verify the format by decoding, not by filename or client Content-Type. Use Image.open(BytesIO(b)); img.verify() then reopen. Accept only formats in ALLOWED_FORMATS = {JPEG, PNG, WEBP, TIFF}."
+    - id: IV4
+      rule: "wrap Image.open in try/except and return HTTP 415 with a clear message on failure. Never let a decoder exception become a 500."
+    - id: IV5
+      rule: "rate limit POST /api/v1/analyze. See S03 -- either implement it or delete the false claim from the docs."
+
+cors:
+  current: "allow_origins=['*'] together with allow_credentials=True"
+  defect: >
+    This combination is invalid per the CORS specification -- a wildcard origin
+    with credentials is rejected by browsers -- and it is wrong for production
+    regardless.
+  required: >
+    Read allowed origins from the ALLOWED_ORIGINS environment variable
+    (comma-separated). Default to
+    ['http://localhost:5173', 'http://localhost:8000'] for development. Set
+    allow_credentials=False, because this API has no cookies or auth. Restrict
+    allow_methods to ['GET','POST'].
+
+concurrency:
+  current: "all four handlers are `async def` but call fully synchronous OpenCV/NumPy/Pillow code"
+  defect: "every analysis blocks the single event loop thread for its entire duration, so concurrent requests serialise and the healthcheck stalls"
+  required: >
+    Either declare the handlers as plain `def` (Starlette then runs them in its
+    threadpool automatically) or keep `async def` and wrap the analysis call in
+    `starlette.concurrency.run_in_threadpool`. Pick ONE and apply it to every
+    handler. Also cap concurrent analyses with an asyncio.Semaphore sized from
+    MAX_CONCURRENT_ANALYSES (default 4) so N large uploads cannot exhaust memory.
+
+payload:
+  current_defect: >
+    /analyze/combined calls encode_image_to_base64 SIX times: once per detector
+    for the three top-level *_visualization_base64 fields and once more for the
+    identical image nested inside each *_result object. The response is twice
+    the necessary size and the frontend only reads the nested copy.
+  required: "each visualisation is encoded ONCE and appears at exactly one path in the response"
+
+# ==============================================================================
+# BENCHMARK OUTPUT SCHEMA
+# ==============================================================================
+# Produced by scripts/benchmark.py (stage S05). Consumed by the acceptance
+# blocks of S06, S07, S08, S09, S10 and S12, which index these key paths
+# LITERALLY. Any deviation breaks every downstream gate, so this shape is part
+# of the contract, not an implementation detail.
+benchmark_output_schema:
+  file: "benchmarks/<name>.json"
+  json_dump_options: "sort_keys=True, indent=2"
+  skeleton: |
+    {
+      "generated_at": "2026-08-28T12:00:00Z",
+      "corpus": {
+        "synthetic_revision": "<sha256 of data/corpus/synthetic/index.json>",
+        "real_manifest_revision": "<sha256 of data/corpus/MANIFEST.yaml>",
+        "n_images": 137,
+        "real_corpus_present": true
+      },
+      "detectors": {
+        "<detector_id>": {
+          "metric_sets": [
+            {
+              "corpus": "synthetic" | "real" | "external",
+              "tier": "A" | "B",
+              "n": 100,
+              "n_applicable": 78,
+              "n_not_applicable": 20,
+              "n_error": 2,
+              "auc": 0.71,
+              "tpr": 0.6, "fpr": 0.2, "precision": 0.7, "recall": 0.6, "f1": 0.65,
+              "mean_duration_ms": 120.5
+            }
+          ]
+        }
+      },
+      "per_family_mean_score": { "<detector_id>": { "<family>": 0.42 } },
+      "per_family_mean_iou":   { "<detector_id>": { "<family>": 0.31 } },
+      "per_axis_mean_score":   { "<detector_id>": { "real_camera": 0.2, "real_ai": 0.7 } },
+      "fused": {
+        "heldout_auc": 0.82,
+        "family_verdicts": {
+          "<family>": { "manipulated_rate": 0.04, "inconclusive_rate": 0.1, "n": 20 }
+        }
+      }
+    }
+  rules:
+    - "`auc` is null when n_applicable < 10 or when only one class is present. Every consumer must treat null as 'skip this comparison', never as 0.0."
+    - "`per_family_*` are keyed by the `family` field of data/corpus/synthetic/index.json entries."
+    - "`per_axis_mean_score` is keyed by the `axis` field of data/corpus/MANIFEST.yaml entries, and is absent entirely when the real corpus is not present."
+    - "`fused.family_verdicts` is written from S10 onward. Before S10 the fusion is provisional, so benchmark.py writes `fused: null` and S10's acceptance is the first to read it."
+    - "S10 and S12 both read `fused.heldout_auc`. There is exactly ONE such key path -- do not also write a top-level `fused_family_verdicts`."
+
+# ==============================================================================
+# CORPUS INDEX SCHEMA
+# ==============================================================================
+# Produced by scripts/make_corpus.py (S05 step 2), read by benchmark.py and by
+# S05's own acceptance block.
+corpus_index_schema:
+  file: "data/corpus/synthetic/index.json"
+  skeleton: |
+    {
+      "seed": 20260828,
+      "generated_at": "2026-08-28T12:00:00Z",
+      "entries": [
+        {
+          "id": "splice_0007",
+          "path": "data/corpus/synthetic/splice_0007.jpg",
+          "mask": "data/corpus/synthetic/splice_0007_mask.png",
+          "label": "authentic" | "manipulated",
+          "family": "authentic_recompress" | "splice" | "copy_move" |
+                    "double_compress_aligned" | "double_compress_shifted" |
+                    "local_retouch" | "resize_then_save",
+          "source_image": "data/samples/original/landscape_original.jpg",
+          "params": { "quality": 85, "region": [120, 340, 96, 96] }
+        }
+      ]
+    }
+  rules:
+    - "`source_image` is what S10's grouped held-out split groups by, so a splice and its own authentic parent never land on opposite sides. It is required on every entry."
+    - "`mask` is present on every entry; for label=authentic it points at an all-zero mask, so consumers never branch on its absence."
+
+# ==============================================================================
+# CALIBRATION SCHEMA
+# ==============================================================================
+# Written by scripts/calibrate.py (S10). Read by fusion.py, by base.to_probability
+# and by the acceptance blocks of S10 and S12. Never hand-edited after S10.
+calibration_schema:
+  file: "backend/app/analysis/calibration.json"
+  skeleton: |
+    {
+      "version": "2026-08-28",
+      "generated_at": "2026-08-28T12:00:00Z",
+      "fitted_on": {
+        "corpus_revision": "<sha256>",
+        "n_images": 137,
+        "corpora": ["synthetic", "real"]
+      },
+      "detectors": {
+        "<detector_id>": {
+          "threshold": 0.42,
+          "scale": 0.11,
+          "weight": 0.83,
+          "higher_is_worse": true,
+          "heldout_auc": 0.74,
+          "clipped": false
+        }
+      },
+      "fusion": { "method": "weighted_logit", "intercept": -1.2 },
+      "heldout": { "split_by": "source_image", "n": 41, "auc": 0.82, "seed": 20260828 }
+    }
+  rules:
+    - "`version` must not contain the substring 'provisional' after S10."
+    - "`heldout.split_by` must be the literal string 'source_image'."
+    - "`clipped` is true when the prior constraint in fusion.weights.prior_constraints reduced a fitted weight; the original value goes in `weight_unclipped`."

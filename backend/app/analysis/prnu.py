@@ -6,6 +6,7 @@ and the Binghamton PRNU toolbox.
 import numpy as np
 import cv2
 from pathlib import Path
+import json
 import io
 from typing import Tuple, Optional, List, Union
 from scipy import signal
@@ -14,12 +15,14 @@ import pywt  # Add pywt for wavelet denoising
 import logging  # Add logging for debugging
 from scipy.ndimage import median_filter, gaussian_filter
 
+logger = logging.getLogger(__name__)
+
 def prnu_uniformity(
     image: Union[str, np.ndarray],
     noise_filter_sigma: float = 3.0,
     window_size: int = 64,
     stride: int = 32,
-    variance_threshold: float = 0.001
+    variance_threshold: float | None = None
 ) -> Tuple[bool, float, np.ndarray]:
     """
     Extracts the noise residual from an image, computes the local variance of the noise,
@@ -38,6 +41,8 @@ def prnu_uniformity(
         uniformity_score: Mean local variance of the noise residual
         noise_map: The extracted noise residual (same shape as input)
     """
+    if variance_threshold is None:
+        variance_threshold = _legacy_threshold()
     # Load image if path
     if isinstance(image, str):
         img = cv2.imread(image, cv2.IMREAD_COLOR)
@@ -81,12 +86,17 @@ def prnu_uniformity(
     is_tampered = uniformity_score > variance_threshold
     return is_tampered, uniformity_score, noise
 
+def _legacy_threshold() -> float:
+    calibration = json.loads(Path(__file__).with_name("calibration.json").read_text())
+    return float(calibration["legacy"]["prnu"]["variance_threshold"])
+
+
 class PRNUAnalyzer:
     def __init__(self,
                  noise_filter_sigma: float = 3.0,
                  window_size: int = 64,
                  stride: int = 32,
-                 variance_threshold: float = 0.001):
+                 variance_threshold: float | None = None):
         """
         Initialize PRNU analyzer for tampering detection.
         Args:
@@ -98,7 +108,7 @@ class PRNUAnalyzer:
         self.noise_filter_sigma = noise_filter_sigma
         self.window_size = window_size
         self.stride = stride
-        self.variance_threshold = variance_threshold
+        self.variance_threshold = _legacy_threshold() if variance_threshold is None else variance_threshold
 
     def _load_image(self, image_input: Union[str, Path, bytes, np.ndarray]) -> np.ndarray:
         if isinstance(image_input, (str, Path)):
@@ -408,7 +418,7 @@ class PRNUAnalyzer:
         height, width = noise_residual.shape[:2]
 
         # Print debug info about image and windowing
-        print(f"[PRNU] Image shape: {image_rgb.shape}, window_size: {window_size}, stride: {stride}")
+        logger.debug("PRNU image shape=%s window_size=%s stride=%s", image_rgb.shape, window_size, stride)
 
         # Compute global PRNU pattern (mean of noise residual)
         global_pattern = np.mean(noise_residual, axis=(0, 1), keepdims=True)
@@ -444,7 +454,7 @@ class PRNUAnalyzer:
                 wy = min(actual_window_size_y, height - y)
                 wx = min(actual_window_size_x, width - x)
                 local_window = noise_residual[y:y+wy, x:x+wx, :]
-                print(f"[PRNU] Processing window at (y={y}, x={x}), shape={local_window.shape}")
+                logger.debug("PRNU processing window y=%s x=%s shape=%s", y, x, local_window.shape)
                 # Compute local PRNU pattern
                 local_pattern = np.mean(local_window, axis=(0, 1), keepdims=True)
                 # Normalize local pattern
@@ -463,11 +473,11 @@ class PRNUAnalyzer:
                     heatmap[y:y+wy, x:x+wx] += correlation
                     window_count[y:y+wy, x:x+wx] += 1
 
-        print(f"[PRNU] window_count sum: {np.sum(window_count)} (should be > 0)")
+        logger.debug("PRNU window_count sum=%s", np.sum(window_count))
 
         # Robustness: If window_count is all zeros, set heatmap to zeros and warn
         if np.all(window_count == 0):
-            print("[PRNU] WARNING: window_count is all zeros. No windows were processed. Setting heatmap to zeros.")
+            logger.warning("PRNU window_count is all zeros; no windows were processed")
             heatmap[:] = 0
         else:
             # Normalize heatmap
@@ -486,7 +496,7 @@ class PRNUAnalyzer:
                 )
         # Robustness: If any NaN in heatmap, set to zero and warn
         if np.isnan(heatmap).any():
-            print("[PRNU] WARNING: NaN values in heatmap. Setting NaNs to zero.")
+            logger.warning("PRNU heatmap contained NaN values; replacing them with zero")
             heatmap = np.nan_to_num(heatmap)
         logging.debug(f"PRNU inconsistency heatmap: min={np.min(heatmap)}, max={np.max(heatmap)}, mean={np.mean(heatmap)}")
         # Create mask for inconsistent regions

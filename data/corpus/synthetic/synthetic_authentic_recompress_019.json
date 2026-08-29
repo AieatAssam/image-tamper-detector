@@ -1,0 +1,11 @@
+{
+  "family": "authentic_recompress",
+  "id": "synthetic_authentic_recompress_019",
+  "label": "authentic",
+  "params": {
+    "quality": 95,
+    "seed": 20260828
+  },
+  "seed": 20260828,
+  "source_image": "data/samples/original/landscape_original.jpg"
+}
