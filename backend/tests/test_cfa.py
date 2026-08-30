@@ -63,6 +63,13 @@ def test_cfa_requires_strict_real_camera_evidence():
     assert relaxed.score is None and relaxed.flagged is None
 
     exif[0xA002] = 256
+    exif[0xA003] = 128
+    output = BytesIO()
+    image.save(output, format="JPEG", exif=exif.tobytes())
+    height_mismatch = CfaDetector().run(ImageContext(output.getvalue()))
+    assert height_mismatch.state is DetectorState.NOT_APPLICABLE
+
+    exif[0xA003] = 256
     output = BytesIO()
     image.save(output, format="JPEG", exif=exif.tobytes())
     strict = CfaDetector().run(ImageContext(output.getvalue()))
@@ -76,7 +83,24 @@ def test_cfa_reads_nested_exif_pixel_dimensions():
         output, format="JPEG"
     )
     ctx = ImageContext(output.getvalue())
-    nested_metadata = {0x010F: "Example Camera", 0x0110: "Example Model", 0xA002: 256}
+    nested_metadata = {0x010F: "Example Camera", 0x0110: "Example Model", 0xA002: 256, 0xA003: 256}
     with patch("backend.app.analysis.cfa._metadata", return_value=nested_metadata):
         result = CfaDetector().run(ctx)
     assert result.state is DetectorState.APPLICABLE
+
+
+def test_cfa_uses_full_resolution_after_strict_gate():
+    image = Image.fromarray(np.zeros((256, 2048, 3), dtype=np.uint8), "RGB")
+    exif = Image.Exif()
+    exif[0x010F] = "Example Camera"
+    exif[0x0110] = "Example Model"
+    exif[0xA002] = 2048
+    exif[0xA003] = 256
+    output = BytesIO()
+    image.save(output, format="JPEG", exif=exif.tobytes())
+    detector = CfaDetector()
+    ratio_map = np.ones((256, 2048), dtype=np.float32)
+    with patch.object(detector, "measure", return_value=(0.5, 0, ratio_map)) as measure:
+        result = detector.run(ImageContext(output.getvalue()))
+    assert result.state is DetectorState.APPLICABLE
+    assert measure.call_args.args[0].shape == (256, 2048, 3)

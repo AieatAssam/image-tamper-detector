@@ -16,10 +16,11 @@ from backend.app.analysis.learned import LearnedDetector
 from backend.app.analysis.cfa import CfaDetector
 from backend.app.analysis.exif import ExifConsistencyDetector
 from backend.app.analysis.spectral import SpectralPeakDetector
+from backend.app.analysis.zero import ZeroDetector
 
 logger = logging.getLogger(__name__)
 _REGISTRY: dict[str, Detector] = {}
-DEFAULT_ENABLED = frozenset({"ela", "prnu", "entropy", "qtable", "double_jpeg", "jpeg_ghosts", "copy_move", "cfa", "spectral", "exif", "c2pa"})
+DEFAULT_ENABLED = frozenset({"ela", "prnu", "entropy", "qtable", "double_jpeg", "jpeg_ghosts", "copy_move", "cfa", "spectral", "exif", "c2pa", "zero"})
 
 
 def register(detector: Detector) -> Detector:
@@ -87,6 +88,7 @@ register(ELAAdapter())
 register(NoiseResidualAdapter())
 register(EntropyAdapter())
 register(QuantizationTableDetector())
+register(ZeroDetector())
 register(DoubleJpegDetector())
 register(JpegGhostDetector())
 register(CopyMoveDetector())

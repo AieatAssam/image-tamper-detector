@@ -1,13 +1,15 @@
 """Colour-filter-array periodicity detector.
 
-The statistic is intentionally modest: it measures the 2x2 variance pattern
-left by interpolation in a Bayer-demosaiced image.  It is not a camera
-classifier and must not be run on an image whose capture dimensions are gone.
+The intermediate-value/grid-pattern statistic is an independent
+reimplementation of Bammey et al., *Image forgery detection using a Bayer
+pattern analysis*, Image Processing On Line 11 (2021), article 355:
+https://doi.org/10.5201/ipol.2021.355.  The paper-only AGPL reference source
+is not used.  It is not a camera classifier and must not be run on an image
+whose capture dimensions are gone.
 """
 
 from time import perf_counter
 
-import cv2
 import numpy as np
 
 from backend.app.analysis.base import (
@@ -39,8 +41,9 @@ class CfaDetector:
         if _first(metadata, 0x010F) is None or _first(metadata, 0x0110) is None:
             return False, "CFA requires EXIF camera Make/Model and strict dimensions"
         capture_width = _number(_first(metadata, 0xA002))
-        if capture_width is None or capture_width != ctx.width:
-            return False, "CFA is not applicable without strict matching PixelXDimension evidence"
+        capture_height = _number(_first(metadata, 0xA003))
+        if capture_width != ctx.width or capture_height != ctx.height:
+            return False, "CFA is not applicable without strict matching PixelXDimension/PixelYDimension evidence"
         return True, "strict real-camera dimensions match the decoded JPEG"
 
     def run(self, ctx: ImageContext) -> DetectorResult:
@@ -60,8 +63,9 @@ class CfaDetector:
                 _duration(started),
             )
 
-        ratio, phase, ratio_map = self.measure(ctx.downscaled_rgb_uint8)
-        # Higher ratio means less CFA structure and therefore MORE suspicious.
+        ratio, phase, ratio_map = self.measure(ctx.rgb_uint8)
+        # Higher inconsistency means the local Bayer pattern disagrees with
+        # the dominant image pattern and is therefore MORE suspicious.
         score = to_probability(ratio, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
         flagged = score >= 0.5
         return DetectorResult(
@@ -70,72 +74,109 @@ class CfaDetector:
             score,
             flagged,
             float(config["threshold"]),
-            f"CFA variance ratio {ratio:.3f} ({'exceeds' if flagged else 'is below'} {float(config['threshold']):.3f})",
+            f"CFA intermediate-value inconsistency {ratio:.3f} ({'exceeds' if flagged else 'is below'} {float(config['threshold']):.3f})",
             {"cfa_ratio": float(ratio), "phase": float(phase)},
             ratio_map,
             _duration(started),
         )
 
     def measure(self, rgb: np.ndarray) -> tuple[float, int, np.ndarray]:
-        """Return the strongest-phase ratio, phase index, and ratio heatmap."""
+        """Return Bammey's inconsistency ratio, dominant phase, and map.
+
+        The method uses intermediate-value masks to identify the Bayer
+        diagonal and red/blue arrangement globally, then marks local windows
+        whose pattern disagrees with that dominant arrangement.  This is an
+        independent reimplementation of the paper-only IPOL method; the
+        AGPL reference source is not used.
+        """
         image = np.asarray(rgb)
         if image.ndim != 3 or image.shape[2] < 3:
             raise ValueError("CFA analysis requires an RGB image")
-        if min(image.shape[:2]) < 32:
+        height, width = image.shape[:2]
+        if min(height, width) < 32:
             raise ValueError("CFA analysis requires at least 32x32 pixels")
 
-        candidates = [_phase_measure(image.astype(np.float32), phase) for phase in range(4)]
-        phase, (ratio, ratio_map) = min(enumerate(candidates), key=lambda item: item[1][0])
-        return float(ratio), phase, ratio_map
+        image = image[..., :3].astype(np.float32)
+        dominant = _pattern_measure(image)
+        if dominant is None:
+            return 0.0, -1, np.zeros((height, width), dtype=np.float32)
+        dominant_pattern, dominant_confidence = dominant
+        heatmap = np.zeros((height, width), dtype=np.float32)
+        window = min(128, height - (height % 2), width - (width % 2))
+        stride = max(16, window // 2)
+        inconsistent = []
+        for top in range(0, max(1, height - window + 1), stride):
+            for left in range(0, max(1, width - window + 1), stride):
+                bottom = min(height, top + window)
+                right = min(width, left + window)
+                patch = image[top:bottom, left:right]
+                local = _pattern_measure(patch)
+                if local is None:
+                    continue
+                local_pattern, local_confidence = local
+                if local_pattern != dominant_pattern:
+                    value = max(local_confidence, dominant_confidence)
+                    heatmap[top:bottom, left:right] = np.maximum(
+                        heatmap[top:bottom, left:right], value
+                    )
+                    inconsistent.append(value)
 
-
-def _phase_measure(image: np.ndarray, phase: int) -> tuple[float, np.ndarray]:
-    height, width = image.shape[:2]
-    dy, dx = divmod(phase, 2)
-    residuals = []
-    for channel in range(3):
-        plane = image[..., channel]
-        # The centre-excluding 3x3 bilinear neighbourhood is the local
-        # interpolation prediction; demosaicing leaves a 2x2 variance pattern.
-        prediction = cv2.blur(plane, (3, 3), borderType=cv2.BORDER_REFLECT)
-        residuals.append(plane - prediction)
-    residual = np.mean(residuals, axis=0)
-    local_mean = cv2.boxFilter(residual, cv2.CV_32F, (32, 32), normalize=True)
-    local_second = cv2.boxFilter(residual * residual, cv2.CV_32F, (32, 32), normalize=True)
-    local_variance = np.maximum(local_second - local_mean * local_mean, 0.0)
-
-    classes = [
-        float(np.var(residual[dy + row::2, dx + col::2]))
-        for row, col in ((0, 0), (0, 1), (1, 0), (1, 1))
-        if dy + row < height and dx + col < width
-    ]
-    ordered = np.sort(np.asarray(classes, dtype=np.float64))
-    ratio = float(np.mean(ordered[:2]) / (np.mean(ordered[2:]) + 1e-8))
-
-    # A small sliding ratio map is enough for the protocol's localisation map.
-    step = 16
-    rows = range(0, max(1, height - 31), step)
-    cols = range(0, max(1, width - 31), step)
-    values = []
-    for y in rows:
-        row_values = []
-        for x in cols:
-            tile = residual[y : y + 32, x : x + 32]
-            variances = np.asarray(
-                [
-                    np.var(tile[row::2, col::2])
-                    for row, col in ((0, 0), (0, 1), (1, 0), (1, 1))
-                ],
-                dtype=np.float64,
-            )
-            ordered_tile = np.sort(variances)
-            row_values.append(np.mean(ordered_tile[:2]) / (np.mean(ordered_tile[2:]) + 1e-8))
-        values.append(row_values)
-    ratio_map = np.asarray(values, dtype=np.float32)
-    ratio_map = cv2.resize(ratio_map, (width, height), interpolation=cv2.INTER_LINEAR)
-    finite = np.nan_to_num(ratio_map, nan=1.0, posinf=1.0, neginf=0.0)
-    return ratio, finite
+        phase = _pattern_phase(dominant_pattern)
+        ratio = float(np.mean(inconsistent)) if inconsistent else 0.0
+        return ratio, phase, np.asarray(heatmap, dtype=np.float32)
 
 
 def _duration(started: float) -> int:
     return int((perf_counter() - started) * 1000)
+
+
+def _intermediate_values(channel: np.ndarray) -> np.ndarray:
+    """Return the mean horizontal/vertical intermediate-value mask."""
+    channel = np.asarray(channel, dtype=np.float32)
+    center = channel[1:-1, 1:-1]
+    left, right = channel[1:-1, :-2], channel[1:-1, 2:]
+    up, down = channel[:-2, 1:-1], channel[2:, 1:-1]
+    horizontal = ((left <= center) & (center <= right)) | ((right <= center) & (center <= left))
+    vertical = ((up <= center) & (center <= down)) | ((down <= center) & (center <= up))
+    values = np.zeros_like(channel, dtype=np.float32)
+    values[1:-1, 1:-1] = (horizontal.astype(np.float32) + vertical.astype(np.float32)) * 0.5
+    return values
+
+
+def _pattern_measure(image: np.ndarray) -> tuple[str, float] | None:
+    """Estimate a Bayer arrangement and its normalized confidence."""
+    height, width = image.shape[:2]
+    height -= height % 2
+    width -= width % 2
+    if min(height, width) < 8:
+        return None
+    red, green, blue = (
+        _intermediate_values(image[:height, :width, index])
+        for index in range(3)
+    )
+    blocks = float((height // 2) * (width // 2))
+    diagonal = (
+        (green[1::2, 0::2].sum() + green[0::2, 1::2].sum())
+        - (green[0::2, 0::2].sum() + green[1::2, 1::2].sum())
+    ) / (2.0 * blocks * 255.0)
+    first = (
+        (red[0::2, 0::2].sum() + blue[1::2, 1::2].sum())
+        - (red[1::2, 1::2].sum() + blue[0::2, 0::2].sum())
+    ) / (2.0 * blocks * 255.0)
+    second = (
+        (red[1::2, 0::2].sum() + blue[0::2, 1::2].sum())
+        - (red[0::2, 1::2].sum() + blue[1::2, 0::2].sum())
+    ) / (2.0 * blocks * 255.0)
+    if abs(diagonal) < 1e-6:
+        return None
+    diagonal_name = "dotgg" if diagonal < 0 else "gdotg"
+    color_delta = first if diagonal_name == "dotgg" else second
+    if abs(color_delta) < 1e-6:
+        return None
+    colors = ("rggb", "bggr") if diagonal_name == "dotgg" else ("grbg", "gbrg")
+    pattern = colors[0] if color_delta < 0 else colors[1]
+    return pattern, float(max(abs(diagonal), abs(color_delta)))
+
+
+def _pattern_phase(pattern: str) -> int:
+    return {"rggb": 0, "bggr": 1, "grbg": 2, "gbrg": 3}[pattern]

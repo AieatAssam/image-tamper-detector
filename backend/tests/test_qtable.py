@@ -26,6 +26,23 @@ def test_pil_quality_fingerprint_and_estimate():
     assert len(fingerprints) == 4
 
 
+def test_exact_libjpeg_table_is_more_suspicious_than_a_distant_table():
+    image = Image.fromarray(np.random.default_rng(8).integers(0, 256, (256, 256, 3), dtype=np.uint8))
+    exact = BytesIO()
+    image.save(exact, format="JPEG", quality=90)
+    distant = BytesIO()
+    custom_table = [index + 1 for index in range(64)]
+    image.save(distant, format="JPEG", qtables=[custom_table, custom_table])
+
+    detector = QuantizationTableDetector()
+    exact_result = detector.run(ImageContext(exact.getvalue()))
+    distant_result = detector.run(ImageContext(distant.getvalue()))
+
+    assert exact_result.metrics["libjpeg_distance"] == 0
+    assert distant_result.metrics["libjpeg_distance"] > exact_result.metrics["libjpeg_distance"]
+    assert exact_result.score > distant_result.score
+
+
 def test_png_is_not_applicable():
     output = BytesIO()
     Image.new("RGB", (256, 256), "gray").save(output, format="PNG")

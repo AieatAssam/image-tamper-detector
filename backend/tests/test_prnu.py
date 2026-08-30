@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 import cv2
-from backend.app.analysis.prnu import PRNUAnalyzer
+from backend.app.analysis.prnu import PRNUAnalyzer, _log_binomial_tail, _significance
 
 @pytest.fixture
 def prnu_analyzer():
@@ -87,4 +87,18 @@ def test_print_uniformity_scores_for_all_images(prnu_analyzer, data_dir):
         is_tampered, _, uniformity_score = prnu_analyzer.detect_tampering(img_path)
         print(f"Tampered: {img_path.name} | Tampered: {is_tampered} | Score: {uniformity_score:.6f}")
 
-# Note: We ignore copy-paste tampered images in these tests, as PRNU is not designed for copy-move forgeries. 
+# Note: We ignore copy-paste tampered images in these tests, as PRNU is not designed for copy-move forgeries.
+
+
+def test_noisesniffer_nfa_is_a_higher_is_worse_significance_score():
+    """The paper's NFA tail decreases as a cell has more selected blocks."""
+    less_deviant = _log_binomial_tail(40, 400, 3, 0.5)
+    more_deviant = _log_binomial_tail(180, 400, 3, 0.5)
+    assert more_deviant < less_deviant
+    assert _significance(more_deviant) > _significance(less_deviant)
+
+    image = np.random.default_rng(7).integers(1, 254, (96, 96, 3), dtype=np.uint8)
+    _, visualization, score = PRNUAnalyzer(samples_per_bin=200, cell_size=16).detect_tampering(image)
+    assert visualization.shape == image.shape
+    assert visualization.dtype == np.uint8
+    assert np.isfinite(score)

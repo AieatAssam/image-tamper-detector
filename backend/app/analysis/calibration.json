@@ -23,8 +23,8 @@
       "clipped": false,
       "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.0029976326471670145,
-      "threshold": 0.99814603050007,
+      "scale": 2.253978829104493e-05,
+      "threshold": 0.00023601214742881548,
       "weight": 0.0,
       "weight_guard": {
         "auc": null,
@@ -44,7 +44,7 @@
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 1.0,
-      "weight": 0.17675379389749576,
+      "weight": 0.18506086967782528,
       "weight_guard": {
         "auc": 0.5846774193548387,
         "drop": false,
@@ -62,7 +62,7 @@
       "higher_is_worse": true,
       "scale": 0.2821708227378247,
       "threshold": -1.3584791656095467,
-      "weight": 0.159096136119734,
+      "weight": 0.15568978786881607,
       "weight_guard": {
         "auc": 0.6598639455782312,
         "drop": false,
@@ -137,7 +137,7 @@
       "higher_is_worse": true,
       "scale": 0.5,
       "threshold": 2.0,
-      "weight": 0.03148984118703188,
+      "weight": 0.024724226252050206,
       "weight_guard": {
         "auc": 0.5385487528344671,
         "drop": false,
@@ -170,21 +170,21 @@
     },
     "prnu": {
       "clipped": false,
-      "heldout_auc": 0.5507246376811594,
+      "heldout_auc": 0.5978260869565217,
       "higher_is_worse": true,
-      "scale": 332.00584411621094,
-      "threshold": 652.1331176757812,
-      "weight": 0.08902394744474287,
+      "scale": 9.779030036708251,
+      "threshold": 0.49014515949088894,
+      "weight": 0.0,
       "weight_guard": {
-        "auc": 0.527114967462039,
+        "auc": 0.5433839479392625,
         "drop": false,
         "metric": "within_source_auc",
         "n_neg": 251,
         "n_pos": 260,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.025515373288547943
+        "se": 0.025438797247157766
       },
-      "within_source_auc": 0.527114967462039
+      "within_source_auc": 0.5433839479392625
     },
     "qtable": {
       "clipped": false,
@@ -222,6 +222,25 @@
         "se": 0.025478661704110016
       },
       "within_source_auc": 0.5357917570498916
+    },
+    "zero": {
+      "clipped": false,
+      "heldout_auc": 0.4963768115942029,
+      "higher_is_worse": true,
+      "scale": 2.220446049250313e-16,
+      "threshold": 5.8381868871963025,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5075921908893709,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 251,
+        "n_pos": 260,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.02556354287977486
+      },
+      "weight_reason": "within_source_auc=0.507592 <= 0.5 + SE=0.025564",
+      "within_source_auc": 0.5075921908893709
     }
   },
   "fitted_on": {
@@ -233,12 +252,12 @@
     "n_images": 526
   },
   "fusion": {
-    "intercept": 0.13157956033448273,
+    "intercept": 0.10895561609939154,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-29T21:41:48Z",
+  "generated_at": "2026-08-30T01:28:42Z",
   "heldout": {
-    "auc": 0.6884057971014492,
+    "auc": 0.677536231884058,
     "n": 168,
     "seed": 20260828,
     "split_by": "source_image"
@@ -252,5 +271,5 @@
     }
   },
   "version": "2026-08-28",
-  "weight_skill_spearman": 0.8946135105917714
+  "weight_skill_spearman": 0.6487300740092935
 }

@@ -28,6 +28,7 @@ RAW_KEYS = {
     "jpeg_ghosts": "distinct_modes",
     "copy_move": "verified_clusters",
     "cfa": "cfa_ratio",
+    "zero": "foreign_grid_strength",
     "spectral": "peak_to_sigma",
     "learned": "deepfake_probability",
     "c2pa": "generative_assertion",

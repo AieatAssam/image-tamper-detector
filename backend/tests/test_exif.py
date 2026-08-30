@@ -34,8 +34,9 @@ def _with_thumbnail(main: Image.Image, thumbnail: Image.Image) -> bytes:
 def test_matching_and_mismatching_embedded_thumbnails():
     main = Image.fromarray(np.full((128, 128, 3), 120, dtype=np.uint8), "RGB")
     matching = ExifConsistencyDetector().run(ImageContext(_with_thumbnail(main, main)))
-    different = Image.fromarray(np.full((128, 128, 3), 240, dtype=np.uint8), "RGB")
-    mismatch = ExifConsistencyDetector().run(ImageContext(_with_thumbnail(main, different)))
+    edited = main.copy()
+    edited.paste((240, 240, 240), (32, 32, 128, 128))
+    mismatch = ExifConsistencyDetector().run(ImageContext(_with_thumbnail(edited, main)))
     assert matching.state is DetectorState.APPLICABLE
     assert matching.metrics["thumbnail_similarity"] > 0.95
     assert mismatch.flagged is True

@@ -32,6 +32,18 @@ def test_spectral_is_stable_across_png_encoding():
     assert abs(first - second) < 0.05
 
 
+def test_jpeg_grid_does_not_change_spectral_score():
+    rng = np.random.default_rng(17)
+    image = Image.fromarray(rng.integers(0, 256, (512, 512, 3), dtype=np.uint8), "RGB")
+    encoded = []
+    for quality in (60, 95):
+        output = BytesIO()
+        image.save(output, format="JPEG", quality=quality)
+        encoded.append(np.asarray(Image.open(BytesIO(output.getvalue())).convert("L")))
+    detector = SpectralPeakDetector()
+    assert abs(detector.measure(encoded[0])[0] - detector.measure(encoded[1])[0]) < 0.1
+
+
 def test_small_image_is_not_applicable():
     result = SpectralPeakDetector().run(_context(np.zeros((16, 16), dtype=np.uint8)))
     assert result.state.value == "not_applicable"

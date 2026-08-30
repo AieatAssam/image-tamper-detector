@@ -68,7 +68,7 @@ class NoiseResidualAdapter:
     limitations = ["This is not camera attribution without a reference fingerprint."]
 
     def __init__(self) -> None:
-        self.analyzer = PRNUAnalyzer(variance_threshold=float(_settings(self.id)["threshold"]))
+        self.analyzer = PRNUAnalyzer()
 
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
         return True, "Noise residual analysis supports this decoded image format"

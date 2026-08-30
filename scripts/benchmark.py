@@ -31,6 +31,7 @@ VALIDATED_BY = {
     "cfa": {"real_camera", "real_ai"},
     "spectral": {"real_camera", "real_ai"},
     "exif": {"synthetic_recompress", "real_camera"},
+    "zero": {"synthetic_splice"},
     "c2pa": {"real_c2pa_signed", "real_camera"},
 }
 for _detector_id in set(VALIDATED_BY) - {"c2pa"}:
