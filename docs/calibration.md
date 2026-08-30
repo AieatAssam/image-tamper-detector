@@ -23,6 +23,14 @@ from runtime fusion. `within_source_auc` compares only
 authentic/manipulated pairs sharing the same `source_image`; rows from
 different source images are never compared.
 
+The generator-specific AI axes do not ship their camera counterpart bytes. For the
+AI-generation guard, `scripts/calibrate.py` therefore records an explicit
+`ai_axis_auc` screen for `learned` and `npr`, comparing applicable generated
+rows from `sd35_flux` and `synthbuster` with applicable `real_camera` rows.
+This is an unpaired cross-source screen, not a within-source claim. The
+selected `weight_guard.metric` says which measurement controlled a detector's
+weight.
+
 The held-out split is deterministic, uses `source_image` groups, and reports
 only the groups excluded from fitting. Both per-detector `heldout_auc` and the
 fused held-out AUC are source-local comparisons, never pooled across source
@@ -54,10 +62,11 @@ for the `authentic_recompress` and `resize_then_save` false-positive traps.
 The committed numbers are valid for images resembling the corpus. The corpus
 is small, partly synthetic, and not representative of the open web. The
 manifest currently has 12 strict real-camera images, 12 real-AI images, two
-C2PA fixtures, and 400 source-balanced IMD2020 rows. Synthetic images cannot validate CFA, spectral, or PRNU
+C2PA fixtures, 400 source-balanced IMD2020 rows, 120 `sd35_flux` rows, and 270
+`synthbuster` rows. Synthetic images cannot validate CFA, spectral, or PRNU
 sensor-provenance detectors. The `double_jpeg` aggregate was sign-corrected
-after its corpus measurement showed the raw direction was inverted. The
-current calibration reports a fused held-out AUC of 0.6884 on 526 rows across
-227 source groups; it remains below the best single held-out detector
-(double_jpeg, 0.7385), so S10 remains failed. No AUC floor was introduced and
-no weight was tuned to improve fusion.
+after its corpus measurement showed the raw direction was inverted. The Round
+11 calibration reports a fused held-out AUC of 0.5784615384615385 on 916 rows
+across 317 source groups. This is lower than the prior 0.6521739130434783 and
+is reported without a tuning change; no AUC floor was introduced and no
+weight was tuned to improve fusion.

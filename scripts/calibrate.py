@@ -34,8 +34,11 @@ RAW_KEYS = {
     "c2pa": "generative_assertion",
     "splicebuster": "mahalanobis_max",
     "resampling": "local_inconsistency",
+    "npr": "npr_statistic",
 }
 HIGHER_WORSE = {"entropy": False, "qtable": False, "aeroblade": False}
+AI_AXIS_GUARD = frozenset({"learned", "npr"})
+AI_AXES = frozenset({"sd35_flux", "synthbuster"})
 FALSE_POSITIVE_FAMILIES = ("authentic_recompress", "resize_then_save")
 FALSE_POSITIVE_LIMIT = 0.10
 VERDICT_THRESHOLD = 0.55
@@ -246,6 +249,21 @@ def _raw_value(detector_id: str, result) -> float | None:
     return float(value) if value is not None else None
 
 
+def _ai_axis_values(rows: list[dict], score_by_index: dict[int, float]) -> list[tuple[float, bool]]:
+    """Return the unpaired AI-axis screen against applicable real-camera rows."""
+    values = [
+        (score_by_index[index], True)
+        for index, row in enumerate(rows)
+        if index in score_by_index and row["family"] in AI_AXES and row["label"]
+    ]
+    values.extend(
+        (score_by_index[index], False)
+        for index, row in enumerate(rows)
+        if index in score_by_index and row["family"] == "real_camera" and not row["label"]
+    )
+    return values
+
+
 def _group_split(rows: list[dict], seed: int) -> tuple[list[int], list[int]]:
     groups = sorted({row["source_image"] for row in rows})
     paired_sources = _paired_sources(rows)
@@ -395,7 +413,26 @@ def main() -> int:
         heldout_within_source_auc = within_source_auc(heldout_values)
         heldout_n_pos, heldout_n_neg = _within_source_counts(heldout_values)
         heldout_se = hanley_mcneil_se(heldout_within_source_auc, heldout_n_pos, heldout_n_neg)
-        drop = all_within_source_auc is None or all_se is None or all_within_source_auc <= 0.5 + all_se
+        ai_values = _ai_axis_values(rows, score_by_index)
+        ai_auc = auc(
+            [score for score, _label in ai_values],
+            [label for _score, label in ai_values],
+        )
+        ai_n_pos = sum(label for _score, label in ai_values)
+        ai_n_neg = len(ai_values) - ai_n_pos
+        ai_se = hanley_mcneil_se(ai_auc, ai_n_pos, ai_n_neg)
+        guard_metric = "within_source_auc"
+        guard_auc = all_within_source_auc
+        guard_se = all_se
+        guard_n_pos = all_n_pos
+        guard_n_neg = all_n_neg
+        if detector.id in AI_AXIS_GUARD and ai_auc is not None and ai_se is not None:
+            guard_metric = "ai_axis_auc"
+            guard_auc = ai_auc
+            guard_se = ai_se
+            guard_n_pos = ai_n_pos
+            guard_n_neg = ai_n_neg
+        drop = guard_auc is None or guard_se is None or guard_auc <= 0.5 + guard_se
         configs[detector.id] = {
             "threshold": t,
             "scale": scale,
@@ -403,15 +440,20 @@ def main() -> int:
             "higher_is_worse": higher,
             "within_source_auc": all_within_source_auc,
             "heldout_auc": heldout_within_source_auc,
+            "ai_axis_auc": ai_auc,
+            "ai_axis_standard_error": ai_se,
+            "ai_axis_n_positive": ai_n_pos,
+            "ai_axis_n_negative": ai_n_neg,
+            "ai_axis_negative_scope": "real_camera",
             "clipped": False,
             "weight_guard": {
-                "metric": "within_source_auc",
-                "auc": all_within_source_auc,
-                "se": all_se,
-                "n_pos": all_n_pos,
-                "n_neg": all_n_neg,
+                "metric": guard_metric,
+                "auc": guard_auc,
+                "se": guard_se,
+                "n_pos": guard_n_pos,
+                "n_neg": guard_n_neg,
                 "drop": drop,
-                "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+                "rule": f"keep only when {guard_metric} > 0.5 + Hanley-McNeil SE",
             },
         }
         for index, score in score_by_index.items():
@@ -421,10 +463,10 @@ def main() -> int:
             configs[detector.id]["scale"] = 1.0
             configs[detector.id]["weight_reason"] = "heldout_auc unavailable: no applicable observations"
         elif drop:
-            if all_within_source_auc is None or all_se is None:
-                configs[detector.id]["weight_reason"] = "within_source_auc unavailable for Hanley-McNeil guard"
+            if guard_auc is None or guard_se is None:
+                configs[detector.id]["weight_reason"] = f"{guard_metric} unavailable for Hanley-McNeil guard"
             else:
-                configs[detector.id]["weight_reason"] = f"within_source_auc={all_within_source_auc:.6f} <= 0.5 + SE={all_se:.6f}"
+                configs[detector.id]["weight_reason"] = f"{guard_metric}={guard_auc:.6f} <= 0.5 + SE={guard_se:.6f}"
 
     fit_ids = [
         detector_id for detector_id in detector_ids

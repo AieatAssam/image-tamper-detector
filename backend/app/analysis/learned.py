@@ -4,10 +4,16 @@ from pathlib import Path
 from time import perf_counter
 import json
 
+import cv2
 import numpy as np
 from PIL import Image
 
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
+
+
+_FACE_CASCADE = cv2.CascadeClassifier(
+    cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+)
 
 
 class LearnedDetector:
@@ -22,21 +28,29 @@ class LearnedDetector:
     model_path = Path("models/onnx/model_quantized.onnx")
 
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
+        if not self._has_face(ctx):
+            return False, "learned face detector requires a detectable face"
         return True, "optional learned detector"
 
     def run(self, ctx: ImageContext) -> DetectorResult:
         started = perf_counter()
+        from backend.app.analysis.adapters import _settings
+
+        config = _settings(self.id)
+        applicable, reason = self.applicable(ctx)
+        if not applicable:
+            return DetectorResult(
+                self.id, DetectorState.NOT_APPLICABLE, None, None,
+                float(config["threshold"]), reason, {}, None, _duration(started),
+            )
         try:
             import onnxruntime as ort
         except Exception:
-            return self._unavailable(started)
+            return self._unavailable(started, float(config["threshold"]))
         model_path = self.model_path
         if not model_path.is_file():
-            return self._unavailable(started)
+            return self._unavailable(started, float(config["threshold"]))
         try:
-            from backend.app.analysis.adapters import _settings
-
-            config = _settings(self.id)
             image = Image.fromarray(ctx.rgb_uint8).convert("RGB").resize((224, 224), resample=2)
             array = np.asarray(image, dtype=np.float32) * 0.00392156862745098
             array = ((array - np.asarray([0.5, 0.5, 0.5], dtype=np.float32)) / 0.5).transpose(2, 0, 1)[None]
@@ -60,10 +74,23 @@ class LearnedDetector:
             )
             return DetectorResult(self.id, DetectorState.APPLICABLE, calibrated, calibrated >= 0.5, float(config["threshold"]), f"face deepfake model score {score:.3f}", {"deepfake_probability": score}, None, _duration(started))
         except Exception:
-            return DetectorResult(self.id, DetectorState.ERROR, None, None, self.threshold, "learned detector failed", {}, None, _duration(started), "learned detector failure")
+            return DetectorResult(self.id, DetectorState.ERROR, None, None, float(config["threshold"]), "learned detector failed", {}, None, _duration(started), "learned detector failure")
 
-    def _unavailable(self, started: float) -> DetectorResult:
-        return DetectorResult(self.id, DetectorState.NOT_APPLICABLE, None, None, self.threshold, "learned detector not installed", {}, None, _duration(started))
+    def _has_face(self, ctx: ImageContext) -> bool:
+        gray = cv2.cvtColor(ctx.downscaled_rgb_uint8, cv2.COLOR_RGB2GRAY)
+        return bool(
+            len(
+                _FACE_CASCADE.detectMultiScale(
+                    gray,
+                    scaleFactor=1.1,
+                    minNeighbors=5,
+                    minSize=(48, 48),
+                )
+            )
+        )
+
+    def _unavailable(self, started: float, threshold: float) -> DetectorResult:
+        return DetectorResult(self.id, DetectorState.NOT_APPLICABLE, None, None, threshold, "learned detector not installed", {}, None, _duration(started))
 
 
 def _duration(started: float) -> int:

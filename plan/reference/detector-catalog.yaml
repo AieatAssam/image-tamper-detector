@@ -293,7 +293,7 @@ new:
     class: CfaDetector
     stage_owner: S08
     priority: 2
-    rationale: "one of the few detectors that is genuinely strong on fully-synthetic images such as the GPT-4o receipt samples"
+    rationale: "a sensor-provenance cue for strict full-resolution camera originals; it is not a sound generic AI-generation detector"
     principle: >
       A single-sensor camera captures one colour per pixel behind a Bayer colour
       filter array and INTERPOLATES the other two. Interpolated pixels are, by
@@ -301,23 +301,17 @@ new:
       variance pattern in the second derivative of each colour plane. A
       rendered, generated, or heavily resampled image has no such pattern.
     implementation:
-      residual: "for each colour plane, compute the interpolation residual as the plane minus its bilinear re-interpolation from the plane's own Bayer-subsampled positions, for each of the 4 possible Bayer phases"
-      statistic: >
-        Partition pixels into the 4 positions of the 2x2 lattice. Compute the
-        variance of the residual within each position class over sliding
-        WxW windows (W=32). For a genuine demosaiced image, two of the four
-        classes have systematically lower variance than the other two. Report
-        the ratio  mean(var of the 2 lowest classes) / mean(var of the 2 highest).
-      decision: "ratio near 1.0 => NO CFA structure => not straight-from-sensor. Ratio well below 1.0 => CFA present."
-      phase_selection: "test all 4 Bayer phases, keep the phase giving the strongest ratio"
-      localisation: "the per-window ratio map is directly a tamper map: an inserted region loses CFA structure the surrounding image retains"
-    signal_direction: "synthetic / resampled / spliced -> ratio closer to 1.0 (CFA structure absent)"
-    validated_by: [real_camera, real_ai]
+      residual: "Estimate the dominant Bayer arrangement with per-channel intermediate-value masks, then compare bounded local windows with that dominant arrangement."
+      statistic: "Report the mean confidence of local windows whose estimated Bayer arrangement disagrees with the dominant arrangement; no dominant arrangement returns zero."
+      decision: "Higher local inconsistency is more suspicious for a splice or other CFA-breaking operation. Absence of a dominant pattern is not mapped to AI generation."
+      phase_selection: "Estimate the four Bayer arrangements from the intermediate-value masks and retain the strongest global arrangement."
+      localisation: "The per-window inconsistency map identifies local disagreement with the dominant camera pattern."
+    signal_direction: "local CFA-pattern inconsistency -> HIGHER cfa_ratio; no dominant pattern -> no CFA conclusion"
+    validated_by: [real_camera]
     critical_note: >
-      THIS DETECTOR CANNOT BE VALIDATED ON THE SYNTHETIC CORPUS. Splicing one
-      Unsplash JPEG into itself does not create or destroy Bayer structure in a
-      way that mirrors reality. Its Tier A acceptance MUST use the
-      checksum-verified real_camera and real_ai images from data/corpus/MANIFEST.yaml.
+      THIS DETECTOR CANNOT BE VALIDATED ON PNG AI AXES. A generated PNG and a
+      genuine camera JPEG re-encoded to PNG can both lack a detectable Bayer
+      pattern. The strict JPEG plus camera-EXIF gate remains in force.
     citation: >
       A.C. Popescu, H. Farid, 'Exposing Digital Forgeries in Color Filter Array
       Interpolated Images', IEEE TSP 53(10), 2005;
@@ -326,6 +320,7 @@ new:
     failure_modes:
       - "destroyed by any downscaling, so it is only meaningful on full-resolution originals -- CHECK image dimensions against EXIF and report `not_applicable` if the file was resized"
       - "Foveon/monochrome sensors and multi-shot pixel-shift modes have no CFA"
+      - "absence of CFA structure in a PNG does not distinguish generation from camera capture followed by re-encoding"
 
   spectral_peaks:
     module: backend/app/analysis/spectral.py
@@ -402,7 +397,7 @@ new:
     class: LearnedDetector
     stage_owner: S12
     priority: OPTIONAL
-    status: "opt-in extra; MUST degrade to `unavailable` when weights are absent"
+    status: "opt-in extra; image-gated to detectable faces and MUST degrade to `not_applicable` when the face or weights are absent"
     model:
       huggingface_repo: "onnx-community/Deep-Fake-Detector-v2-Model-ONNX"
       license: "apache-2.0"
@@ -418,6 +413,8 @@ new:
         - "rescale: multiply by rescale_factor 0.00392156862745098 (i.e. 1/255)"
         - "normalise: (x - mean) / std with image_mean [0.5,0.5,0.5] and image_std [0.5,0.5,0.5]"
         - "transpose HWC -> CHW, add batch dim, dtype float32"
+    applicability:
+      face_gate: "Run OpenCV's bundled haarcascade_frontalface_default detector on the uploaded image; no detected face returns NOT_APPLICABLE before model inference."
     labels:
       source: "config.json id2label, verified"
       mapping: {0: "Realism", 1: "Deepfake"}
@@ -518,42 +515,50 @@ new:
       statistics: "Report intra/inter variance ratio, near-constant patch fraction, and entropy of the quantized difference distribution."
       score: "Equal-weight combination of near-constant fraction, inverse variance ratio, and inverse normalized difference entropy; mapped with a fixed exploratory calibration."
       applicability: "Require at least 4x4 pixels; all computation is derived from the input image."
-    signal_direction: "more degenerate neighboring-pixel relationships -> HIGHER exploratory statistic"
+    signal_direction: "raw intra/inter variance ratio and entropy decrease -> HIGHER exploratory suspicion composite; calibration higher_is_worse remains true"
+    physics_check: >
+      The paper's premise predicts lower intra-patch variance, more
+      near-constant patches, and lower difference entropy for generated output.
+      The implementation inverts the first and third terms before combining
+      them, so its final suspicion statistic has the physically correct higher
+      direction. Round 11 data disagrees with that prediction on most
+      generators; the sign was not flipped to improve AUC.
     validated_by: [real_ai, sd35_flux, synthbuster]
     citation: "C. Tan et al., 'Rethinking the Up-Sampling Operations in CNN-based Generative Network for Generalizable Deepfake Detection', CVPR 2024, arXiv:2312.10461"
     licensing: "Paper-only reimplementation; the reference repository declares no license and its classifier weights are not used."
     failure_modes:
       - "This statistic is not the paper's trained classifier and should not be compared with its headline accuracy."
-      - "Round 10's AUC is below chance overall; fusion remains disabled."
+      - "Round 11's AI-axis AUC is below chance overall; fusion remains disabled."
 
 # ------------------------------------------------------------------------------
 # CALIBRATED MEASUREMENTS -- generated by scripts/calibrate.py
 # ------------------------------------------------------------------------------
 # These values are source-paired measurements over the complete calibration
-# corpus. `null` means no valid paired comparison, never a zero score.
+# corpus unless an entry also names an explicit AI-axis screen. `null` means no
+# valid comparison in that scope, never a zero score.
 measurements:
   source: backend/app/analysis/calibration.json
   corpus: all
-  n_images: 526
-  n_source_groups: 227
-  revision: "2026-08-30 calibration run, seed 20260828"
+  n_images: 916
+  n_source_groups: 317
+  revision: "2026-08-30 calibration run after Round 11 face gate, seed 20260828"
   detectors:
     ela: {within_source_auc: 0.4376417233560091, auc_standard_error: 0.026403534166689748, n_positive: 240, n_negative: 231}
     entropy: {within_source_auc: 0.47288503253796094, auc_standard_error: 0.025531609503020178, n_positive: 260, n_negative: 251}
     c2pa: {within_source_auc: null, auc_standard_error: null, n_positive: 0, n_negative: 0}
-    qtable: {within_source_auc: 0.4957081545064378, auc_standard_error: 0.058134984141335326, n_positive: 53, n_negative: 47}
+    qtable: {within_source_auc: 0.4699570815450644, auc_standard_error: 0.058069136163396824, n_positive: 53, n_negative: 47}
     double_jpeg: {within_source_auc: 0.6598639455782312, auc_standard_error: 0.024895535336266532, n_positive: 240, n_negative: 231}
     jpeg_ghosts: {within_source_auc: 0.5385487528344671, auc_standard_error: 0.026526225840307432, n_positive: 240, n_negative: 231}
     copy_move: {within_source_auc: 0.5846774193548387, auc_standard_error: 0.055533239187862155, n_positive: 55, n_negative: 50}
     cfa: {within_source_auc: null, auc_standard_error: null, n_positive: 0, n_negative: 0}
     spectral: {within_source_auc: 0.5357917570498916, auc_standard_error: 0.025478661704110016, n_positive: 260, n_negative: 251}
-    exif: {within_source_auc: 0.5076628352490421, auc_standard_error: 0.055197227828327644, n_positive: 60, n_negative: 51}
-    learned: {within_source_auc: 0.6594360086767896, auc_standard_error: 0.023911381674705686, n_positive: 260, n_negative: 251}
-    zero: {within_source_auc: 0.5075921908893709, auc_standard_error: 0.02556354287977486, n_positive: 260, n_negative: 251}
+    exif: {within_source_auc: 0.5, auc_standard_error: 0.05522779130530093, n_positive: 60, n_negative: 51}
+    learned: {within_source_auc: 0.6235294117647059, auc_standard_error: 0.13664179659732437, auc_standard_error_scope: ai_axis_auc, ai_axis_auc: 0.42385321100917434, ai_axis_standard_error: 0.13664179659732437, weight_guard_metric: ai_axis_auc, n_positive: 109, n_negative: 5}
+    zero: {within_source_auc: 0.5065075921908894, auc_standard_error: 0.02556482271436026, n_positive: 260, n_negative: 251}
     splicebuster: {within_source_auc: 0.6086956521739131, auc_standard_error: 0.03300110319471434, n_positive: 154, n_negative: 134}
     resampling: {within_source_auc: 0.4749262536873156, auc_standard_error: 0.030282095118942188, n_positive: 192, n_negative: 173}
     aeroblade: {within_source_auc: null, auc_standard_error: null, n_positive: 0, n_negative: 0}
-    npr: {within_source_auc: null, auc_standard_error: null, n_positive: 0, n_negative: 0}
+    npr: {within_source_auc: 0.4793926247288503, auc_standard_error: 0.0255490669616917, ai_axis_auc: 0.3416666666666667, ai_axis_standard_error: 0.08720542226749045, weight_guard_metric: ai_axis_auc, n_positive: 390, n_negative: 12}
 
 # ------------------------------------------------------------------------------
 # DELIBERATELY NOT IN SCOPE

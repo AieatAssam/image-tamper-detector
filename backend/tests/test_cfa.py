@@ -51,6 +51,12 @@ def test_small_image_without_exif_is_not_applicable():
     assert result.state is DetectorState.NOT_APPLICABLE
 
 
+def test_png_cfa_absence_is_not_an_ai_signal():
+    result = CfaDetector().run(_context(np.zeros((256, 256, 3), dtype=np.uint8)))
+    assert result.state is DetectorState.NOT_APPLICABLE
+    assert "JPEG" in result.reason
+
+
 def test_cfa_requires_strict_real_camera_evidence():
     exif = Image.Exif()
     exif[0x010F] = "Example Camera"

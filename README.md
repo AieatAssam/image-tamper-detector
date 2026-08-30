@@ -29,9 +29,10 @@ The response contains a three-valued result for each detector (`applicable`, `no
 
 ELA is meaningful only for JPEG input. The noise-residual detector is not camera attribution: real PRNU attribution requires a reference fingerprint from the same camera. C2PA absence is not evidence of tampering. The optional learned model is face-deepfake-specific and is not a general splice, document, or receipt detector.
 
-The committed calibration reports a held-out AUC of 0.6884 on the current
-526-entry, partly synthetic corpus, including a source-balanced IMD2020
-sample. That is still small and is not representative of the open web. See
+The committed calibration reports a held-out AUC of 0.5784615384615385 on the
+current 916-entry, partly synthetic corpus, including a source-balanced
+IMD2020 sample and generator-specific AI axes. That is still small and is not
+representative of the open web. See
 [`docs/corpus.md`](docs/corpus.md) and [`docs/calibration.md`](docs/calibration.md).
 
 ## Corpus and optional model

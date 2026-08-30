@@ -25,47 +25,35 @@ The catalog stores the AUC, standard error, participating class counts, and
 corpus revision under each calibrated detector entry. A null means that the
 corpus did not contain a valid paired comparison. It is not a zero score.
 
-The complete calibration corpus currently contains 526 rows in 227 source
-groups: 100 synthetic processing-history rows and 426 rows from the local
+The complete calibration corpus currently contains 916 rows in 317 source
+groups: 100 synthetic processing-history rows and 816 rows from the local
 manifest, including 400 source-directory-stratified IMD2020 rows, 12 strict
-real-camera rows, 12 real-AI rows, and two C2PA fixtures. The synthetic rows
-are useful for compression, geometry, and controlled processing experiments;
-they cannot establish sensor provenance. The synthetic and real portions must
-therefore be read as different validation populations, not pooled evidence of
-one universal detector skill.
+real-camera rows, 12 real-AI rows, two C2PA fixtures, 120 `sd35_flux` rows,
+and 270 `synthbuster` rows. The synthetic rows are useful for compression,
+geometry, and controlled processing experiments; they cannot establish sensor
+provenance. The synthetic and real portions must therefore be read as
+different validation populations, not pooled evidence of one universal
+detector skill.
 
-## Round 9 AI-corpus gate
+Round 11 adds generator-specific AI axes. Their Zenodo archives do not ship
+the genuine camera counterpart bytes, so `ai_axis_auc` compares applicable
+generated rows with applicable `real_camera` rows as an explicitly unpaired
+cross-source screen. It is not a within-source paired claim. The generator
+field is copied from the archive directory and is never inferred.
 
-The AI-generation column remains under-measured until it has source-balanced
-generated/real pairs. The Round 9 ELSA1M inspection sampled shard metadata at
-three distant row ranges; every probe reported the same recorded model,
-`stabilityai/stable-diffusion-2-1-base`, so it did not meet the six-generator
-requirement. The permitted GenImage fallback is Apache-2.0 and publishes
-generator-specific archives with separate `ai` and `nature` directories. The
-inspected ADM archive exposed no image-level pairing key or metadata manifest.
-The official claim that the benchmark contains pairs is therefore insufficient
-to reconstruct exact pairs without guessing.
+### Round 11 coverage snapshot
 
-No new AI detector is calibrated from the existing twelve `real_ai` entries:
-they are not paired with real counterparts and cannot support a within-source
-AUC. K3-K6 remain blocked rather than receiving fabricated measurements. The
-existing detector entries and their null/uncertain measurements remain the
-source of truth in the catalog until a reproducible paired corpus is added.
+This audit snapshot separates the main image-manipulation families. AI
+generation is now measurable per named generator, but the AI negative class is
+cross-source camera imagery and should not be read as a paired reconstruction.
 
-### Round 9 coverage snapshot
-
-This audit snapshot separates the main image-manipulation families. Its AI
-generation figure is face-only learned-model evidence, not general generator
-coverage; the Round 9 corpus gate above prevents new AI measurements from being
-reported as if they were source-balanced.
-
-| Mechanism | Current detector coverage | Best within-source AUC | Position after Round 9 |
+| Mechanism | Current detector coverage | Best within-source AUC | Position after Round 11 |
 |---|---|---:|---|
 | Recompression / re-save | `double_jpeg`, `jpeg_ghosts`, `zero`, `qtable`, `ela` | 0.660 (`double_jpeg`) | adequate |
 | Splicing | `splicebuster`, `zero`, `ghosts`, `prnu`, `resampling` | 0.669 synthetic / 0.487 real | weak; does not generalise |
 | Copy-move | `copy_move` | 0.585 | weak but real |
 | Local retouch | `prnu`, `ela`, `splicebuster` | ~0.54 | weak |
-| AI generation | `spectral`, `entropy`, `cfa`, `learned`, `aeroblade` | 0.659 (`learned`, face-only) | barely covered; R9 blocked |
+| AI generation | `spectral`, `entropy`, `cfa`, `learned`, `aeroblade`, `npr` | see R11 report per generator | measurable on 11 named generators; CFA and AEROBLADE abstain |
 | Provenance | `c2pa`, `exif` | n/a; declarative | correct but rarely present |
 
 Every applicable raw statistic is mapped to a probability using
@@ -220,12 +208,27 @@ statistic is the fixed equal-weight combination of near-constant fraction,
 entropy. It uses only the uploaded image and a bounded RGB derivation, never
 corpus membership.
 
-Round 10 measured this statistic but left its fusion weight at zero. The
+Round 11 measured this statistic but left its fusion weight at zero. The
 current implementation is intentionally not a reproduction of NPR's learned
 model.
 
-Lower proportion is mapped as more suspicious. The decision direction is
-correct, but a matching proportion is not itself a calibrated confidence.
+### Physics and direction decision
+
+Tan et al.'s premise is that upsampling creates locally interdependent
+neighbouring pixels. In a generated image, relative differences inside a 2x2
+patch should therefore be more structured: lower intra-patch variance, more
+near-constant patches, and lower difference entropy than in a camera image.
+The raw variance ratio and entropy consequently move lower when suspicion
+increases. The implementation maps both lower-moving terms to higher suspicion
+(`1 / (1 + ratio)` and `1 - normalized_entropy`), while the near-constant
+fraction already moves higher. Therefore the final composite's
+`higher_is_worse=True` declaration in calibration agrees with the physics.
+It was not flipped to chase the AUC. The Round 11 result is a genuine negative
+finding on modern generators: the AI-axis AUC is `0.341667 +/- 0.087205`, with
+seven of eleven generator AUCs below 0.5.
+
+Round 11 measured this statistic and left its fusion weight at zero. It is
+training-free, but is intentionally not a reproduction of NPR's learned model.
 
 ### Citation and provenance
 
@@ -470,24 +473,20 @@ a cross-image splice because its match is restricted to one image.
 ### Principle
 
 A Bayer camera samples one colour at each sensor position and interpolates the
-other colours. Interpolated samples are statistically smoother in a 2x2
-periodic arrangement. Rendered, resampled, or inserted content does not retain
-the same arrangement.
+other colours. Interpolated samples can leave a 2x2 arrangement in the
+intermediate-value masks. This is a camera-capture cue, not a general
+AI-origin cue: the absence of that arrangement in a generated PNG is also
+consistent with a camera image that was re-encoded as PNG.
 
 ### Method
 
-For each colour plane and each Bayer phase, interpolation residuals are formed
-from Bayer-subsampled positions. Sliding 32x32 windows estimate the variance in
-the four 2x2 classes. The raw ratio is
-
-```text
-cfa_ratio = mean(two lowest class variances) /
-            mean(two highest class variances)
-```
-
-The phase with strongest CFA structure is selected. A local ratio map is
-returned. Full-resolution dimensions must agree with camera EXIF before this
-detector is allowed to speak.
+The implementation estimates the dominant Bayer arrangement from per-channel
+intermediate-value masks, then checks bounded local windows for a different
+arrangement. The raw `cfa_ratio` is the mean confidence of those inconsistent
+windows and a map marks their locations. No dominant arrangement returns zero
+and is not treated as evidence of AI generation. Full-resolution dimensions
+must agree with camera EXIF, and the file must be a strict camera JPEG, before
+this detector is allowed to speak.
 
 ### Citation and provenance
 
@@ -499,14 +498,18 @@ reference source is not included.
 
 ### Signal direction
 
-A ratio closer to one means CFA structure is absent and is more suspicious.
+Higher local inconsistency is more suspicious for a splice or other
+CFA-breaking operation. Absence of a dominant pattern is `NOT_APPLICABLE` at
+the input gate, not a generated-image score.
 
 ### Measured performance
 
-See `measurements.detectors.cfa` in the catalog. The current
-IMD2020 slice has zero applicable rows because strict camera-original evidence
-is missing, so AUC and standard error are null. That abstention is a finding,
-not a zero-performance result.
+See `measurements.detectors.cfa` in the catalog. The 402-image Round 11 AI
+benchmark has zero applicable generated rows because all downloaded AI images
+are PNG. A probe also found the same no-dominant-pattern result on a camera
+JPEG re-encoded in memory as PNG, so relaxing the gate would confound
+generation with re-encoding. The strict gate is unchanged and the AI AUC is
+null.
 
 ### Failure modes
 
@@ -749,6 +752,10 @@ sampling is an explicit runtime tradeoff.
 This is a learned classifier, not a classical forensic measurement. Its model
 was trained to classify face deepfakes, so its output may carry evidence for
 that task but does not generalize to arbitrary splices, documents, or scenes.
+The adapter first runs OpenCV's bundled
+`haarcascade_frontalface_default.xml` on the uploaded image. No detected face
+returns `NOT_APPLICABLE`; this is an inference-time image precondition, not a
+corpus-membership check.
 
 ### Method
 
@@ -769,16 +776,20 @@ Higher `Deepfake` probability is more suspicious only for face-deepfake inputs.
 
 ### Measured performance
 
-See `measurements.detectors.learned` in the catalog. The optional model
-was present for this calibration and has a source-paired measurement; future
-runs without its external weights must report null rather than treating
-NOT_APPLICABLE as a negative result.
+See `measurements.detectors.learned` in the catalog. The optional model was
+present for this calibration. After applying the face gate, its AI-axis AUC is
+`0.423853 +/- 0.136642` from 109 applicable generated images and five
+applicable camera negatives, so its fusion weight is zero. The old
+source-paired result (`0.623529`) is retained as context but does not justify
+using this face-specific model on the AI axes. Runs without its external
+weights must report null rather than treating `NOT_APPLICABLE` as a negative
+result.
 
 ### Failure modes
 
 It is not a general splice detector, receipt/document forgery detector, or
-image-origin oracle. It is opt-in and must remain low-weight even when its
-weights are installed.
+image-origin oracle. It is opt-in and is image-gated to faces; even when its
+weights are installed, it must remain scoped to that task.
 
 ## AEROBLADE-style reconstruction (`new.aeroblade`)
 
