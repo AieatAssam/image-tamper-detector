@@ -188,22 +188,22 @@
     },
     "qtable": {
       "clipped": false,
-      "heldout_auc": 0.38846153846153847,
+      "heldout_auc": 0.391304347826087,
       "higher_is_worse": false,
-      "scale": 33.0,
-      "threshold": 611.0,
+      "scale": 149.0,
+      "threshold": 0.0,
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.4387755102040816,
+        "auc": 0.4957081545064378,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 231,
-        "n_pos": 240,
+        "n_neg": 47,
+        "n_pos": 53,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.026412308684516862
+        "se": 0.058134984141335326
       },
-      "weight_reason": "within_source_auc=0.438776 <= 0.5 + SE=0.026412",
-      "within_source_auc": 0.4387755102040816
+      "weight_reason": "within_source_auc=0.495708 <= 0.5 + SE=0.058135",
+      "within_source_auc": 0.4957081545064378
     },
     "spectral": {
       "clipped": false,
@@ -255,7 +255,7 @@
     "intercept": 0.10895561609939154,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-30T01:28:42Z",
+  "generated_at": "2026-08-30T02:40:19Z",
   "heldout": {
     "auc": 0.677536231884058,
     "n": 168,

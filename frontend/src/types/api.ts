@@ -29,7 +29,7 @@ export interface DetectorResult {
   score: number | null;
   threshold: number;
   reason: string;
-  metrics: Record<string, number>;
+  metrics: Record<string, number | null>;
   visualization_png_base64: string | null;
   duration_ms: number;
   error: string | null;

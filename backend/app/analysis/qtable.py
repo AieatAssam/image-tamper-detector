@@ -44,12 +44,14 @@ class QuantizationTableDetector:
     applicable_formats = frozenset({"JPEG"})
     produces_map = False
     description = "Compares JPEG quantization tables with standard libjpeg quality tables."
-    limitations = ["Not applicable to non-JPEG images; standard tables are not proof of software re-saving."]
+    limitations = ["Requires JPEG plus EXIF Make/Model provenance; standard tables alone are not proof of software re-saving."]
 
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
         image_format, tables = _jpeg_tables(ctx)
         if image_format not in self.applicable_formats or not tables:
             return False, f"qtable requires JPEG quantization tables; decoded format is {image_format or 'unknown'}"
+        if not ctx.exif.get(0x010F) or not ctx.exif.get(0x0110):
+            return False, "qtable requires EXIF Make and Model to compare encoder identity with claimed provenance"
         return True, "JPEG quantization tables are available"
 
     def run(self, ctx: ImageContext) -> DetectorResult:

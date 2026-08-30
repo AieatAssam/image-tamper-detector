@@ -19,13 +19,15 @@ class DetectorState(str, Enum):
 
 @dataclass(frozen=True)
 class DetectorResult:
+    """One image-level detector result, including numeric measurements."""
+
     detector_id: str
     state: DetectorState
     score: float | None
     flagged: bool | None
     threshold: float
     reason: str
-    metrics: dict[str, float]
+    metrics: dict[str, float | None]
     visualization: np.ndarray | None
     duration_ms: int
     error: str | None = None

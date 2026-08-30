@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from starlette.concurrency import run_in_threadpool
 
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext
-from backend.app.analysis.fusion import fuse
+from backend.app.analysis.fusion import calibration_metrics, fuse
 from backend.app.analysis.registry import DEFAULT_ENABLED, get_all, get as get_detectors, run_all
 from backend.app.config import settings
 
@@ -96,13 +96,15 @@ class DetectorListResponse(BaseModel):
 
 
 class DetectorResponse(BaseModel):
+    """Image result plus training-time calibration metadata in ``metrics``."""
+
     id: str
     state: DetectorState
     flagged: bool | None
     score: float | None = Field(None, ge=0, le=1)
     threshold: float
     reason: str
-    metrics: dict[str, float]
+    metrics: dict[str, float | None]
     visualization_png_base64: str | None = None
     duration_ms: int
     error: str | None = None
@@ -170,6 +172,7 @@ async def analyze(
     include_maps: bool = Query(True),
     _: None = Depends(_rate_limit),
 ):
+    """Analyze an upload; AUC and SE are training-time detector properties, not per-image uncertainty."""
     try:
         detector_ids = [item.strip() for item in detectors.split(",") if item.strip()] if detectors is not None else None
         if detector_ids is not None:
@@ -226,7 +229,7 @@ def _detector_payload(result: DetectorResult, include_maps: bool) -> DetectorRes
         score=result.score,
         threshold=result.threshold,
         reason=result.reason,
-        metrics=result.metrics,
+        metrics={**result.metrics, **calibration_metrics(result.detector_id)},
         visualization_png_base64=visualization,
         duration_ms=result.duration_ms,
         error=result.error,

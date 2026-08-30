@@ -77,6 +77,12 @@ function scoreText(score: number | null): string {
   return score === null ? '—' : `${Math.round(score * 100)}%`;
 }
 
+function metricLabel(key: string): string {
+  if (key === 'auc') return 'training AUC';
+  if (key === 'auc_standard_error') return 'training AUC standard error';
+  return key.replaceAll('_', ' ');
+}
+
 function uncertaintyFor(result: DetectorResult): number | null {
   const candidate = result as ResultWithUncertainty;
   const value =
@@ -85,7 +91,9 @@ function uncertaintyFor(result: DetectorResult): number | null {
     result.metrics.hanley_mcneil_se ??
     result.metrics.auc_standard_error ??
     result.metrics.standard_error;
-  return Number.isFinite(value) && value !== undefined && value >= 0 ? Math.min(value, 1) : null;
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0
+    ? Math.min(value, 1)
+    : null;
 }
 
 function stateLabel(result: DetectorResult): string {
@@ -153,13 +161,15 @@ function DetectorTable({
   return (
     <Box className="table-wrap">
       <table className="detector-table">
-        <caption className="sr-only">Detector scores, uncertainty, and applicability</caption>
+        <caption className="sr-only">
+          Detector scores, training-time uncertainty, and applicability
+        </caption>
         <thead>
           <tr>
             <th scope="col">Detector</th>
             <th scope="col">State</th>
             <th scope="col">Score</th>
-            <th scope="col">± SE</th>
+            <th scope="col">± training SE</th>
             <th scope="col">Threshold</th>
           </tr>
         </thead>
@@ -179,11 +189,7 @@ function DetectorTable({
                   {result.score === null ? '—' : scoreText(result.score)}
                 </td>
                 <td className="table-number">
-                  {result.score === null
-                    ? '—'
-                    : uncertainty === null
-                      ? 'Not returned'
-                      : `±${Math.round(uncertainty * 100)}%`}
+                  {uncertainty === null ? 'Not returned' : `±${Math.round(uncertainty * 100)}%`}
                 </td>
                 <td className="table-number">{scoreText(result.threshold)}</td>
               </tr>
@@ -224,9 +230,9 @@ function ScoreDotPlot({
           className="dot-plot"
           viewBox={`0 0 ${width} ${height}`}
           role="img"
-          aria-label="Detector scores with one-standard-error whiskers"
+          aria-label="Detector scores with one training-time standard-error whiskers"
         >
-          <title>Detector scores with uncertainty</title>
+          <title>Detector scores with training-time uncertainty</title>
           <line
             className="plot-threshold"
             x1={x(SCORE_THRESHOLD)}
@@ -254,8 +260,8 @@ function ScoreDotPlot({
             const label = detectorName(point.id, detectors);
             const detail =
               uncertainty === null
-                ? 'uncertainty not returned'
-                : `plus or minus ${Math.round(uncertainty * 100)} percent SE`;
+                ? 'training-time uncertainty not returned'
+                : `plus or minus ${Math.round(uncertainty * 100)} percent training SE`;
             return (
               <g key={point.id} data-detector-id={point.id} data-score={point.score}>
                 <title>{`${label}: ${scoreText(point.score)}; ${detail}`}</title>
@@ -297,11 +303,11 @@ function ScoreDotPlot({
           <span className="plot-key-dot" aria-hidden="true" /> Score
         </span>
         <span className="plot-key">
-          <span className="plot-key-whisker" aria-hidden="true" /> ± one SE
+          <span className="plot-key-whisker" aria-hidden="true" /> ± one training SE
         </span>
         <Text fontSize="xs" color="muted">
-          SE is shown only when returned by the service. No uncertainty is fabricated for a single
-          image.
+          SE is estimated during detector training, not for this uploaded image. It is shown only
+          when returned by the service.
         </Text>
       </HStack>
     </Box>
@@ -352,10 +358,10 @@ function EvidenceCard({
                     textTransform="uppercase"
                     letterSpacing="0.08em"
                   >
-                    Uncertainty
+                    Training-time SE
                   </Text>
                   <Text fontFamily="mono" fontSize="xl" fontWeight="bold">
-                    {uncertainty === null ? '—' : `±${Math.round(uncertainty * 100)}%`}
+                    {uncertainty === null ? 'Not returned' : `±${Math.round(uncertainty * 100)}%`}
                   </Text>
                 </Box>
                 <Box>
@@ -381,8 +387,8 @@ function EvidenceCard({
                 <VStack align="stretch" gap={1} fontFamily="mono" fontSize="sm">
                   {Object.entries(result.metrics).map(([key, value]) => (
                     <HStack key={key} justify="space-between">
-                      <Text color="muted">{key.replaceAll('_', ' ')}</Text>
-                      <Text>{value.toFixed(3)}</Text>
+                      <Text color="muted">{metricLabel(key)}</Text>
+                      <Text>{value === null ? 'Not returned' : value.toFixed(3)}</Text>
                     </HStack>
                   ))}
                 </VStack>

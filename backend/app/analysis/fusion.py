@@ -13,6 +13,17 @@ def _calibration() -> dict:
     return json.loads(CALIBRATION_PATH.read_text())
 
 
+def calibration_metrics(detector_id: str) -> dict[str, float | None]:
+    """Return training-time AUC metadata, never image-specific uncertainty."""
+    config = _calibration().get("detectors", {}).get(detector_id, {})
+    auc = config.get("within_source_auc")
+    standard_error = config.get("weight_guard", {}).get("se")
+    return {
+        "auc": None if auc is None else float(auc),
+        "auc_standard_error": None if standard_error is None else float(standard_error),
+    }
+
+
 def fuse(results: list[DetectorResult]) -> dict:
     calibration = _calibration()
     applicable = [result for result in results if result.state is DetectorState.APPLICABLE and result.score is not None]

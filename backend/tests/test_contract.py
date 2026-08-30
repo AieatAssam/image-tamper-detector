@@ -5,12 +5,13 @@ from fastapi.testclient import TestClient
 from PIL import Image
 
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
-from backend.app.analysis.fusion import fuse
+from backend.app.analysis.fusion import calibration_metrics, fuse
 from backend.app.analysis.registry import get, register
 from backend.app.main import app
 
 
 SAMPLE = Path(__file__).parents[2] / "data/samples/original/landscape_original.jpg"
+CAMERA_SAMPLE = Path(__file__).parents[2] / "data/corpus/real/cam_002.jpg"
 
 
 def _png_bytes() -> bytes:
@@ -76,3 +77,18 @@ def test_image_context_decodes_once() -> None:
     context = ImageContext(SAMPLE.read_bytes())
     assert context.pil_image is context.pil_image
     assert context.rgb_uint8 is context.rgb_uint8
+
+
+def test_api_exposes_training_calibration_metrics() -> None:
+    response = TestClient(app).post(
+        "/api/v1/analyze?detectors=qtable,c2pa,learned&include_maps=false",
+        files={"file": ("sample.jpg", CAMERA_SAMPLE.read_bytes(), "image/jpeg")},
+    )
+    assert response.status_code == 200
+    detectors = {item["id"]: item for item in response.json()["detectors"]}
+    expected = calibration_metrics("qtable")
+    assert detectors["qtable"]["metrics"]["auc"] == expected["auc"]
+    assert detectors["qtable"]["metrics"]["auc_standard_error"] == expected["auc_standard_error"]
+    for detector_id in ("c2pa", "learned"):
+        assert detectors[detector_id]["metrics"]["auc"] is None
+        assert detectors[detector_id]["metrics"]["auc_standard_error"] is None

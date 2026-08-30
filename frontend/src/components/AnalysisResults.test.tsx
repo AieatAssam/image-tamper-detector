@@ -52,7 +52,12 @@ function result(
     score,
     threshold: 0.5,
     reason: state === 'not_applicable' ? 'JPEG metadata is absent.' : 'Test result.',
-    metrics: id === 'strong' ? { hanley_mcneil_se: 0.09 } : {},
+    metrics:
+      id === 'strong'
+        ? { hanley_mcneil_se: 0.09 }
+        : id === 'metadata'
+          ? { auc: null, auc_standard_error: null }
+          : {},
     visualization_png_base64: id === 'metadata' ? null : 'ZmFrZQ==',
     duration_ms: 1,
     error: null,
@@ -95,6 +100,7 @@ describe('AnalysisResults', () => {
     ).toEqual(['strong', 'weak']);
     expect(container.querySelector('[data-uncertainty="0.09"]')).toBeTruthy();
     expect(screen.getAllByText('NOT_APPLICABLE')).toHaveLength(2);
+    expect(screen.getAllByText('Not returned').length).toBeGreaterThan(0);
     expect(screen.getByRole('table')).toBeTruthy();
   });
 
