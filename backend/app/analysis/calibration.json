@@ -186,6 +186,25 @@
       },
       "within_source_auc": 0.6594360086767896
     },
+    "npr": {
+      "clipped": false,
+      "heldout_auc": null,
+      "higher_is_worse": true,
+      "scale": 0.15,
+      "threshold": 0.5,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "training-free NPR statistic has no fitted fusion weight",
+        "se": null
+      },
+      "weight_reason": "training-free exploratory statistic; no fusion calibration",
+      "within_source_auc": null
+    },
     "prnu": {
       "clipped": false,
       "heldout_auc": 0.5978260869565217,

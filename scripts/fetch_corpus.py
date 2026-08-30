@@ -21,7 +21,7 @@ MANIFEST = ROOT / "data/corpus/MANIFEST.yaml"
 REAL = ROOT / "data/corpus/real"
 USER_AGENT = "image-tamper-detector-corpus/1.0 (+https://github.com/)"
 ALLOWED_LICENSE = re.compile(
-    r"^(?:CC0|CC BY(?:-SA)?(?: [0-9]+(?:\.[0-9]+)?)?|Public domain|PD|MIT OR Apache-2\.0)$"
+    r"^(?:CC0|CC BY(?:-SA)?(?: [0-9]+(?:\.[0-9]+)?)?|CC BY-NC-SA(?: [0-9]+(?:\.[0-9]+)?)?|Public domain|PD|MIT OR Apache-2\.0)$"
 )
 EDITOR_SOFTWARE = ("gimp", "adobe", "photoshop", "lightroom", "paintshop", "affinity")
 

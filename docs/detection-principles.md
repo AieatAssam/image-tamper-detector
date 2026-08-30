@@ -199,6 +199,31 @@ then uniformity and colour-consistency masks produce a matching proportion
 matching_proportion = matching_pixels / analyzed_pixels
 ```
 
+## Neighboring Pixel Relationships statistic (`new.npr`)
+
+### Scope
+
+This is a training-free statistic derived from the NPR representation in Tan
+et al., “Rethinking the Up-Sampling Operations in CNN-based Generative Network
+for Generalizable Deepfake Detection,” CVPR 2024, arXiv:2312.10461. It is not
+the paper's trained classifier, and its measurements must not be compared with
+the paper's headline accuracy.
+
+### Method
+
+For each overlapping 2x2 RGB patch, the last pixel is subtracted from the other
+three pixels. The detector reports the ratio of mean intra-patch variance to
+inter-patch variance, the fraction of near-constant relative patches, and the
+Shannon entropy of the quantized difference distribution. Its exploratory
+statistic is the fixed equal-weight combination of near-constant fraction,
+`1 / (1 + intra_inter_variance_ratio)`, and one minus normalized difference
+entropy. It uses only the uploaded image and a bounded RGB derivation, never
+corpus membership.
+
+Round 10 measured this statistic but left its fusion weight at zero. The
+current implementation is intentionally not a reproduction of NPR's learned
+model.
+
 Lower proportion is mapped as more suspicious. The decision direction is
 correct, but a matching proportion is not itself a calibrated confidence.
 

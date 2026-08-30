@@ -63,3 +63,18 @@ def test_rank_auc_contract_edges() -> None:
     benchmark = _load("benchmark")
     assert benchmark._auc([0.1] * 10, [False] * 5 + [True] * 5) == 0.5
     assert benchmark._auc(list(np.linspace(0.1, 0.9, 10)), [False] * 5 + [True] * 5) == 1.0
+
+
+def test_per_generator_auc_reports_standard_error() -> None:
+    benchmark = _load("benchmark")
+    rows = [
+        {"state": "applicable", "score": score, "label": "ai_generated", "axis": "sd35_flux", "generator": "g", "source_group": f"s{i}"}
+        for i, score in enumerate(np.linspace(0.6, 1.0, 5))
+    ] + [
+        {"state": "applicable", "score": score, "label": "authentic", "axis": "real_camera", "generator": None, "source_group": f"c{i}"}
+        for i, score in enumerate(np.linspace(0.0, 0.4, 5))
+    ]
+    stats = benchmark._per_generator(rows)["sd35_flux"]["g"]
+    assert stats["auc"] == 1.0
+    assert stats["se"] is not None
+    assert stats["n_pos"] == stats["n_neg"] == 5

@@ -73,6 +73,37 @@ PY
 
 This printed `C.jpg Valid` and `XCA.jpg Invalid`; the invalid fixture included `assertion.dataHash.mismatch`. The fixture source was pinned to commit `be7f5ea22b385ee1af6c327906ba002747687628`; its `make_test_images/Cargo.toml` records `MIT OR Apache-2.0`, and the generator source carries the corresponding Apache/MIT notices.
 
+## Round 10 AI-generation axes
+
+The manifest adds two new axes without changing `real_ai`:
+
+- `sd35_flux`: Zenodo DOI `10.5281/zenodo.22166280`, Roman Demchenko,
+  “SD3.5 and Flux datasets,” CC BY 4.0. The verified `datasets.zip` is
+  `3,575,134,662` bytes with MD5
+  `6a6125f7483e93108fa859c0cb8ebb20`. Its own directory names are retained as
+  generators: `FLUX.1-schnell` and `stable-diffusion-3.5-medium`. A fixed seed
+  `20260830` selected 60 common prompt stems per generator, 120 images total.
+- `synthbuster`: Zenodo DOI `10.5281/zenodo.10066460`, Quentin Bammey,
+  “Synthbuster: Towards Detection of Diffusion Model Generated Images,” CC
+  BY-NC-SA 4.0. The verified `synthbuster.zip` is `12,372,557,226` bytes with
+  MD5 `0695bd328e16ea21c5c9cc2ae1d994ff`. Its nine archive directory names are
+  retained as generators, with a fixed seed `20260830` selecting 30 common
+  prompt stems per generator, 270 images total.
+
+The Synthbuster licence is explicitly non-commercial and share-alike. The
+corpus is therefore not uniformly CC BY, and derivatives or redistribution
+must preserve that stricter term. The archive contains `prompts.csv` with an
+image-name key described as matching RAISE-1k, but it does not contain the
+RAISE camera counterpart bytes. The manifest records that `source_key` and
+limitation; it never claims an image-level real/fake pair. Round 10's
+per-generator AUC uses the available `real_camera` negatives and labels that
+scope in the benchmark JSON.
+
+The downloaded archives and extracted image bytes remain under the existing
+gitignored `data/corpus/real/` path. They are not CI inputs. To verify local
+bytes without downloading again, run `.venv/bin/python scripts/fetch_corpus.py
+--check`.
+
 ## Commands
 
 ```bash
@@ -83,4 +114,4 @@ pyenv local 3.14.7
 .venv/bin/python scripts/benchmark.py --out /tmp/bench.json --corpus all
 ```
 
-Use `--corpus synthetic` for an offline benchmark. Use `--detectors ela,prnu,entropy` to select a subset. For a fast, reproducible iteration run, use `--sample 64 --seed 20260828`; rows are selected proportionally within corpus/family-or-axis/label strata, and the same seed and size produce byte-identical JSON and Markdown. Add `--profile` to print measured per-detector mean durations; those raw timings stay out of the deterministic files. The benchmark writes a JSON contract and a matching Markdown table. S06/S07 wall-clock caps are tested separately.
+Use `--corpus synthetic` for an offline benchmark. Use `--detectors ela,prnu,entropy` to select a subset. For a fast, reproducible iteration run, use `--sample 64 --seed 20260828`; rows are selected proportionally within corpus/family-or-axis/label strata, and the same seed and size produce byte-identical JSON and Markdown. Round 10 uses `--axes sd35_flux,synthbuster,real_camera` to isolate AI-generation axes. Add `--profile` to print measured per-detector mean durations; those raw timings stay out of the deterministic files. The benchmark writes a JSON contract and a matching Markdown table. S06/S07 wall-clock caps are tested separately.

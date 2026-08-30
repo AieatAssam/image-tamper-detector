@@ -20,6 +20,7 @@ from backend.app.analysis.zero import ZeroDetector
 from backend.app.analysis.splicebuster import SpliceBusterDetector
 from backend.app.analysis.resampling import ResamplingDetector
 from backend.app.analysis.aeroblade import AerobladeDetector
+from backend.app.analysis.npr import NprDetector
 
 logger = logging.getLogger(__name__)
 _REGISTRY: dict[str, Detector] = {}
@@ -103,3 +104,4 @@ register(LearnedDetector())
 register(SpliceBusterDetector(_settings("splicebuster")))
 register(ResamplingDetector(_settings("resampling")))
 register(AerobladeDetector())
+register(NprDetector())
