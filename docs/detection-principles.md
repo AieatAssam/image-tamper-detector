@@ -34,6 +34,40 @@ they cannot establish sensor provenance. The synthetic and real portions must
 therefore be read as different validation populations, not pooled evidence of
 one universal detector skill.
 
+## Round 9 AI-corpus gate
+
+The AI-generation column remains under-measured until it has source-balanced
+generated/real pairs. The Round 9 ELSA1M inspection sampled shard metadata at
+three distant row ranges; every probe reported the same recorded model,
+`stabilityai/stable-diffusion-2-1-base`, so it did not meet the six-generator
+requirement. The permitted GenImage fallback is Apache-2.0 and publishes
+generator-specific archives with separate `ai` and `nature` directories. The
+inspected ADM archive exposed no image-level pairing key or metadata manifest.
+The official claim that the benchmark contains pairs is therefore insufficient
+to reconstruct exact pairs without guessing.
+
+No new AI detector is calibrated from the existing twelve `real_ai` entries:
+they are not paired with real counterparts and cannot support a within-source
+AUC. K3-K6 remain blocked rather than receiving fabricated measurements. The
+existing detector entries and their null/uncertain measurements remain the
+source of truth in the catalog until a reproducible paired corpus is added.
+
+### Round 9 coverage snapshot
+
+This audit snapshot separates the main image-manipulation families. Its AI
+generation figure is face-only learned-model evidence, not general generator
+coverage; the Round 9 corpus gate above prevents new AI measurements from being
+reported as if they were source-balanced.
+
+| Mechanism | Current detector coverage | Best within-source AUC | Position after Round 9 |
+|---|---|---:|---|
+| Recompression / re-save | `double_jpeg`, `jpeg_ghosts`, `zero`, `qtable`, `ela` | 0.660 (`double_jpeg`) | adequate |
+| Splicing | `splicebuster`, `zero`, `ghosts`, `prnu`, `resampling` | 0.669 synthetic / 0.487 real | weak; does not generalise |
+| Copy-move | `copy_move` | 0.585 | weak but real |
+| Local retouch | `prnu`, `ela`, `splicebuster` | ~0.54 | weak |
+| AI generation | `spectral`, `entropy`, `cfa`, `learned`, `aeroblade` | 0.659 (`learned`, face-only) | barely covered; R9 blocked |
+| Provenance | `c2pa`, `exif` | n/a; declarative | correct but rarely present |
+
 Every applicable raw statistic is mapped to a probability using
 
 ```text
