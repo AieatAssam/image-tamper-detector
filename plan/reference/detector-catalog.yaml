@@ -526,7 +526,7 @@ measurements:
     exif: {within_source_auc: 0.5076628352490421, auc_standard_error: 0.055197227828327644, n_positive: 60, n_negative: 51}
     learned: {within_source_auc: 0.6594360086767896, auc_standard_error: 0.023911381674705686, n_positive: 260, n_negative: 251}
     zero: {within_source_auc: 0.5075921908893709, auc_standard_error: 0.02556354287977486, n_positive: 260, n_negative: 251}
-    splicebuster: {within_source_auc: 0.5119305856832972, auc_standard_error: 0.02555695436689327, n_positive: 260, n_negative: 251}
+    splicebuster: {within_source_auc: 0.6730769230769231, auc_standard_error: 0.05350654522518043, n_positive: 60, n_negative: 40, calibration_scope: synthetic}
     resampling: {within_source_auc: 0.4749262536873156, auc_standard_error: 0.030282095118942188, n_positive: 192, n_negative: 173}
     aeroblade: {within_source_auc: null, auc_standard_error: null, n_positive: 0, n_negative: 0}
 

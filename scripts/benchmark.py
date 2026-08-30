@@ -36,7 +36,7 @@ VALIDATED_BY = {
     "splicebuster": {"synthetic_splice"},
     "aeroblade": {"real_ai"},
 }
-for _detector_id in set(VALIDATED_BY) - {"c2pa", "aeroblade"}:
+for _detector_id in set(VALIDATED_BY) - {"c2pa", "aeroblade", "splicebuster"}:
     VALIDATED_BY[_detector_id].add("imd2020")
 SYNTHETIC_INVALID_DETECTORS = frozenset({"aeroblade", "cfa", "spectral", "prnu"})
 
@@ -126,6 +126,36 @@ def _external() -> list[dict]:
     return [{"id": path.name, "path": path, "mask_path": None, "corpus": "external", "axis": "external", "label": "authentic", "family": "external"} for path in sorted(directory.iterdir()) if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}]
 
 
+def _sample_entries(entries: list[dict], sample: int | None, seed: int) -> list[dict]:
+    if sample is None or sample >= len(entries):
+        return entries
+    strata: dict[tuple[str, str, str], list[int]] = {}
+    for index, entry in enumerate(entries):
+        stratum = (
+            entry["corpus"],
+            entry.get("family") if entry["corpus"] == "synthetic" else entry.get("axis", entry.get("family", "")),
+            entry["label"],
+        )
+        strata.setdefault(stratum, []).append(index)
+    total = len(entries)
+    quotas = {key: sample * len(indices) / total for key, indices in strata.items()}
+    selected_counts = {key: int(quota) for key, quota in quotas.items()}
+    remaining = sample - sum(selected_counts.values())
+    by_remainder = sorted(
+        quotas,
+        key=lambda key: (-(quotas[key] - selected_counts[key]), key),
+    )
+    for key in by_remainder[:remaining]:
+        selected_counts[key] += 1
+
+    rng = np.random.default_rng(seed)
+    selected: set[int] = set()
+    for key in sorted(strata):
+        indices = np.asarray(strata[key], dtype=np.int64)
+        selected.update(int(index) for index in rng.permutation(indices)[: selected_counts[key]])
+    return [entry for index, entry in enumerate(entries) if index in selected]
+
+
 def _tier(corpus: str, axis: str, family: str, detector_id: str) -> str:
     if corpus == "external":
         return "B"
@@ -197,10 +227,12 @@ def _metrics(results: list[dict]) -> dict[str, Any]:
     return {"n": len(results), "n_applicable": len(applicable), "n_not_applicable": sum(r["state"] == DetectorState.NOT_APPLICABLE.value for r in results), "n_error": sum(r["state"] == DetectorState.ERROR.value for r in results), "auc": _auc([float(r["score"]) for r in applicable], labels), "tpr": tp / (tp + fn) if tp + fn else 0.0, "fpr": fp / (fp + tn) if fp + tn else 0.0, "precision": precision, "recall": recall, "f1": f1, "mean_duration_ms": sum(durations) / len(durations) if durations else 0.0}
 
 
-def _stable_duration_bucket(results: list[dict]) -> int:
+def _stable_duration_bucket(results: list[dict], deterministic: bool = False) -> int:
     durations = [r["duration_ms"] for r in results if r["state"] == DetectorState.APPLICABLE.value]
     if not durations:
         return 0
+    if deterministic:
+        return DURATION_BUCKET_MS
     # ponytail: coarse buckets trade precision for reproducible committed metrics;
     # use the raw per-result timings for profiling if finer ranking matters.
     mean = sum(durations) / len(durations)
@@ -222,11 +254,11 @@ def _iou(result: Any, mask_path: Path | None) -> float | None:
     return float(np.logical_and(predicted, truth).sum() / union) if union else 1.0
 
 
-def run(corpus: str, detector_ids: list[str] | None) -> dict:
+def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, seed: int = 20260828, profile: bool = False) -> dict:
     synthetic, synthetic_index = _synthetic() if corpus in {"synthetic", "all"} else ([], None)
     real, manifest_path, real_present = _real() if corpus in {"real", "all"} else ([], None, False)
     external = _external() if corpus == "all" else []
-    entries = synthetic + real + external
+    entries = _sample_entries(synthetic + real + external, sample, seed)
     selected_ids = sorted(get_all()) if detector_ids is None else detector_ids
     detectors = list(get_detectors(selected_ids).values())
     by_detector: dict[str, dict] = {detector.id: {"metric_sets": [], "results": []} for detector in detectors}
@@ -262,18 +294,24 @@ def run(corpus: str, detector_ids: list[str] | None) -> dict:
         fused_by_family.setdefault(entry["family"], []).append(fused["verdict"] in {"likely_manipulated", "manipulated"})
     for detector in detectors:
         rows = by_detector[detector.id]["results"]
-        stable_duration = _stable_duration_bucket(rows)
+        raw_mean_duration = (
+            sum(float(row["duration_ms"]) for row in rows if row["state"] == DetectorState.APPLICABLE.value)
+            / max(1, sum(row["state"] == DetectorState.APPLICABLE.value for row in rows))
+        )
+        stable_duration = _stable_duration_bucket(rows, deterministic=sample is not None)
         for row in rows:
             if row["state"] == DetectorState.APPLICABLE.value:
                 row["duration_ms"] = stable_duration
         by_detector[detector.id]["within_source_auc"] = _within_source_auc(rows, source_by_image)
         by_detector[detector.id]["metric_sets"] = [{**_metrics([r for r in rows if r["corpus"] == name]), "corpus": name, "tier": "A" if all(r["tier"] == "A" for r in rows if r["corpus"] == name) else "B"} for name in ("synthetic", "real", "external") if any(r["corpus"] == name for r in rows)]
+        if profile:
+            print(f"{detector.id}: mean_duration_ms={raw_mean_duration:.1f}")
     try:
         calibration = json.loads((ROOT / "backend/app/analysis/calibration.json").read_text())
         heldout_auc = calibration.get("heldout", {}).get("auc")
     except Exception:
         heldout_auc = None
-    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real)}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
+    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real), "sample": {"requested": sample, "selected": len(entries), "seed": seed if sample is not None else None, "stratified": sample is not None}}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
     if real_present:
         output["per_axis_mean_score"] = {did: {axis: sum(vals) / len(vals) for axis, vals in axes.items()} for did, axes in axis_scores.items()}
     return output
@@ -292,9 +330,14 @@ def main() -> int:
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--detectors", default=None)
     parser.add_argument("--corpus", choices=("synthetic", "real", "all"), default="all")
+    parser.add_argument("--sample", type=int, default=None, help="deterministic stratified image subset size")
+    parser.add_argument("--seed", type=int, default=20260828, help="seed for --sample selection")
+    parser.add_argument("--profile", action="store_true", help="print measured mean duration per applicable detector run")
     args = parser.parse_args()
+    if args.sample is not None and args.sample < 1:
+        parser.error("--sample must be positive")
     ids = [item.strip() for item in args.detectors.split(",") if item.strip()] if args.detectors else None
-    data = run(args.corpus, ids)
+    data = run(args.corpus, ids, args.sample, args.seed, args.profile)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(data, sort_keys=True, indent=2, allow_nan=False) + "\n")
     args.out.with_suffix(".md").write_text(_markdown(data))

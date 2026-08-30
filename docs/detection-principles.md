@@ -526,6 +526,104 @@ valid source-paired comparison, so the AUC is null.
 Platforms can strip all EXIF, tags can be forged, and an editor can regenerate
 the thumbnail. A missing block is weak evidence and is never treated as proof.
 
+## Splicebuster residual co-occurrence (`new.splicebuster`)
+
+### Principle
+
+A camera processing chain leaves a statistical fingerprint in high-frequency
+residuals. A splice from a different chain changes the local residual
+distribution, even when ordinary compression and noise cues are weak.
+
+### Method
+
+The detector converts the image to grayscale, applies third-order horizontal
+and vertical residual filters, and quantizes each residual to one of three
+symbols. Four-symbol co-occurrences are accumulated in overlapping 128x128
+blocks. A regularized single-Gaussian Mahalanobis model scores the maximum
+block distance. This is a bounded implementation of the paper's feature family,
+not the paper's two-component EM posterior.
+
+### Citation and provenance
+
+A. Cozzolino, G. Poggi, and L. Verdoliva, “Splicebuster: A New Blind Image
+Splicing Detector,” IEEE WIFS, 2015,
+<https://doi.org/10.1109/WIFS.2015.7368565>. The implementation is
+reconstructed from the paper; the GRIP-UNINA source is not copied.
+
+### Signal direction
+
+Higher maximum block Mahalanobis distance is more suspicious for a change in
+processing-chain population.
+
+### Measured performance
+
+The complete corpus gives the following metric-set and source-paired results:
+
+| scope | metric-set AUC | within-source AUC |
+|---|---:|---:|
+| synthetic processing-history corpus, 100 images | 0.611250 | 0.673077 |
+| IMD2020, 400 images | 0.434425 | 0.420000 |
+| pooled within-source result before scoping | not applicable | 0.511931 +/- 0.025557 |
+
+The calibration scope is therefore the synthetic corpus only. Its fitted fusion
+weight is 0.182273 and its held-out source-paired AUC is 0.796296. The pooled
+number is misleading because IMD2020 is internet-sourced and heavily
+recompressed: that processing destroys the camera-chain fingerprint that this
+method assumes is still present. IMD2020 remains in the benchmark and is
+reported as Tier B for this detector; it is not removed from the corpus.
+
+### Failure modes
+
+Heavy recompression, resizing, denoising, or a common web processing chain can
+erase the cue. Strong texture boundaries and legitimate multiple pipelines can
+also resemble a splice. No recompression-strength NOT_APPLICABLE gate is used
+in this round; the calibration scope is the explicit guard.
+
+## Local resampling inconsistency (`new.resampling`)
+
+### Principle
+
+Interpolation creates deterministic relationships among neighboring pixels and
+periodic structure in prediction residuals. A global resize is benign; a local
+resized or rotated region is suspicious when its periodic signal disagrees with
+the surrounding blocks.
+
+### Method
+
+The detector uses a fixed 3x3 linear predictor, takes the absolute prediction
+residual, and measures the non-DC peak-to-background ratio of a windowed 2-D
+DFT in bounded 128x128 blocks. The raw score is the 75th-percentile absolute
+deviation from the block-median peak ratio, so a uniform global resize is not
+treated as tampering.
+
+### Citation and provenance
+
+A. C. Popescu and H. Farid, “Exposing Digital Forgeries by Detecting Traces
+of Resampling,” IEEE TSP 53(2), 2005; M. Kirchner, “Fast and Reliable
+Resampling Detection by Spectral Analysis of Fixed Linear Predictor Residue,”
+ACM MM&Sec, 2008. Both are cited in the bibliography and the implementation is
+independent.
+
+### Signal direction
+
+Higher local block disagreement is more suspicious for local resampling.
+
+### Measured performance
+
+The corpus-level measurements are synthetic metric-set AUC 0.521354 and
+within-source AUC 0.524390, versus IMD2020 metric-set AUC 0.541445 and
+within-source AUC 0.537879. The pooled within-source result is
+0.474926 +/- 0.030282. The synthetic and IMD2020 results do not show a clear
+corpus-specific failure that justifies scoping, so resampling remains unscoped.
+It has no labeled local-resampling positive family and remains at zero fusion
+weight under the existing statistical guard.
+
+### Failure modes
+
+Small, heavily compressed, or smoothly textured regions may not preserve the
+periodic signal. A global web resize can be indistinguishable from benign
+processing and is intentionally not flagged.
+
 ## ZERO JPEG grid origin (`new.zero`)
 
 ### Principle

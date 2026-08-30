@@ -83,4 +83,4 @@ pyenv local 3.14.7
 .venv/bin/python scripts/benchmark.py --out /tmp/bench.json --corpus all
 ```
 
-Use `--corpus synthetic` for an offline benchmark. Use `--detectors ela,prnu,entropy` to select a subset. The benchmark writes a JSON contract and a matching Markdown table. Its output omits timestamps and uses deterministic timing buckets, so unchanged runs can be compared byte-for-byte; S06/S07 wall-clock caps are tested separately.
+Use `--corpus synthetic` for an offline benchmark. Use `--detectors ela,prnu,entropy` to select a subset. For a fast, reproducible iteration run, use `--sample 64 --seed 20260828`; rows are selected proportionally within corpus/family-or-axis/label strata, and the same seed and size produce byte-identical JSON and Markdown. Add `--profile` to print measured per-detector mean durations; those raw timings stay out of the deterministic files. The benchmark writes a JSON contract and a matching Markdown table. S06/S07 wall-clock caps are tested separately.
