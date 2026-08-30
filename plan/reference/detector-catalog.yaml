@@ -432,7 +432,7 @@ new:
     class: SpliceBusterDetector
     stage_owner: R8
     priority: 1
-    status: "implemented; paper-only Mahalanobis variant"
+    status: "implemented; paper-only Mahalanobis variant with measured JPEG-quality applicability gate"
     principle: >
       A camera processing chain leaves a statistical fingerprint in
       high-frequency residuals. A pasted region from another chain changes the
@@ -444,6 +444,7 @@ new:
       cooccurrence: "Vectorize four-symbol sliding windows and encode each tuple into one of 3^4 = 81 bins; sum horizontal and vertical block histograms."
       blocks: "Use 128x128 overlapping blocks with 32px stride on a longest-side <=1024 analysis image."
       score: "Fit one regularized Gaussian to normalized block histograms and report max block Mahalanobis distance; the paper's two-component EM posterior is intentionally not implemented."
+      applicability: "Require JPEG input with a lowest qtable-estimated libjpeg quality of at least 80; non-JPEG, missing-table, and lower-quality inputs return NOT_APPLICABLE."
     signal_direction: "different processing-chain population -> HIGHER maximum Mahalanobis distance"
     validated_by: [synthetic_splice]
     citation: "A. Cozzolino, G. Poggi, L. Verdoliva, 'Splicebuster: A New Blind Image Splicing Detector', IEEE WIFS 2015, DOI 10.1109/WIFS.2015.7368565"
@@ -451,7 +452,7 @@ new:
     failure_modes:
       - "single-Gaussian distance is an approximation to the paper's EM model"
       - "strong texture boundaries, content changes, or multiple legitimate pipelines can look like a splice"
-      - "not applicable below 256px on either bounded analysis axis"
+      - "not applicable below estimated JPEG quality 80 or below 256px on either bounded analysis axis"
 
   resampling:
     module: backend/app/analysis/resampling.py
@@ -526,7 +527,7 @@ measurements:
     exif: {within_source_auc: 0.5076628352490421, auc_standard_error: 0.055197227828327644, n_positive: 60, n_negative: 51}
     learned: {within_source_auc: 0.6594360086767896, auc_standard_error: 0.023911381674705686, n_positive: 260, n_negative: 251}
     zero: {within_source_auc: 0.5075921908893709, auc_standard_error: 0.02556354287977486, n_positive: 260, n_negative: 251}
-    splicebuster: {within_source_auc: 0.6730769230769231, auc_standard_error: 0.05350654522518043, n_positive: 60, n_negative: 40, calibration_scope: synthetic}
+    splicebuster: {within_source_auc: 0.6086956521739131, auc_standard_error: 0.03300110319471434, n_positive: 154, n_negative: 134}
     resampling: {within_source_auc: 0.4749262536873156, auc_standard_error: 0.030282095118942188, n_positive: 192, n_negative: 173}
     aeroblade: {within_source_auc: null, auc_standard_error: null, n_positive: 0, n_negative: 0}
 

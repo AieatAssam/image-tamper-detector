@@ -63,7 +63,7 @@
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 1.0,
-      "weight": 0.17868968020494916,
+      "weight": 0.18388743574928954,
       "weight_guard": {
         "auc": 0.5846774193548387,
         "drop": false,
@@ -81,7 +81,7 @@
       "higher_is_worse": true,
       "scale": 0.2821708227378247,
       "threshold": -1.3584791656095467,
-      "weight": 0.1419125974792483,
+      "weight": 0.15096715966080557,
       "weight_guard": {
         "auc": 0.6598639455782312,
         "drop": false,
@@ -156,7 +156,7 @@
       "higher_is_worse": true,
       "scale": 0.5,
       "threshold": 2.0,
-      "weight": 0.025285215711655568,
+      "weight": 0.0220425732645146,
       "weight_guard": {
         "auc": 0.5385487528344671,
         "drop": false,
@@ -174,7 +174,7 @@
       "higher_is_worse": true,
       "scale": 0.07031184434890747,
       "threshold": 0.7499462962150574,
-      "weight": 0.10761934996699347,
+      "weight": 0.11950275731498387,
       "weight_guard": {
         "auc": 0.6594360086767896,
         "drop": false,
@@ -262,21 +262,21 @@
     },
     "splicebuster": {
       "clipped": false,
-      "heldout_auc": 0.7962962962962963,
+      "heldout_auc": 0.6746987951807228,
       "higher_is_worse": true,
-      "scale": 0.571765661239624,
-      "threshold": 9.018142700195312,
-      "weight": 0.18227337214570286,
+      "scale": 0.656783938407898,
+      "threshold": 9.483312606811523,
+      "weight": 0.0,
       "weight_guard": {
-        "auc": 0.6730769230769231,
+        "auc": 0.6086956521739131,
         "drop": false,
         "metric": "within_source_auc",
-        "n_neg": 40,
-        "n_pos": 60,
+        "n_neg": 134,
+        "n_pos": 154,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.05350654522518043
+        "se": 0.03300110319471434
       },
-      "within_source_auc": 0.6730769230769231
+      "within_source_auc": 0.6086956521739131
     },
     "zero": {
       "clipped": false,
@@ -307,12 +307,12 @@
     "n_images": 526
   },
   "fusion": {
-    "intercept": -0.15961352832958528,
+    "intercept": 0.27395255894970977,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-30T13:45:04Z",
+  "generated_at": "2026-08-30T15:46:31Z",
   "heldout": {
-    "auc": 0.7536231884057971,
+    "auc": 0.6521739130434783,
     "n": 168,
     "seed": 20260828,
     "split_by": "source_image"
@@ -326,5 +326,5 @@
     }
   },
   "version": "2026-08-28",
-  "weight_skill_spearman": 0.7611610667557432
+  "weight_skill_spearman": 0.5570093470655848
 }

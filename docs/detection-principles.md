@@ -46,6 +46,15 @@ sigmoid(x) = 1 / (1 + exp(-x))
 nothing to fusion. A detector result is evidence, not a proof of origin or
 intent.
 
+## Applicability is an image property
+
+A detector's applicability precondition must be checkable from the image itself
+at inference time. Calibration scope is a statement about which measured rows
+were trusted for fitting; it is not a substitute for an inference-time gate,
+because an incoming image does not carry its corpus label. A detector may be
+calibrated on a narrower validation population, but it must abstain whenever
+the image does not expose the physical evidence its method requires.
+
 ## Error Level Analysis (`existing.ela`)
 
 ### Principle
@@ -555,29 +564,37 @@ reconstructed from the paper; the GRIP-UNINA source is not copied.
 Higher maximum block Mahalanobis distance is more suspicious for a change in
 processing-chain population.
 
+### Applicability
+
+Splicebuster uses the existing JPEG quantisation-table estimator as a measurable
+recompression-strength proxy. It is applicable only to JPEGs whose lowest
+estimated libjpeg quality is at least 80; non-JPEG input, missing tables, and
+lower-quality JPEGs return `NOT_APPLICABLE`. The cutoff is a data-derived
+guard, not a corpus label or calibration scope.
+
 ### Measured performance
 
 The complete corpus gives the following metric-set and source-paired results:
 
 | scope | metric-set AUC | within-source AUC |
 |---|---:|---:|
-| synthetic processing-history corpus, 100 images | 0.611250 | 0.673077 |
-| IMD2020, 400 images | 0.434425 | 0.420000 |
-| pooled within-source result before scoping | not applicable | 0.511931 +/- 0.025557 |
+| synthetic processing-history corpus, 100 images | 0.668527 | 0.748428 |
+| local manifest, 426 images | 0.486766 | 0.459184 |
+| pooled within-source result after gating | not applicable | 0.608696 |
 
-The calibration scope is therefore the synthetic corpus only. Its fitted fusion
-weight is 0.182273 and its held-out source-paired AUC is 0.796296. The pooled
-number is misleading because IMD2020 is internet-sourced and heavily
-recompressed: that processing destroys the camera-chain fingerprint that this
-method assumes is still present. IMD2020 remains in the benchmark and is
-reported as Tier B for this detector; it is not removed from the corpus.
+The fitted fusion weight and held-out fused AUC are recorded in
+`backend/app/analysis/calibration.json`. The local manifest remains useful as a
+stress population, but its lower result shows that a quality gate does not make
+internet-sourced processing histories equivalent to controlled splices. No
+calibration-only scope is used.
 
 ### Failure modes
 
-Heavy recompression, resizing, denoising, or a common web processing chain can
-erase the cue. Strong texture boundaries and legitimate multiple pipelines can
-also resemble a splice. No recompression-strength NOT_APPLICABLE gate is used
-in this round; the calibration scope is the explicit guard.
+Heavy recompression below the measured quality cutoff, resizing, denoising, or a
+common web processing chain can erase the cue. Strong texture boundaries and
+legitimate multiple pipelines can also resemble a splice. The JPEG quality
+proxy is an estimate of the final table, not proof of the complete processing
+history.
 
 ## Local resampling inconsistency (`new.resampling`)
 

@@ -26,8 +26,8 @@ def test_splicebuster_detects_a_different_processing_fingerprint():
     forged.paste(donor_jpeg.crop((144, 112, 368, 336)), (144, 112))
 
     detector = SpliceBusterDetector({"threshold": 0.0, "scale": 1.0})
-    clean_result = detector.run(ImageContext(_encoded(clean, "PNG")))
-    forged_result = detector.run(ImageContext(_encoded(forged, "PNG")))
+    clean_result = detector.run(ImageContext(_encoded(clean, "JPEG", quality=95)))
+    forged_result = detector.run(ImageContext(_encoded(forged, "JPEG", quality=95)))
 
     assert clean_result.state is DetectorState.APPLICABLE
     assert forged_result.state is DetectorState.APPLICABLE
@@ -37,6 +37,20 @@ def test_splicebuster_detects_a_different_processing_fingerprint():
     assert forged_result.visualization.shape == (384, 512)
     assert forged_result.visualization.dtype == np.uint8
     assert all(np.isfinite(value) for value in forged_result.metrics.values())
+
+
+def test_splicebuster_gates_on_measured_jpeg_quality():
+    rng = np.random.default_rng(13)
+    image = Image.fromarray(rng.integers(0, 256, (384, 512, 3), dtype=np.uint8))
+    detector = SpliceBusterDetector()
+
+    high_quality = detector.run(ImageContext(_encoded(image, "JPEG", quality=95)))
+    low_quality = detector.run(ImageContext(_encoded(image, "JPEG", quality=45)))
+
+    assert high_quality.state is DetectorState.APPLICABLE
+    assert low_quality.state is DetectorState.NOT_APPLICABLE
+    assert low_quality.score is None and low_quality.flagged is None
+    assert "estimated JPEG quality 45" in low_quality.reason
 
 
 def test_splicebuster_reports_not_applicable_for_small_images():

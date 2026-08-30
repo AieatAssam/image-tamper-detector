@@ -15,6 +15,7 @@ import cv2
 import numpy as np
 
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
+from backend.app.analysis.qtable import jpeg_quality_proxy
 
 
 BLOCK_SIZE = 128
@@ -24,6 +25,7 @@ QUANTIZATION_STEP = 2.0
 TRUNCATION = 1
 DEFAULT_THRESHOLD = 5.0
 DEFAULT_SCALE = 2.0
+MIN_ESTIMATED_JPEG_QUALITY = 80.0
 _ALPHABET_SIZE = 2 * TRUNCATION + 1
 _FEATURE_DIMENSION = _ALPHABET_SIZE**4
 
@@ -151,10 +153,11 @@ class SpliceBusterDetector:
     id = "splicebuster"
     name = "Splicebuster Residual Co-occurrence"
     family = "processing_chain"
-    applicable_formats = frozenset({"JPEG", "PNG", "WEBP", "TIFF"})
+    applicable_formats = frozenset({"JPEG"})
     produces_map = True
     description = "Measures local processing-chain differences with residual co-occurrence statistics."
     limitations = [
+        "Requires a JPEG quantization-table quality estimate of at least 80.",
         "Requires at least 256 pixels on both axes and a sufficiently heterogeneous image.",
         "A single Gaussian is a cheaper approximation to the paper's two-component EM model.",
         "Content boundaries, strong texture changes, and multiple camera pipelines can resemble a splice.",
@@ -164,11 +167,19 @@ class SpliceBusterDetector:
         settings = settings or {}
         self.threshold = float(settings.get("threshold", DEFAULT_THRESHOLD))
         self.scale = float(settings.get("scale", DEFAULT_SCALE))
+        self.minimum_quality = float(settings.get("minimum_quality", MIN_ESTIMATED_JPEG_QUALITY))
         self.higher_is_worse = bool(settings.get("higher_is_worse", True))
         if self.scale <= 0:
             raise ValueError("scale must be positive")
 
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
+        if ctx.format not in self.applicable_formats:
+            return False, "Splicebuster requires JPEG input to estimate recompression strength"
+        quality = jpeg_quality_proxy(ctx)
+        if quality is None:
+            return False, "Splicebuster requires JPEG quantization tables to estimate recompression strength"
+        if quality < self.minimum_quality:
+            return False, f"estimated JPEG quality {quality:.0f} is below the Splicebuster minimum {self.minimum_quality:.0f}"
         image = ctx.downscaled_rgb_uint8
         longest = max(image.shape[:2])
         ratio = min(1.0, MAX_ANALYSIS_SIDE / float(longest))
@@ -176,7 +187,7 @@ class SpliceBusterDetector:
         width = max(1, int(round(image.shape[1] * ratio)))
         if min(height, width) < 2 * BLOCK_SIZE:
             return False, "Splicebuster requires both analysis dimensions to be at least 256px"
-        return True, "image is large enough for bounded residual co-occurrence blocks"
+        return True, f"estimated JPEG quality {quality:.0f} meets the Splicebuster minimum and image is large enough"
 
     def run(self, ctx: ImageContext) -> DetectorResult:
         started = perf_counter()

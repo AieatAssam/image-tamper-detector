@@ -37,6 +37,25 @@ def _scaled_table(base: tuple[int, ...], quality: int) -> list[int]:
     return [max(1, min(255, (value * scale + 50) // 100)) for value in base]
 
 
+def _estimated_qualities(tables: dict[int, list[int]]) -> dict[int, int]:
+    qualities = {}
+    for index, table in sorted(tables.items()):
+        base = LUMINANCE_TABLE if index == 0 else CHROMINANCE_TABLE
+        qualities[index] = min(
+            (sum(abs(actual - expected) for actual, expected in zip(table, _scaled_table(base, quality))), quality)
+            for quality in range(1, 101)
+        )[1]
+    return qualities
+
+
+def jpeg_quality_proxy(ctx: ImageContext) -> float | None:
+    """Return the lowest estimated libjpeg quality across the JPEG tables."""
+    image_format, tables = _jpeg_tables(ctx)
+    if image_format not in {"JPEG"} or not tables:
+        return None
+    return float(min(_estimated_qualities(tables).values()))
+
+
 class QuantizationTableDetector:
     id = "qtable"
     name = "JPEG Quantization Table Fingerprint"
@@ -66,16 +85,13 @@ class QuantizationTableDetector:
             )
 
         image_format, tables = _jpeg_tables(ctx)
+        estimated_qualities = _estimated_qualities(tables)
         distances: list[int] = []
         qualities: list[int] = []
         for index in sorted(tables):
             base = LUMINANCE_TABLE if index == 0 else CHROMINANCE_TABLE
-            candidates = [
-                (sum(abs(actual - expected) for actual, expected in zip(tables[index], _scaled_table(base, q))), q)
-                for q in range(1, 101)
-            ]
-            distance, quality = min(candidates)
-            distances.append(distance)
+            quality = estimated_qualities[index]
+            distances.append(sum(abs(actual - expected) for actual, expected in zip(tables[index], _scaled_table(base, quality))))
             qualities.append(quality)
 
         concatenated = b"".join(bytes(tables[index]) for index in sorted(tables))

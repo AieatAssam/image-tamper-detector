@@ -40,13 +40,6 @@ FALSE_POSITIVE_FAMILIES = ("authentic_recompress", "resize_then_save")
 FALSE_POSITIVE_LIMIT = 0.10
 VERDICT_THRESHOLD = 0.55
 L2 = 0.05
-# An explicit entry scopes calibration to the named corpus. Missing entries use
-# every applicable observation, which keeps exploratory detectors unscoped.
-VALIDATED_BY = {
-    "splicebuster": {"synthetic"},
-}
-
-
 def auc(scores: list[float], labels: list[bool]) -> float | None:
     """Return tie-aware AUC, or None when the sample cannot support it."""
     if len(scores) < 2 or len(set(labels)) < 2:
@@ -253,11 +246,6 @@ def _raw_value(detector_id: str, result) -> float | None:
     return float(value) if value is not None else None
 
 
-def _in_calibration_scope(row: dict, detector_id: str) -> bool:
-    scope = VALIDATED_BY.get(detector_id)
-    return scope is None or row["corpus"] in scope
-
-
 def _group_split(rows: list[dict], seed: int) -> tuple[list[int], list[int]]:
     groups = sorted({row["source_image"] for row in rows})
     paired_sources = _paired_sources(rows)
@@ -379,7 +367,7 @@ def main() -> int:
         values = [
             (raw_by_image[index][detector.id], rows[index]["label"])
             for index in fit_indices
-            if detector.id in raw_by_image[index] and _in_calibration_scope(rows[index], detector.id)
+            if detector.id in raw_by_image[index]
         ]
         higher = detector.id not in HIGHER_WORSE
         fitted = bool(values)
@@ -387,7 +375,7 @@ def main() -> int:
         score_by_index: dict[int, float] = {
             index: to_probability(raw_by_image[index][detector.id], t, scale, higher)
             for index in range(len(rows))
-            if detector.id in raw_by_image[index] and fitted and _in_calibration_scope(rows[index], detector.id)
+            if detector.id in raw_by_image[index] and fitted
         }
         all_within_source_auc = within_source_auc([
             (rows[index]["source_image"], score, rows[index]["label"])
