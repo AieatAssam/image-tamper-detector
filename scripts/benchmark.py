@@ -33,10 +33,12 @@ VALIDATED_BY = {
     "exif": {"synthetic_recompress", "real_camera"},
     "zero": {"synthetic_splice"},
     "c2pa": {"real_c2pa_signed", "real_camera"},
+    "splicebuster": {"synthetic_splice"},
+    "aeroblade": {"real_ai"},
 }
-for _detector_id in set(VALIDATED_BY) - {"c2pa"}:
+for _detector_id in set(VALIDATED_BY) - {"c2pa", "aeroblade"}:
     VALIDATED_BY[_detector_id].add("imd2020")
-SYNTHETIC_INVALID_DETECTORS = frozenset({"cfa", "spectral", "prnu"})
+SYNTHETIC_INVALID_DETECTORS = frozenset({"aeroblade", "cfa", "spectral", "prnu"})
 
 
 def _sha(path: Path) -> str:

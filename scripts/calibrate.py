@@ -32,8 +32,10 @@ RAW_KEYS = {
     "spectral": "peak_to_sigma",
     "learned": "deepfake_probability",
     "c2pa": "generative_assertion",
+    "splicebuster": "mahalanobis_max",
+    "resampling": "local_inconsistency",
 }
-HIGHER_WORSE = {"entropy": False, "qtable": False}
+HIGHER_WORSE = {"entropy": False, "qtable": False, "aeroblade": False}
 FALSE_POSITIVE_FAMILIES = ("authentic_recompress", "resize_then_save")
 FALSE_POSITIVE_LIMIT = 0.10
 VERDICT_THRESHOLD = 0.55

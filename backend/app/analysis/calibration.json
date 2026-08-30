@@ -1,5 +1,24 @@
 {
   "detectors": {
+    "aeroblade": {
+      "clipped": false,
+      "heldout_auc": null,
+      "higher_is_worse": false,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "heldout_auc unavailable: no applicable observations",
+      "within_source_auc": null
+    },
     "c2pa": {
       "clipped": false,
       "heldout_auc": null,
@@ -44,7 +63,7 @@
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 1.0,
-      "weight": 0.18506086967782528,
+      "weight": 0.18388743574928954,
       "weight_guard": {
         "auc": 0.5846774193548387,
         "drop": false,
@@ -62,7 +81,7 @@
       "higher_is_worse": true,
       "scale": 0.2821708227378247,
       "threshold": -1.3584791656095467,
-      "weight": 0.15568978786881607,
+      "weight": 0.15096715966080557,
       "weight_guard": {
         "auc": 0.6598639455782312,
         "drop": false,
@@ -137,7 +156,7 @@
       "higher_is_worse": true,
       "scale": 0.5,
       "threshold": 2.0,
-      "weight": 0.024724226252050206,
+      "weight": 0.0220425732645146,
       "weight_guard": {
         "auc": 0.5385487528344671,
         "drop": false,
@@ -151,22 +170,21 @@
     },
     "learned": {
       "clipped": false,
-      "heldout_auc": null,
+      "heldout_auc": 0.5869565217391305,
       "higher_is_worse": true,
-      "scale": 1.0,
-      "threshold": 0.0,
-      "weight": 0.0,
+      "scale": 0.07031184434890747,
+      "threshold": 0.7499462962150574,
+      "weight": 0.11950275731498387,
       "weight_guard": {
-        "auc": null,
-        "drop": true,
+        "auc": 0.6594360086767896,
+        "drop": false,
         "metric": "within_source_auc",
-        "n_neg": 0,
-        "n_pos": 0,
+        "n_neg": 251,
+        "n_pos": 260,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": null
+        "se": 0.023911381674705686
       },
-      "weight_reason": "heldout_auc unavailable: no applicable observations",
-      "within_source_auc": null
+      "within_source_auc": 0.6594360086767896
     },
     "prnu": {
       "clipped": false,
@@ -205,6 +223,25 @@
       "weight_reason": "within_source_auc=0.495708 <= 0.5 + SE=0.058135",
       "within_source_auc": 0.4957081545064378
     },
+    "resampling": {
+      "clipped": false,
+      "heldout_auc": 0.46601941747572817,
+      "higher_is_worse": true,
+      "scale": 0.05825424566864967,
+      "threshold": 0.19037577509880066,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.4749262536873156,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 173,
+        "n_pos": 192,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.030282095118942188
+      },
+      "weight_reason": "within_source_auc=0.474926 <= 0.5 + SE=0.030282",
+      "within_source_auc": 0.4749262536873156
+    },
     "spectral": {
       "clipped": false,
       "heldout_auc": 0.5362318840579711,
@@ -222,6 +259,25 @@
         "se": 0.025478661704110016
       },
       "within_source_auc": 0.5357917570498916
+    },
+    "splicebuster": {
+      "clipped": false,
+      "heldout_auc": 0.572463768115942,
+      "higher_is_worse": true,
+      "scale": 0.7202496528625488,
+      "threshold": 6.807354927062988,
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": 0.5119305856832972,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 251,
+        "n_pos": 260,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.02555695436689327
+      },
+      "weight_reason": "within_source_auc=0.511931 <= 0.5 + SE=0.025557",
+      "within_source_auc": 0.5119305856832972
     },
     "zero": {
       "clipped": false,
@@ -252,12 +308,12 @@
     "n_images": 526
   },
   "fusion": {
-    "intercept": 0.10895561609939154,
+    "intercept": 0.27395255894970977,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-30T02:40:19Z",
+  "generated_at": "2026-08-30T12:10:40Z",
   "heldout": {
-    "auc": 0.677536231884058,
+    "auc": 0.6521739130434783,
     "n": 168,
     "seed": 20260828,
     "split_by": "source_image"
@@ -271,5 +327,5 @@
     }
   },
   "version": "2026-08-28",
-  "weight_skill_spearman": 0.6487300740092935
+  "weight_skill_spearman": 0.6509627309079725
 }

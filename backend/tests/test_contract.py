@@ -89,6 +89,7 @@ def test_api_exposes_training_calibration_metrics() -> None:
     expected = calibration_metrics("qtable")
     assert detectors["qtable"]["metrics"]["auc"] == expected["auc"]
     assert detectors["qtable"]["metrics"]["auc_standard_error"] == expected["auc_standard_error"]
-    for detector_id in ("c2pa", "learned"):
-        assert detectors[detector_id]["metrics"]["auc"] is None
-        assert detectors[detector_id]["metrics"]["auc_standard_error"] is None
+    assert detectors["c2pa"]["metrics"]["auc"] is None
+    expected = calibration_metrics("learned")
+    assert detectors["learned"]["metrics"]["auc"] == expected["auc"]
+    assert detectors["learned"]["metrics"]["auc_standard_error"] == expected["auc_standard_error"]

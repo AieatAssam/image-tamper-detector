@@ -1,4 +1,6 @@
 # Optional extra. Never install this for the default application.
+# AEROBLADE uses an externally supplied MIT TAESD ONNX encoder/decoder pair.
+# Runtime inference needs no torch and the model weights stay outside this repo.
 -r requirements.txt
 onnxruntime==1.29.0
 huggingface-hub==1.29.0

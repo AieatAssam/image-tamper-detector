@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 from time import perf_counter
 
-from backend.app.analysis.adapters import ELAAdapter, EntropyAdapter, NoiseResidualAdapter
+from backend.app.analysis.adapters import ELAAdapter, EntropyAdapter, NoiseResidualAdapter, _settings
 from backend.app.analysis.base import Detector, DetectorResult, DetectorState, ImageContext
 from backend.app.config import settings
 from backend.app.analysis.copy_move import CopyMoveDetector
@@ -17,10 +17,13 @@ from backend.app.analysis.cfa import CfaDetector
 from backend.app.analysis.exif import ExifConsistencyDetector
 from backend.app.analysis.spectral import SpectralPeakDetector
 from backend.app.analysis.zero import ZeroDetector
+from backend.app.analysis.splicebuster import SpliceBusterDetector
+from backend.app.analysis.resampling import ResamplingDetector
+from backend.app.analysis.aeroblade import AerobladeDetector
 
 logger = logging.getLogger(__name__)
 _REGISTRY: dict[str, Detector] = {}
-DEFAULT_ENABLED = frozenset({"ela", "prnu", "entropy", "qtable", "double_jpeg", "jpeg_ghosts", "copy_move", "cfa", "spectral", "exif", "c2pa", "zero"})
+DEFAULT_ENABLED = frozenset({"ela", "prnu", "entropy", "qtable", "double_jpeg", "jpeg_ghosts", "copy_move", "cfa", "spectral", "exif", "c2pa", "zero", "splicebuster", "resampling"})
 
 
 def register(detector: Detector) -> Detector:
@@ -97,3 +100,6 @@ register(SpectralPeakDetector())
 register(ExifConsistencyDetector())
 register(C2PAAnalyzer())
 register(LearnedDetector())
+register(SpliceBusterDetector(_settings("splicebuster")))
+register(ResamplingDetector(_settings("resampling")))
+register(AerobladeDetector())
