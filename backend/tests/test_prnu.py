@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 from pathlib import Path
 import cv2
-from backend.app.analysis.prnu import PRNUAnalyzer, _log_binomial_tail, _significance
+from backend.app.analysis.prnu import MAX_ANALYSIS_SIDE, PRNUAnalyzer, _analysis_image, _log_binomial_tail, _significance
 
 @pytest.fixture
 def prnu_analyzer():
@@ -26,6 +26,11 @@ def test_prnu_analyzer_initialization():
     assert analyzer.window_size == 64
     assert analyzer.stride == 32
     assert analyzer.variance_threshold == 0.001
+
+
+def test_prnu_analysis_is_bounded():
+    image = np.zeros((1600, 800, 3), dtype=np.float32)
+    assert _analysis_image(image).shape == (MAX_ANALYSIS_SIDE, 512, 3)
 
 def test_analyze_returns_correct_shapes(prnu_analyzer, data_dir):
     """Test that analyze method returns arrays of correct shape."""

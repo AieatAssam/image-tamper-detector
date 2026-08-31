@@ -432,13 +432,43 @@
       "within_source_auc": 0.5065075921908894
     }
   },
+  "variant_policy": {
+    "variants": [
+      "native",
+      "parity"
+    ],
+    "default_variant": "native",
+    "enforcement": "calibrate.py and benchmark.py exclude rows outside each detector's declared variant_scope; serving must select the matching variant before detector invocation",
+    "detector_scope": {
+      "aeroblade": ["parity"],
+      "clip_probe": ["parity"],
+      "learned": ["parity"],
+      "npr": ["parity"],
+      "spectral": ["parity"],
+      "entropy": ["parity"],
+      "c2pa": ["native"],
+      "qtable": ["native"],
+      "exif": ["native"],
+      "cfa": ["native"],
+      "ela": ["native"],
+      "copy_move": ["native", "parity"],
+      "double_jpeg": ["native", "parity"],
+      "jpeg_ghosts": ["native", "parity"],
+      "prnu": ["native", "parity"],
+      "resampling": ["native", "parity"],
+      "splicebuster": ["native", "parity"],
+      "zero": ["native", "parity"]
+    }
+  },
   "fitted_on": {
     "corpora": [
       "real",
       "synthetic"
     ],
     "corpus_revision": "51f4fde6fac9bd99c40c66b33b3fd9542ce9fe3669a5e5d1f8b3cebad60fa919",
-    "n_images": 916
+    "n_images": 916,
+    "variant_selection": "native",
+    "variants": ["native"]
   },
   "fusion": {
     "intercept": 0.3270728718347808,

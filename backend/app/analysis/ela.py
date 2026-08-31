@@ -18,6 +18,8 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
+MAX_ANALYSIS_SIDE = 1024
+
 @dataclass
 class TamperingFeatures:
     """Container for various tampering detection features."""
@@ -30,7 +32,7 @@ class ELAAnalyzer:
     def __init__(self, 
                  quality: int = 95,
                  resave_quality: int = 75,
-                 max_image_size: int = 2000):
+                 max_image_size: int = MAX_ANALYSIS_SIDE):
         """
         Initialize ELA analyzer with enhanced feature detection.
         
@@ -195,18 +197,18 @@ class ELAAnalyzer:
         blocks_h = h // block_size
         blocks_w = w // block_size
         
-        block_differences = []
-        for i in range(blocks_h - 1):
-            for j in range(blocks_w - 1):
-                block = gray[i*block_size:(i+1)*block_size, j*block_size:(j+1)*block_size]
-                next_block_h = gray[i*block_size:(i+1)*block_size, (j+1)*block_size:(j+2)*block_size]
-                next_block_v = gray[(i+1)*block_size:(i+2)*block_size, j*block_size:(j+1)*block_size]
-                
-                diff_h = np.mean(np.abs(block[:,-1] - next_block_h[:,0]))
-                diff_v = np.mean(np.abs(block[-1,:] - next_block_v[0,:]))
-                block_differences.extend([diff_h, diff_v])
-                
-        return np.mean(block_differences)
+        if blocks_h < 2 or blocks_w < 2:
+            return 0.0
+
+        horizontal = np.abs(
+            gray[: (blocks_h - 1) * block_size, 7 : (blocks_w - 1) * block_size : block_size]
+            - gray[: (blocks_h - 1) * block_size, 8 : blocks_w * block_size : block_size]
+        ).reshape(blocks_h - 1, block_size, blocks_w - 1).mean(axis=1)
+        vertical = np.abs(
+            gray[7 : (blocks_h - 1) * block_size : block_size, : (blocks_w - 1) * block_size]
+            - gray[8 : blocks_h * block_size : block_size, : (blocks_w - 1) * block_size]
+        ).reshape(blocks_h - 1, blocks_w - 1, block_size).mean(axis=2)
+        return float(np.mean((horizontal, vertical)))
 
     def detect_tampering(self, 
                         image_input: Union[str, Path, bytes],

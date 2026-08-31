@@ -31,6 +31,42 @@ corpus ingestion. The `0.55` check is a corpus-shortcut diagnostic, not an AUC
 floor for any detector. CI remains synthetic-only and does not download this
 corpus.
 
+## Native and parity variants
+
+The manifest declares two first-class encoding variants:
+
+- `native` preserves the supplied file bytes, including capture metadata,
+  EXIF, C2PA, quantisation tables, and original JPEG history. Existing rows
+  omit `variant` and use the manifest's explicit `default_variant: native`.
+- `parity` is a separately encoded copy. It is selected only when a manifest
+  row explicitly sets `variant: parity` and points at the corresponding local
+  bytes. No parity path or row is inferred when those bytes are absent.
+
+Select the variant in the benchmark with `--variant native|parity|both`:
+
+```bash
+.venv/bin/python scripts/benchmark.py --corpus real --variant parity \
+  --axes sd35_flux,synthbuster,real_camera --out /tmp/parity.json
+```
+
+`benchmark.py` reports the selected variant, the variants actually present,
+the detector's `variant_scope`, and any `scope_violations`. It does not run a
+detector on a disallowed variant. `calibrate.py --variant both` applies the
+same per-detector scope while fitting and while calculating guards. The
+canonical runtime-ID mapping is in `plan/reference/detector-catalog.yaml` and
+is copied into `calibration.json` for artifact-time inspection.
+
+The provisional Round 16C scope is: parity-only `aeroblade`, `clip_probe`,
+`learned`, `npr`, `spectral`, and `entropy`; native-only `c2pa`, `qtable`,
+`exif`, `cfa`, and `ela`; both `copy_move`, `double_jpeg`, `jpeg_ghosts`,
+`prnu`, `resampling`, `splicebuster`, and `zero`. ELA is explicitly native-only
+because the R15C evidence classified it with compression/history detectors; the
+omitted final assignment remains subject to the 16A/16B measurements.
+
+Parity is not a free normalisation. Its uniform JPEG re-save strips EXIF and
+changes the quality factor and JPEG history. That is why provenance and
+compression detectors remain scoped separately from the AI-generation screen.
+
 S05 has two distinct corpus roles:
 
 - `data/corpus/synthetic/` measures processing-history cues: authentic recompression, splices, copy-move, double JPEG compression, local retouching, and resized authentic content. Manipulation families may use the four existing files under `data/samples/`, but both negative families (`authentic_recompress` and `resize_then_save`) derive only from the genuinely authentic `landscape_original.jpg`. Each index entry and sidecar records `source_label` (`authentic`, `known_forgery`, or `ai_generated`) so parent provenance cannot be confused with the family-specific `label`. Source EXIF is preserved or a neutral source description is added to each JPEG. `index.json` and JSON sidecars are reviewable; image and mask bytes are reproducible and ignored by Git.

@@ -3,8 +3,46 @@
 Run:
 
 ```sh
-.venv/bin/python scripts/calibrate.py --corpus all --out backend/app/analysis/calibration.json --seed 20260828
+.venv/bin/python scripts/calibrate.py --corpus all --variant both \
+  --out backend/app/analysis/calibration.json --seed 20260828
 ```
+
+## Native and parity variants
+
+The calibration command accepts `--variant native|parity|both`; the default is
+`both` so one consolidation run can load both encodings. Each detector is then
+filtered by both its existing `VALIDATED_BY` axis scope and its declared
+`variant_scope`. Rows outside either scope do not contribute to threshold,
+within-source AUC, held-out AUC, the Hanley-McNeil guard, or fusion weights.
+
+```sh
+.venv/bin/python scripts/calibrate.py --corpus all --variant both \
+  --out backend/app/analysis/calibration.json --seed 20260828
+```
+
+`calibration.json.variant_policy.detector_scope` and each newly generated
+detector config's `variant_scope` are the machine-readable declarations. The
+current committed calibration numbers were not refit in Round 16C; its
+`fitted_on.variants: ["native"]` records that they are the pre-parity model.
+The current manifest has no parity rows, so `--variant both` is currently
+equivalent to native data and cannot manufacture missing parity observations.
+
+The held-out split still groups by the underlying `source_image`, keeping
+native and parity encodings of one source together. Within-source comparisons
+key the comparison by `source_image+variant`, so a native positive is never
+paired with a parity negative. `benchmark.py` applies the same scope at
+execution time: an ineligible detector row is `not_applicable`, carries
+`scope_eligible: false`, and increments `scope_violations` rather than being
+run on the wrong variant.
+
+This round cannot make the upload endpoint variant-aware because detector
+modules and the endpoint are outside scope. The explicit known limitation is
+therefore that `run_all(ImageContext(...))` remains variant-blind at serving
+time. A serving orchestrator must select the bytes matching
+`calibration.json.variant_policy.detector_scope` before invocation; the
+benchmark and calibration outputs make that precondition checkable. Until the
+consolidation refit and serving change, the committed calibration is a native
+legacy model, not a claim that parity-only detectors are safe on native input.
 
 The fit reads every available synthetic entry and every checksum-verified real
 entry. `fitted_on.corpora` records the corpus names actually present, so an

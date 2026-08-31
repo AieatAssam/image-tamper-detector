@@ -1,4 +1,5 @@
 from pathlib import Path
+import sys
 
 from backend.app.analysis.base import DetectorState, ImageContext
 from backend.app.analysis.registry import get
@@ -18,3 +19,29 @@ def test_learned_is_not_applicable_without_a_face() -> None:
     result = detector.run(ImageContext.from_path(Path("data/samples/original/landscape_original.jpg")))
     assert result.state is DetectorState.NOT_APPLICABLE
     assert "face" in result.reason.lower()
+
+
+def test_onnx_session_is_cached(monkeypatch) -> None:
+    import backend.app.analysis.learned as learned
+
+    class FakeSession:
+        pass
+
+    class FakeRuntime:
+        calls = 0
+
+        def InferenceSession(self, _path, providers):
+            assert providers == ["CPUExecutionProvider"]
+            self.calls += 1
+            return FakeSession()
+
+    runtime = FakeRuntime()
+    monkeypatch.setitem(sys.modules, "onnxruntime", runtime)
+    learned._load_session.cache_clear()
+    try:
+        first = learned._load_session("model.onnx")
+        second = learned._load_session("model.onnx")
+        assert first is second
+        assert runtime.calls == 1
+    finally:
+        learned._load_session.cache_clear()

@@ -16,11 +16,12 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from backend.app.analysis.base import DetectorState, ImageContext  # noqa: E402
+from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext  # noqa: E402
 from backend.app.analysis.fusion import fuse  # noqa: E402
 from backend.app.analysis.registry import get as get_detectors, get_all, run_all  # noqa: E402
 
 DURATION_BUCKET_MS = 500
+VALID_VARIANTS = frozenset({"native", "parity"})
 VALIDATED_BY = {
     "ela": {"synthetic_splice", "synthetic_recompress"},
     "prnu": {"real_camera", "real_ai"},
@@ -43,6 +44,26 @@ VALIDATED_BY = {
 for _detector_id in set(VALIDATED_BY) - {"c2pa", "aeroblade", "splicebuster"}:
     VALIDATED_BY[_detector_id].add("imd2020")
 SYNTHETIC_INVALID_DETECTORS = frozenset({"aeroblade", "cfa", "spectral", "prnu"})
+VARIANT_SCOPES = {
+    "aeroblade": frozenset({"parity"}),
+    "clip_probe": frozenset({"parity"}),
+    "learned": frozenset({"parity"}),
+    "npr": frozenset({"parity"}),
+    "spectral": frozenset({"parity"}),
+    "entropy": frozenset({"parity"}),
+    "c2pa": frozenset({"native"}),
+    "qtable": frozenset({"native"}),
+    "exif": frozenset({"native"}),
+    "cfa": frozenset({"native"}),
+    "ela": frozenset({"native"}),
+    "copy_move": frozenset({"native", "parity"}),
+    "double_jpeg": frozenset({"native", "parity"}),
+    "jpeg_ghosts": frozenset({"native", "parity"}),
+    "prnu": frozenset({"native", "parity"}),
+    "resampling": frozenset({"native", "parity"}),
+    "splicebuster": frozenset({"native", "parity"}),
+    "zero": frozenset({"native", "parity"}),
+}
 
 
 def _sha(path: Path) -> str:
@@ -65,6 +86,12 @@ def _read_manifest(path: Path) -> dict:
     return yaml.safe_load(path.read_text())
 
 
+def _variant(value: str) -> str:
+    if value not in VALID_VARIANTS:
+        raise ValueError(f"unknown corpus variant: {value}")
+    return value
+
+
 def _local(path_text: str, index_path: Path) -> Path:
     path = Path(path_text)
     candidates = [path, index_path.parent / path.name, ROOT / path]
@@ -84,7 +111,7 @@ def _synthetic() -> tuple[list[dict], Path | None]:
         image = _local(item["path"], index_path)
         mask = _local(item["mask"], index_path)
         if image.is_file():
-            entries.append({**item, "path": image, "mask_path": mask, "corpus": "synthetic", "axis": item["family"]})
+            entries.append({**item, "path": image, "mask_path": mask, "corpus": "synthetic", "axis": item["family"], "variant": "native"})
     return entries, index_path
 
 
@@ -94,6 +121,7 @@ def _real() -> tuple[list[dict], Path | None, bool]:
     if not manifest_path.is_file():
         return [], None, False
     manifest = _read_manifest(manifest_path)
+    default_variant = _variant(manifest.get("default_variant", "native"))
     entries = []
     for item in manifest.get("images", []):
         if item.get("path"):
@@ -118,6 +146,7 @@ def _real() -> tuple[list[dict], Path | None, bool]:
                 "label": item["label"],
                 "family": item.get("family", item["axis"]),
                 "source_image": item.get("source_group", item.get("source_image", str(image.relative_to(ROOT)))),
+                "variant": _variant(item.get("variant", default_variant)),
             })
     return entries, manifest_path, bool(entries)
 
@@ -127,7 +156,7 @@ def _external() -> list[dict]:
     directory = ROOT / "data/corpus/external"
     if not directory.is_dir():
         return []
-    return [{"id": path.name, "path": path, "mask_path": None, "corpus": "external", "axis": "external", "label": "authentic", "family": "external"} for path in sorted(directory.iterdir()) if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}]
+    return [{"id": path.name, "path": path, "mask_path": None, "corpus": "external", "axis": "external", "label": "authentic", "family": "external", "variant": "native"} for path in sorted(directory.iterdir()) if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}]
 
 
 def _matched(path: Path) -> list[dict]:
@@ -143,6 +172,7 @@ def _matched(path: Path) -> list[dict]:
             "corpus": "matched",
             "family": item.get("family", item["axis"]),
             "source_image": item["source_image"],
+            "variant": _variant(item.get("variant", "native")),
         })
     if not rows or {row["label"] for row in rows} != {"ai_generated", "authentic"}:
         raise ValueError("matched manifest must contain both AI and authentic rows")
@@ -244,15 +274,16 @@ def _per_generator(rows: list[dict]) -> dict[str, dict[str, dict[str, float | in
     for (axis, generator), positive_rows in sorted(positives.items()):
         all_positive_rows = positive_rows
         positive_rows = [row for row in positive_rows if row["state"] == DetectorState.APPLICABLE.value and row["score"] is not None]
-        source_groups = {row["source_group"] for row in all_positive_rows}
-        paired = [row for row in authentic if row["source_group"] in source_groups]
+        source_groups = {(row["source_group"], row.get("variant", "native")) for row in positive_rows}
+        paired = [row for row in authentic if (row["source_group"], row.get("variant", "native")) in source_groups]
         if paired:
             negative_rows = paired
             negative_scope = "matching_source_group"
         else:
             # ponytail: use the available camera negatives for unpaired datasets;
             # add source-matched negatives when the dataset publishes them.
-            negative_rows = [row for row in authentic if row["axis"] == "real_camera"]
+            variants = {variant for _source, variant in source_groups}
+            negative_rows = [row for row in authentic if row["axis"] == "real_camera" and row.get("variant", "native") in variants]
             negative_scope = "real_camera"
         stats = _auc_stats(
             [float(row["score"]) for row in positive_rows + negative_rows],
@@ -329,7 +360,9 @@ def _iou(result: Any, mask_path: Path | None) -> float | None:
     return float(np.logical_and(predicted, truth).sum() / union) if union else 1.0
 
 
-def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, seed: int = 20260828, profile: bool = False, axes: set[str] | None = None, matched_entries: list[dict] | None = None) -> dict:
+def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, seed: int = 20260828, profile: bool = False, axes: set[str] | None = None, matched_entries: list[dict] | None = None, variant: str = "native") -> dict:
+    if variant not in VALID_VARIANTS | {"both"}:
+        raise ValueError(f"unknown variant selection: {variant}")
     if corpus == "matched":
         synthetic, synthetic_index = [], None
         real, manifest_path, real_present = [], None, False
@@ -340,10 +373,16 @@ def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, 
         real, manifest_path, real_present = _real() if corpus in {"real", "all"} else ([], None, False)
         external = _external() if corpus == "all" else []
         entries = synthetic + real + external
+    entries = [{**entry, "variant": _variant(entry.get("variant", "native"))} for entry in entries]
+    if variant != "both":
+        entries = [entry for entry in entries if _variant(entry.get("variant", "native")) == variant]
     if axes is not None:
         entries = [entry for entry in entries if entry["axis"] in axes]
     entries = _sample_entries(entries, sample, seed)
     selected_ids = sorted(get_all()) if detector_ids is None else detector_ids
+    missing_scopes = sorted(set(selected_ids) - VARIANT_SCOPES.keys())
+    if missing_scopes:
+        raise ValueError(f"missing variant scope for detector(s): {', '.join(missing_scopes)}")
     detectors = list(get_detectors(selected_ids).values())
     by_detector: dict[str, dict] = {detector.id: {"metric_sets": [], "results": []} for detector in detectors}
     family_scores: dict[str, dict[str, list[float]]] = {d.id: {} for d in detectors}
@@ -352,19 +391,23 @@ def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, 
     fused_by_family: dict[str, list[bool]] = {}
     source_by_image: dict[tuple[str, str], str] = {}
     for entry in entries:
-        source_by_image[(entry["corpus"], entry["id"])] = entry.get(
-            "source_image", f"{entry['corpus']}:{entry['id']}"
-        )
+        source_by_image[(entry["corpus"], entry["id"])] = f"{entry['variant']}::{entry.get('source_image', f'{entry['corpus']}:{entry['id']}')}"
+        eligible_ids = [detector_id for detector_id in selected_ids if entry["variant"] in VARIANT_SCOPES[detector_id]]
         try:
-            results = run_all(ImageContext(entry["path"].read_bytes()), selected_ids)
+            results = run_all(ImageContext(entry["path"].read_bytes()), eligible_ids) if eligible_ids else []
         except Exception as exc:
             results = []
-            for detector in detectors:
-                by_detector[detector.id]["results"].append({"image_id": entry["id"], "state": "error", "score": None, "flagged": None, "metrics": {}, "duration_ms": 0, "reason": "benchmark execution failed", "error": str(exc), "corpus": entry["corpus"], "axis": entry["axis"], "label": entry["label"], "family": entry["family"], "generator": entry.get("generator"), "source_group": entry.get("source_image", entry.get("source_group", entry["id"])), "tier": _tier(entry["corpus"], entry["axis"], entry["family"], detector.id)})
-        for result in results:
+            results = [DetectorResult(detector_id, DetectorState.ERROR, None, None, 0.0, "benchmark execution failed", {}, None, 0, str(exc)) for detector_id in eligible_ids]
+        result_by_id = {result.detector_id: result for result in results}
+        for detector in detectors:
+            if detector.id not in result_by_id:
+                row = {"image_id": entry["id"], "state": DetectorState.NOT_APPLICABLE.value, "score": None, "flagged": None, "metrics": {}, "duration_ms": 0, "reason": f"detector is scoped to variants: {', '.join(sorted(VARIANT_SCOPES[detector.id]))}", "error": None, "corpus": entry["corpus"], "axis": entry["axis"], "label": entry["label"], "family": entry["family"], "generator": entry.get("generator"), "source_group": entry.get("source_image", entry.get("source_group", entry["id"])), "variant": entry["variant"], "scope_eligible": False, "tier": _tier(entry["corpus"], entry["axis"], entry["family"], detector.id)}
+                by_detector[detector.id]["results"].append(row)
+                continue
+            result = result_by_id[detector.id]
             duration_ms = max(1, result.duration_ms) if result.state is DetectorState.APPLICABLE else 0
-            row = {"image_id": entry["id"], "state": result.state.value, "score": result.score, "flagged": result.flagged, "metrics": result.metrics, "duration_ms": duration_ms, "reason": result.reason, "error": result.error, "corpus": entry["corpus"], "axis": entry["axis"], "label": entry["label"], "family": entry["family"], "generator": entry.get("generator"), "source_group": entry.get("source_image", entry.get("source_group", entry["id"])), "tier": _tier(entry["corpus"], entry["axis"], entry["family"], result.detector_id)}
-            by_detector[result.detector_id]["results"].append(row)
+            row = {"image_id": entry["id"], "state": result.state.value, "score": result.score, "flagged": result.flagged, "metrics": result.metrics, "duration_ms": duration_ms, "reason": result.reason, "error": result.error, "corpus": entry["corpus"], "axis": entry["axis"], "label": entry["label"], "family": entry["family"], "generator": entry.get("generator"), "source_group": entry.get("source_image", entry.get("source_group", entry["id"])), "variant": entry["variant"], "scope_eligible": True, "tier": _tier(entry["corpus"], entry["axis"], entry["family"], result.detector_id)}
+            by_detector[detector.id]["results"].append(row)
             if result.score is not None:
                 family_scores[result.detector_id].setdefault(entry["family"], []).append(float(result.score))
                 if entry["corpus"] == "real": axis_scores[result.detector_id].setdefault(entry["axis"], []).append(float(result.score))
@@ -388,6 +431,9 @@ def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, 
                 row["duration_ms"] = stable_duration
         by_detector[detector.id]["within_source_auc"] = _within_source_auc(rows, source_by_image)
         by_detector[detector.id]["per_generator"] = _per_generator(rows)
+        by_detector[detector.id]["variant_scope"] = sorted(VARIANT_SCOPES[detector.id])
+        by_detector[detector.id]["evaluated_variants"] = sorted({row.get("variant", "native") for row in rows if row["scope_eligible"] and row["state"] == DetectorState.APPLICABLE.value})
+        by_detector[detector.id]["scope_violations"] = sum(not row["scope_eligible"] for row in rows)
         corpus_names = ("matched",) if corpus == "matched" else ("synthetic", "real", "external")
         metric_sets = []
         for name in corpus_names:
@@ -414,7 +460,7 @@ def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, 
         heldout_auc = calibration.get("heldout", {}).get("auc")
     except Exception:
         heldout_auc = None
-    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real), "sample": {"requested": sample, "selected": len(entries), "seed": seed if sample is not None else None, "stratified": sample is not None}, "axes": sorted(axes) if axes is not None else None}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": None if corpus == "matched" else heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
+    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real), "variant_selection": variant, "variants": sorted({entry["variant"] for entry in entries}), "sample": {"requested": sample, "selected": len(entries), "seed": seed if sample is not None else None, "stratified": sample is not None}, "axes": sorted(axes) if axes is not None else None}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": None if corpus == "matched" else heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
     if real_present:
         output["per_axis_mean_score"] = {did: {axis: sum(vals) / len(vals) for axis, vals in axes.items()} for did, axes in axis_scores.items()}
     return output
@@ -437,6 +483,7 @@ def main() -> int:
     parser.add_argument("--seed", type=int, default=20260828, help="seed for --sample selection")
     parser.add_argument("--profile", action="store_true", help="print measured mean duration per applicable detector run")
     parser.add_argument("--axes", default=None, help="comma-separated manifest axes to include")
+    parser.add_argument("--variant", choices=("native", "parity", "both"), default="native", help="corpus encoding variant to benchmark")
     parser.add_argument("--matched-manifest", type=Path, help="JSONL produced by scripts/matched_eval.py")
     args = parser.parse_args()
     if args.sample is not None and args.sample < 1:
@@ -446,9 +493,9 @@ def main() -> int:
     if args.corpus == "matched":
         if not args.matched_manifest:
             parser.error("--corpus matched requires --matched-manifest")
-        data = run("matched", ids, profile=args.profile, matched_entries=_matched(args.matched_manifest))
+        data = run("matched", ids, profile=args.profile, matched_entries=_matched(args.matched_manifest), variant=args.variant)
     else:
-        data = run(args.corpus, ids, args.sample, args.seed, args.profile, axes)
+        data = run(args.corpus, ids, args.sample, args.seed, args.profile, axes, variant=args.variant)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(data, sort_keys=True, indent=2, allow_nan=False) + "\n")
     args.out.with_suffix(".md").write_text(_markdown(data))

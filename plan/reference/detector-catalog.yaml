@@ -12,7 +12,33 @@
 # against generated splices -- see plan.yaml acceptance_tiers.
 # ==============================================================================
 
-catalog_version: 1
+catalog_version: 2
+
+# R16C dual-axis input contract. These keys are runtime detector IDs, not the
+# longer catalog entry names below. A detector is fitted and gated only on the
+# listed variants, in addition to its `validated_by` axis scope.
+variant_policy:
+  variants: [native, parity]
+  default_variant: native
+  detector_scope:
+    aeroblade: [parity]
+    clip_probe: [parity]
+    learned: [parity]
+    npr: [parity]
+    spectral: [parity]
+    entropy: [parity]
+    c2pa: [native]
+    qtable: [native]
+    exif: [native]
+    cfa: [native]
+    ela: [native]
+    copy_move: [native, parity]
+    double_jpeg: [native, parity]
+    jpeg_ghosts: [native, parity]
+    prnu: [native, parity]
+    resampling: [native, parity]
+    splicebuster: [native, parity]
+    zero: [native, parity]
 
 # ------------------------------------------------------------------------------
 # EXISTING DETECTORS (reworked, not rewritten from scratch)

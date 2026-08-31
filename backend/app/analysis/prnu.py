@@ -30,6 +30,7 @@ from scipy.stats import binom
 
 
 ImageInput = Union[str, Path, bytes, np.ndarray]
+MAX_ANALYSIS_SIDE = 1024
 
 
 def _as_rgb_float32(image_input: ImageInput) -> np.ndarray:
@@ -59,6 +60,18 @@ def _as_rgb_float32(image_input: ImageInput) -> np.ndarray:
     elif image.ndim != 3 or image.shape[2] not in (3, 4):
         raise ValueError("Image array must have shape HxW, HxWx1, HxWx3, or HxWx4")
     return np.asarray(image[..., :3], dtype=np.float32).copy()
+
+
+def _analysis_image(image: np.ndarray) -> np.ndarray:
+    longest = max(image.shape[:2])
+    if longest <= MAX_ANALYSIS_SIDE:
+        return image
+    ratio = MAX_ANALYSIS_SIDE / float(longest)
+    return cv2.resize(
+        image,
+        (max(1, round(image.shape[1] * ratio)), max(1, round(image.shape[0] * ratio))),
+        interpolation=cv2.INTER_AREA,
+    )
 
 
 def _log_binomial_tail(red_blocks: int, all_blocks: int, block_size: int, percentile: float) -> float:
@@ -294,7 +307,7 @@ class PRNUAnalyzer:
     def detect_tampering(self, image_input: ImageInput, overlay_alpha: float = 0.8) -> tuple[bool, np.ndarray, float]:
         """Return tampering flag, edge-preserving map, and ``-log10(NFA)``."""
         del overlay_alpha  # retained for callers of the former implementation
-        image = _as_rgb_float32(image_input)
+        image = _analysis_image(_as_rgb_float32(image_input))
         detected, visualization, score = _detect(
             image,
             self.block_size,

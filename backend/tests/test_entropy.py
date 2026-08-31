@@ -6,7 +6,7 @@ import numpy as np
 from pathlib import Path
 from PIL import Image
 import cv2
-from backend.app.analysis.entropy import EntropyAnalyzer, EntropyFeatures
+from backend.app.analysis.entropy import MAX_ANALYSIS_SIDE, EntropyAnalyzer, EntropyFeatures, _analysis_image
 
 # Test constants
 TEST_RADIUS = 4  # Match default radius
@@ -58,6 +58,11 @@ def test_entropy_analyzer_initialization():
         EntropyAnalyzer(matching_threshold=0)  # Threshold must be positive
     with pytest.raises(ValueError):
         EntropyAnalyzer(matching_threshold=1.5)  # Threshold must be less than 1
+
+
+def test_entropy_analysis_is_bounded():
+    image = np.zeros((1600, 800, 3), dtype=np.uint8)
+    assert _analysis_image(image).shape == (MAX_ANALYSIS_SIDE, 512, 3)
 
 def test_analyze_returns_correct_shapes(entropy_analyzer, data_dir):
     """Test that analyze method returns arrays of correct shape."""

@@ -16,6 +16,20 @@ from dataclasses import dataclass
 from skimage.morphology import disk
 from skimage import filters
 
+MAX_ANALYSIS_SIDE = 1024
+
+
+def _analysis_image(image: np.ndarray) -> np.ndarray:
+    longest = max(image.shape[:2])
+    if longest <= MAX_ANALYSIS_SIDE:
+        return image
+    ratio = MAX_ANALYSIS_SIDE / float(longest)
+    return cv2.resize(
+        image,
+        (max(1, round(image.shape[1] * ratio)), max(1, round(image.shape[0] * ratio))),
+        interpolation=cv2.INTER_AREA,
+    )
+
 @dataclass
 class EntropyFeatures:
     """Container for entropy analysis features."""
@@ -183,6 +197,9 @@ class EntropyAnalyzer:
             # Convert to uint8 if necessary
             if image_rgb.dtype != np.uint8:
                 image_rgb = cv2.convertScaleAbs(image_rgb)
+
+            if isinstance(image_input, np.ndarray):
+                image_rgb = _analysis_image(image_rgb)
 
             # Calculate local entropy for each channel
             entropy_red = filters.rank.entropy(image_rgb[..., 0], self.selem)

@@ -1,4 +1,8 @@
-version: 1
+version: 2
+# Every image row may set `variant` to `native` or `parity`. Existing rows omit
+# it and therefore use this explicit default until parity bytes are ingested.
+variants: [native, parity]
+default_variant: native
 corpus_sources:
   sd35_flux:
     title: "SD3.5 and Flux datasets"

@@ -39,12 +39,89 @@ RAW_KEYS = {
     "clip_probe": "clip_probability",
 }
 HIGHER_WORSE = {"entropy": False, "qtable": False, "aeroblade": False}
+VALID_VARIANTS = frozenset({"native", "parity"})
+VALIDATED_BY = {
+    "ela": {"synthetic_splice", "synthetic_recompress"},
+    "prnu": {"real_camera", "real_ai"},
+    "entropy": {"real_camera", "real_ai", "sd35_flux", "synthbuster"},
+    "qtable": {"synthetic_recompress", "real_camera"},
+    "double_jpeg": {"synthetic_recompress"},
+    "jpeg_ghosts": {"synthetic_splice"},
+    "copy_move": {"synthetic_copymove"},
+    "cfa": {"real_camera", "real_ai", "sd35_flux", "synthbuster"},
+    "spectral": {"real_camera", "real_ai", "sd35_flux", "synthbuster"},
+    "exif": {"synthetic_recompress", "real_camera"},
+    "zero": {"synthetic_splice"},
+    "c2pa": {"real_c2pa_signed", "real_camera"},
+    "splicebuster": {"synthetic_splice"},
+    "aeroblade": {"real_ai", "sd35_flux", "synthbuster"},
+    "clip_probe": {"real_ai", "sd35_flux", "synthbuster"},
+    "learned": {"real_ai", "sd35_flux", "synthbuster"},
+    "npr": {"real_ai", "sd35_flux", "synthbuster"},
+}
+for _detector_id in set(VALIDATED_BY) - {"c2pa", "aeroblade", "splicebuster"}:
+    VALIDATED_BY[_detector_id].add("imd2020")
+VARIANT_SCOPES = {
+    "aeroblade": frozenset({"parity"}),
+    "clip_probe": frozenset({"parity"}),
+    "learned": frozenset({"parity"}),
+    "npr": frozenset({"parity"}),
+    "spectral": frozenset({"parity"}),
+    "entropy": frozenset({"parity"}),
+    "c2pa": frozenset({"native"}),
+    "qtable": frozenset({"native"}),
+    "exif": frozenset({"native"}),
+    "cfa": frozenset({"native"}),
+    "ela": frozenset({"native"}),
+    "copy_move": frozenset({"native", "parity"}),
+    "double_jpeg": frozenset({"native", "parity"}),
+    "jpeg_ghosts": frozenset({"native", "parity"}),
+    "prnu": frozenset({"native", "parity"}),
+    "resampling": frozenset({"native", "parity"}),
+    "splicebuster": frozenset({"native", "parity"}),
+    "zero": frozenset({"native", "parity"}),
+}
 AI_AXIS_GUARD = frozenset({"learned", "npr", "clip_probe"})
 AI_AXES = frozenset({"sd35_flux", "synthbuster"})
 FALSE_POSITIVE_FAMILIES = ("authentic_recompress", "resize_then_save")
 FALSE_POSITIVE_LIMIT = 0.10
 VERDICT_THRESHOLD = 0.55
 L2 = 0.05
+SYNTHETIC_VALIDATION_AXES = {
+    "splice": "synthetic_splice",
+    "copy_move": "synthetic_copymove",
+    "authentic_recompress": "synthetic_recompress",
+    "double_compress_aligned": "synthetic_recompress",
+    "double_compress_shifted": "synthetic_recompress",
+}
+
+
+def _validation_axis(row: dict) -> str | None:
+    if row.get("corpus") == "synthetic":
+        return SYNTHETIC_VALIDATION_AXES.get(row.get("family"), row.get("family"))
+    return row.get("axis", row.get("family"))
+
+
+def _in_calibration_scope(row: dict, detector_id: str) -> bool:
+    """Return whether both the validated axis and input variant permit a fit."""
+    return (
+        _validation_axis(row) in VALIDATED_BY.get(detector_id, set())
+        and row.get("variant", "native") in VARIANT_SCOPES.get(detector_id, frozenset())
+    )
+
+
+def _variant(value: str) -> str:
+    if value not in VALID_VARIANTS:
+        raise ValueError(f"unknown corpus variant: {value}")
+    return value
+
+
+def _validate_variant_selection(selection: str) -> str:
+    if selection not in VALID_VARIANTS | {"both"}:
+        raise ValueError(f"unknown variant selection: {selection}")
+    return selection
+
+
 def auc(scores: list[float], labels: list[bool]) -> float | None:
     """Return tie-aware AUC, or None when the sample cannot support it."""
     if len(scores) < 2 or len(set(labels)) < 2:
@@ -144,8 +221,12 @@ def _manifest() -> dict:
 
 def _real_entries() -> list[dict]:
     real_dir = ROOT / "data/corpus/real"
+    manifest = _manifest()
+    default_variant = _validate_variant_selection(manifest.get("default_variant", "native"))
+    if default_variant == "both":
+        raise ValueError("manifest default_variant must be a concrete variant")
     rows = []
-    for item in _manifest().get("images", []):
+    for item in manifest.get("images", []):
         if item.get("path"):
             path = Path(item["path"])
             path = path if path.is_absolute() else ROOT / path
@@ -162,11 +243,13 @@ def _real_entries() -> list[dict]:
                 "family": item["axis"],
                 "source_image": item.get("source_group", item.get("source_image", str(path.relative_to(ROOT)))),
                 "corpus": "real",
+                "variant": _variant(item.get("variant", default_variant)),
             })
     return rows
 
 
-def entries(corpus: str) -> list[dict]:
+def entries(corpus: str, variant: str = "both") -> list[dict]:
+    _validate_variant_selection(variant)
     rows = []
     if corpus in {"synthetic", "all"}:
         index_path = ROOT / "data/corpus/synthetic/index.json"
@@ -174,10 +257,12 @@ def entries(corpus: str) -> list[dict]:
             for item in json.loads(index_path.read_text())["entries"]:
                 path = ROOT / item["path"]
                 if path.is_file():
-                    rows.append({**item, "path": path, "label": item["label"] != "authentic", "corpus": "synthetic"})
+                    rows.append({**item, "path": path, "label": item["label"] != "authentic", "corpus": "synthetic", "variant": "native"})
     if corpus in {"real", "all"}:
         rows.extend(_real_entries())
-    return rows
+    if variant == "both":
+        return rows
+    return [row for row in rows if row.get("variant", "native") == variant]
 
 
 def threshold(values: list[tuple[float, bool]], higher: bool) -> tuple[float, float]:
@@ -355,7 +440,7 @@ def _revision(rows: list[dict]) -> str | None:
         return None
     digest = hashlib.sha256()
     for path in existing:
-        digest.update(str(path.relative_to(ROOT)).encode())
+        digest.update(str(path.relative_to(ROOT) if path.is_relative_to(ROOT) else path).encode())
         digest.update(path.read_bytes())
     return digest.hexdigest()
 
@@ -365,11 +450,15 @@ def main() -> int:
     parser.add_argument("--corpus", choices=("synthetic", "real", "all"), default="all")
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=20260828)
+    parser.add_argument("--variant", choices=("native", "parity", "both"), default="both", help="input encoding variant; per-detector scopes still apply")
     args = parser.parse_args()
 
-    rows = entries(args.corpus)
+    rows = entries(args.corpus, args.variant)
     detectors = list(get_all().values())
     detector_ids = [detector.id for detector in detectors]
+    missing_scopes = sorted(set(detector_ids) - VARIANT_SCOPES.keys())
+    if missing_scopes:
+        raise ValueError(f"missing variant scope for detector(s): {', '.join(missing_scopes)}")
     train_indices, test_indices = _group_split(rows, args.seed) if rows else ([], [])
     paired_sources = _paired_sources(rows)
     fit_indices = [index for index in train_indices if rows[index]["source_image"] in paired_sources]
@@ -387,7 +476,7 @@ def main() -> int:
         values = [
             (raw_by_image[index][detector.id], rows[index]["label"])
             for index in fit_indices
-            if detector.id in raw_by_image[index]
+            if detector.id in raw_by_image[index] and _in_calibration_scope(rows[index], detector.id)
         ]
         higher = detector.id not in HIGHER_WORSE
         fitted = bool(values)
@@ -395,20 +484,20 @@ def main() -> int:
         score_by_index: dict[int, float] = {
             index: to_probability(raw_by_image[index][detector.id], t, scale, higher)
             for index in range(len(rows))
-            if detector.id in raw_by_image[index] and fitted
+            if detector.id in raw_by_image[index] and fitted and _in_calibration_scope(rows[index], detector.id)
         }
         all_within_source_auc = within_source_auc([
-            (rows[index]["source_image"], score, rows[index]["label"])
+            (f"{rows[index].get('variant', 'native')}::{rows[index]['source_image']}", score, rows[index]["label"])
             for index, score in score_by_index.items()
         ])
         all_within_values = [
-            (rows[index]["source_image"], score, rows[index]["label"])
+            (f"{rows[index].get('variant', 'native')}::{rows[index]['source_image']}", score, rows[index]["label"])
             for index, score in score_by_index.items()
         ]
         all_n_pos, all_n_neg = _within_source_counts(all_within_values)
         all_se = hanley_mcneil_se(all_within_source_auc, all_n_pos, all_n_neg)
         heldout_values = [
-            (rows[index]["source_image"], score_by_index[index], rows[index]["label"])
+            (f"{rows[index].get('variant', 'native')}::{rows[index]['source_image']}", score_by_index[index], rows[index]["label"])
             for index in test_indices
             if index in score_by_index
         ]
@@ -447,6 +536,8 @@ def main() -> int:
             "ai_axis_n_positive": ai_n_pos,
             "ai_axis_n_negative": ai_n_neg,
             "ai_axis_negative_scope": "real_camera",
+            "variant_scope": sorted(VARIANT_SCOPES[detector.id]),
+            "validated_by": sorted(VALIDATED_BY.get(detector.id, set())),
             "clipped": False,
             "weight_guard": {
                 "metric": guard_metric,
@@ -527,7 +618,7 @@ def main() -> int:
         score, _ = _fusion_score(rows[index], detector_ids, configs, intercept)
         fused_scores.append(score)
         fused_labels.append(rows[index]["label"])
-        fused_within_source.append((rows[index]["source_image"], score, rows[index]["label"]))
+        fused_within_source.append((f"{rows[index].get('variant', 'native')}::{rows[index]['source_image']}", score, rows[index]["label"]))
 
     corpora = sorted({row["corpus"] for row in rows})
     generated_at = datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -535,11 +626,11 @@ def main() -> int:
         "version": "2026-08-28",
         "generated_at": generated_at,
         "legacy": {"prnu": {"variance_threshold": 0.001}, "entropy": {"matching_threshold": 0.35}},
-        "fitted_on": {"corpus_revision": _revision(rows), "n_images": len(rows), "corpora": corpora},
+        "fitted_on": {"corpus_revision": _revision(rows), "n_images": len(rows), "corpora": corpora, "variant_selection": args.variant, "variants": sorted({row.get("variant", "native") for row in rows})},
         "detectors": configs,
         "weight_skill_spearman": weight_skill_spearman,
         "fusion": {"method": "weighted_logit", "intercept": float(intercept)},
-        "heldout": {"split_by": "source_image", "n": len(fused_scores), "auc": within_source_auc(fused_within_source), "seed": args.seed},
+        "heldout": {"split_by": "source_image", "within_source_auc_by": "source_image+variant", "n": len(fused_scores), "auc": within_source_auc(fused_within_source), "seed": args.seed},
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(output, sort_keys=True, indent=2) + "\n")

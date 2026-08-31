@@ -1,8 +1,9 @@
 """Optional face deepfake detector backed by a local ONNX model."""
 
+import json
+from functools import lru_cache
 from pathlib import Path
 from time import perf_counter
-import json
 
 import cv2
 import numpy as np
@@ -54,7 +55,7 @@ class LearnedDetector:
             image = Image.fromarray(ctx.rgb_uint8).convert("RGB").resize((224, 224), resample=2)
             array = np.asarray(image, dtype=np.float32) * 0.00392156862745098
             array = ((array - np.asarray([0.5, 0.5, 0.5], dtype=np.float32)) / 0.5).transpose(2, 0, 1)[None]
-            session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
+            session = _load_session(str(model_path))
             input_name = session.get_inputs()[0].name
             raw = np.asarray(session.run(None, {input_name: array})[0]).reshape(-1)
             if raw.size < 2:
@@ -91,6 +92,13 @@ class LearnedDetector:
 
     def _unavailable(self, started: float, threshold: float) -> DetectorResult:
         return DetectorResult(self.id, DetectorState.NOT_APPLICABLE, None, None, threshold, "learned detector not installed", {}, None, _duration(started))
+
+
+@lru_cache(maxsize=2)
+def _load_session(model_path: str):
+    import onnxruntime as ort
+
+    return ort.InferenceSession(model_path, providers=["CPUExecutionProvider"])
 
 
 def _duration(started: float) -> int:

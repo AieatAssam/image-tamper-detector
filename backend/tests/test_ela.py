@@ -7,7 +7,7 @@ from io import BytesIO
 from pathlib import Path
 from PIL import Image
 import cv2
-from backend.app.analysis.ela import ELAAnalyzer, TamperingFeatures
+from backend.app.analysis.ela import ELAAnalyzer, MAX_ANALYSIS_SIDE, TamperingFeatures
 
 @pytest.fixture
 def ela_analyzer():
@@ -25,6 +25,7 @@ def test_ela_analyzer_initialization():
     analyzer = ELAAnalyzer(quality=95, resave_quality=75)
     assert analyzer.quality == 95
     assert analyzer.resave_quality == 75
+    assert analyzer.max_image_size == MAX_ANALYSIS_SIDE
     
     # Test invalid quality values
     with pytest.raises(ValueError):
@@ -137,6 +138,21 @@ def test_image_preprocessing(ela_analyzer):
     large_image = Image.new('RGB', (3000, 3000), color='white')
     processed = ela_analyzer._preprocess_image(large_image)
     assert max(processed.size) <= ela_analyzer.max_image_size
+
+
+def test_compression_artifacts_matches_8px_block_boundaries(ela_analyzer):
+    gray = np.arange(32 * 32, dtype=np.uint8).reshape(32, 32)
+    expected = []
+    for row in range(3):
+        for column in range(3):
+            block = gray[row * 8:(row + 1) * 8, column * 8:(column + 1) * 8]
+            next_horizontal = gray[row * 8:(row + 1) * 8, (column + 1) * 8:(column + 2) * 8]
+            next_vertical = gray[(row + 1) * 8:(row + 2) * 8, column * 8:(column + 1) * 8]
+            expected.extend([
+                np.mean(np.abs(block[:, -1] - next_horizontal[:, 0])),
+                np.mean(np.abs(block[-1, :] - next_vertical[0, :])),
+            ])
+    assert np.isclose(ela_analyzer._compute_compression_artifacts(gray), np.mean(expected))
 
 def test_empty_suspicious_mask_does_not_fail():
     image = Image.new('RGB', (256, 256), color='gray')

@@ -65,14 +65,16 @@ class JpegGhostDetector:
             return DetectorResult(self.id, DetectorState.NOT_APPLICABLE, None, None, float(config["threshold"]), reason, {}, None, _duration(started))
 
         image = _analysis_image(ctx)
+        image_bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+        image_float32 = image.astype(np.float32)
         curves: list[np.ndarray] = []
         for quality in _QUALITIES:
-            encoded_ok, encoded = cv2.imencode(".jpg", cv2.cvtColor(image, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, quality])
+            encoded_ok, encoded = cv2.imencode(".jpg", image_bgr, [cv2.IMWRITE_JPEG_QUALITY, quality])
             if not encoded_ok:
                 raise ValueError(f"JPEG re-encoding failed at quality {quality}")
             decoded = cv2.imdecode(encoded, cv2.IMREAD_COLOR)
             decoded_rgb = cv2.cvtColor(decoded, cv2.COLOR_BGR2RGB)
-            error = np.mean((image.astype(np.float32) - decoded_rgb.astype(np.float32)) ** 2, axis=2)
+            error = np.mean((image_float32 - decoded_rgb.astype(np.float32)) ** 2, axis=2)
             height = error.shape[0] - error.shape[0] % _BLOCK_SIZE
             width = error.shape[1] - error.shape[1] % _BLOCK_SIZE
             curves.append(error[:height, :width].reshape(height // _BLOCK_SIZE, _BLOCK_SIZE, width // _BLOCK_SIZE, _BLOCK_SIZE).mean(axis=(1, 3)))

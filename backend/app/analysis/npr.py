@@ -9,6 +9,21 @@ from backend.app.analysis.adapters import _settings
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
 
 
+MAX_ANALYSIS_SIDE = 1024
+
+
+def _analysis_image(image: np.ndarray) -> np.ndarray:
+    longest = max(image.shape[:2])
+    if longest <= MAX_ANALYSIS_SIDE:
+        return image
+    ratio = MAX_ANALYSIS_SIDE / float(longest)
+    return cv2.resize(
+        image,
+        (max(1, round(image.shape[1] * ratio)), max(1, round(image.shape[0] * ratio))),
+        interpolation=cv2.INTER_AREA,
+    )
+
+
 class NprDetector:
     id = "npr"
     name = "Neighboring Pixel Relationships"
@@ -35,7 +50,7 @@ class NprDetector:
                 self.id, DetectorState.NOT_APPLICABLE, None, None,
                 float(config["threshold"]), reason, {}, None, _duration(started),
             )
-        score_raw, visualization, metrics = self.measure(ctx.downscaled_rgb_uint8)
+        score_raw, visualization, metrics = self.measure(_analysis_image(ctx.downscaled_rgb_uint8))
         score = to_probability(
             score_raw,
             float(config["threshold"]),
@@ -61,18 +76,24 @@ class NprDetector:
             raise ValueError("NPR requires an RGB image at least 4x4 pixels")
         image = image.astype(np.float32) / 255.0
 
-        patches = np.stack(
-            (image[:-1, :-1], image[:-1, 1:], image[1:, :-1], image[1:, 1:]),
-            axis=2,
+        reference_pixels = image[1:, 1:]
+        differences = (
+            image[:-1, :-1] - reference_pixels,
+            image[:-1, 1:] - reference_pixels,
+            image[1:, :-1] - reference_pixels,
         )
-        differences = patches - patches[..., -1:, :]
-        intra_variance = np.var(differences, axis=(2, 3))
-        reference = patches[..., -1, :].mean(axis=2)
+        value_sum = sum(difference.sum(axis=2) for difference in differences)
+        value_square_sum = sum(np.square(difference).sum(axis=2) for difference in differences)
+        intra_variance = value_square_sum / 12.0 - np.square(value_sum / 12.0)
+        reference = reference_pixels.mean(axis=2)
         inter_variance = float(np.var(reference))
         ratio = float(np.mean(intra_variance) / (inter_variance + 1e-8))
         near_constant = float(np.mean(intra_variance <= (1.0 / 255.0) ** 2))
 
-        quantized = np.rint(differences * 255.0).astype(np.int16).ravel() + 255
+        quantized = np.concatenate(
+            tuple(np.rint(difference * 255.0).astype(np.int16).ravel() for difference in differences)
+            + (np.zeros(reference_pixels.size, dtype=np.int16),)
+        ) + 255
         counts = np.bincount(quantized, minlength=511).astype(np.float64)
         probabilities = counts[counts > 0] / counts.sum()
         difference_entropy = float(-(probabilities * np.log2(probabilities)).sum())
