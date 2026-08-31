@@ -78,3 +78,22 @@ def test_per_generator_auc_reports_standard_error() -> None:
     assert stats["auc"] == 1.0
     assert stats["se"] is not None
     assert stats["n_pos"] == stats["n_neg"] == 5
+
+
+def test_imd2020_inpainting_sample_is_deterministic_and_stratified() -> None:
+    fetcher = _load("fetch_imd2020_inpainting")
+    pairs = [
+        fetcher.Pair(
+            key=f"image_{index}.jpg",
+            manipulated=Path(f"fake_{index}.jpg"),
+            real=Path(f"real_{index}.jpg"),
+            mask=Path(f"mask_{index}.jpg"),
+            camera_group=f"camera_{index:03d}",
+        )
+        for index in range(200)
+    ]
+    left = fetcher.select_pairs(pairs, count=150, seed=20260828)
+    right = fetcher.select_pairs(pairs, count=150, seed=20260828)
+    assert [pair.key for pair in left] == [pair.key for pair in right]
+    assert len(left) == 150
+    assert len({pair.camera_group for pair in left}) == 150

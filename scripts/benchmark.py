@@ -130,6 +130,25 @@ def _external() -> list[dict]:
     return [{"id": path.name, "path": path, "mask_path": None, "corpus": "external", "axis": "external", "label": "authentic", "family": "external"} for path in sorted(directory.iterdir()) if path.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".tif", ".tiff"}]
 
 
+def _matched(path: Path) -> list[dict]:
+    rows = []
+    for line in path.read_text().splitlines():
+        if not line.strip():
+            continue
+        item = json.loads(line)
+        rows.append({
+            **item,
+            "path": Path(item["path"]),
+            "mask_path": None,
+            "corpus": "matched",
+            "family": item.get("family", item["axis"]),
+            "source_image": item["source_image"],
+        })
+    if not rows or {row["label"] for row in rows} != {"ai_generated", "authentic"}:
+        raise ValueError("matched manifest must contain both AI and authentic rows")
+    return rows
+
+
 def _sample_entries(entries: list[dict], sample: int | None, seed: int) -> list[dict]:
     if sample is None or sample >= len(entries):
         return entries
@@ -310,11 +329,17 @@ def _iou(result: Any, mask_path: Path | None) -> float | None:
     return float(np.logical_and(predicted, truth).sum() / union) if union else 1.0
 
 
-def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, seed: int = 20260828, profile: bool = False, axes: set[str] | None = None) -> dict:
-    synthetic, synthetic_index = _synthetic() if corpus in {"synthetic", "all"} else ([], None)
-    real, manifest_path, real_present = _real() if corpus in {"real", "all"} else ([], None, False)
-    external = _external() if corpus == "all" else []
-    entries = synthetic + real + external
+def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, seed: int = 20260828, profile: bool = False, axes: set[str] | None = None, matched_entries: list[dict] | None = None) -> dict:
+    if corpus == "matched":
+        synthetic, synthetic_index = [], None
+        real, manifest_path, real_present = [], None, False
+        external = []
+        entries = matched_entries or []
+    else:
+        synthetic, synthetic_index = _synthetic() if corpus in {"synthetic", "all"} else ([], None)
+        real, manifest_path, real_present = _real() if corpus in {"real", "all"} else ([], None, False)
+        external = _external() if corpus == "all" else []
+        entries = synthetic + real + external
     if axes is not None:
         entries = [entry for entry in entries if entry["axis"] in axes]
     entries = _sample_entries(entries, sample, seed)
@@ -363,7 +388,25 @@ def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, 
                 row["duration_ms"] = stable_duration
         by_detector[detector.id]["within_source_auc"] = _within_source_auc(rows, source_by_image)
         by_detector[detector.id]["per_generator"] = _per_generator(rows)
-        by_detector[detector.id]["metric_sets"] = [{**_metrics([r for r in rows if r["corpus"] == name]), "corpus": name, "tier": "A" if all(r["tier"] == "A" for r in rows if r["corpus"] == name) else "B"} for name in ("synthetic", "real", "external") if any(r["corpus"] == name for r in rows)]
+        corpus_names = ("matched",) if corpus == "matched" else ("synthetic", "real", "external")
+        metric_sets = []
+        for name in corpus_names:
+            selected = [row for row in rows if row["corpus"] == name]
+            if not selected:
+                continue
+            metric = _metrics(selected)
+            if corpus == "matched":
+                applicable = [row for row in selected if row["state"] == DetectorState.APPLICABLE.value and row["score"] is not None]
+                metric["auc_standard_error"] = _auc_stats(
+                    [float(row["score"]) for row in applicable],
+                    [row["label"] in {"manipulated", "ai_generated"} for row in applicable],
+                )["se"]
+            metric_sets.append({
+                **metric,
+                "corpus": name,
+                "tier": "A" if all(row["tier"] == "A" for row in selected) else "B",
+            })
+        by_detector[detector.id]["metric_sets"] = metric_sets
         if profile:
             print(f"{detector.id}: mean_duration_ms={raw_mean_duration:.1f}")
     try:
@@ -371,7 +414,7 @@ def run(corpus: str, detector_ids: list[str] | None, sample: int | None = None, 
         heldout_auc = calibration.get("heldout", {}).get("auc")
     except Exception:
         heldout_auc = None
-    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real), "sample": {"requested": sample, "selected": len(entries), "seed": seed if sample is not None else None, "stratified": sample is not None}, "axes": sorted(axes) if axes is not None else None}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
+    output = {"corpus": {"synthetic_revision": _sha(synthetic_index) if synthetic_index else None, "real_manifest_revision": _sha(manifest_path) if manifest_path and manifest_path.is_file() else None, "n_images": len(entries), "n_source_groups": len({entry.get("source_image", f"{entry['corpus']}:{entry['id']}") for entry in entries}), "real_corpus_present": bool(real_present and real), "sample": {"requested": sample, "selected": len(entries), "seed": seed if sample is not None else None, "stratified": sample is not None}, "axes": sorted(axes) if axes is not None else None}, "detectors": by_detector, "per_family_mean_score": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_scores.items()}, "per_family_mean_iou": {did: {fam: sum(vals) / len(vals) for fam, vals in families.items()} for did, families in family_ious.items()}, "fused": {"heldout_auc": None if corpus == "matched" else heldout_auc, "family_verdicts": {family: {"manipulated_rate": sum(values) / len(values), "inconclusive_rate": 0.0, "n": len(values)} for family, values in fused_by_family.items()}}}
     if real_present:
         output["per_axis_mean_score"] = {did: {axis: sum(vals) / len(vals) for axis, vals in axes.items()} for did, axes in axis_scores.items()}
     return output
@@ -389,17 +432,23 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--detectors", default=None)
-    parser.add_argument("--corpus", choices=("synthetic", "real", "all"), default="all")
+    parser.add_argument("--corpus", choices=("synthetic", "real", "all", "matched"), default="all")
     parser.add_argument("--sample", type=int, default=None, help="deterministic stratified image subset size")
     parser.add_argument("--seed", type=int, default=20260828, help="seed for --sample selection")
     parser.add_argument("--profile", action="store_true", help="print measured mean duration per applicable detector run")
     parser.add_argument("--axes", default=None, help="comma-separated manifest axes to include")
+    parser.add_argument("--matched-manifest", type=Path, help="JSONL produced by scripts/matched_eval.py")
     args = parser.parse_args()
     if args.sample is not None and args.sample < 1:
         parser.error("--sample must be positive")
     ids = [item.strip() for item in args.detectors.split(",") if item.strip()] if args.detectors else None
     axes = {item.strip() for item in args.axes.split(",") if item.strip()} if args.axes else None
-    data = run(args.corpus, ids, args.sample, args.seed, args.profile, axes)
+    if args.corpus == "matched":
+        if not args.matched_manifest:
+            parser.error("--corpus matched requires --matched-manifest")
+        data = run("matched", ids, profile=args.profile, matched_entries=_matched(args.matched_manifest))
+    else:
+        data = run(args.corpus, ids, args.sample, args.seed, args.profile, axes)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps(data, sort_keys=True, indent=2, allow_nan=False) + "\n")
     args.out.with_suffix(".md").write_text(_markdown(data))

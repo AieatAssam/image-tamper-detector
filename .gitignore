@@ -11,3 +11,6 @@ data/corpus/synthetic/*.jpg
 data/corpus/synthetic/*.jpeg
 data/corpus/synthetic/*.png
 models
+
+# stray SQLite session artifact written by some tooling
+:memory:*

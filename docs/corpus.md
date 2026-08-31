@@ -58,6 +58,16 @@ and the source's `_orig.jpg` counterpart. The manifest records 400 rows with
 `axis: imd2020`, `source_group`, `split`, SHA-256, and byte size; the image and
 mask paths remain under the gitignored local archive directory.
 
+Round 15B tested a separate `imd2020_inpaint` candidate using the matching
+IMD2020 real-image Part01 archive, inpainting Part01 archive, and masks. It was
+rejected before manifest ingestion: the fixed-seed metadata shortcut gate gave
+held-out AUC `0.9917 +/- 0.0084` and pooled AUC `0.9975 +/- 0.0025`, driven by
+EXIF presence. A valid version of this axis would measure detection of
+AI-edited regions, not wholly generated images. Yu et al. 2018 is a GAN
+inpainter, not a diffusion model, so this is a different question from the
+`sd35_flux` and `synthbuster` axes. It is narrower, but this candidate did not
+pass the metadata-parity gate and has no valid detector score here.
+
 The synthetic corpus cannot validate sensor provenance. A generator can faithfully synthesise PROCESSING HISTORY (splices, recompression, copy-move, quality changes) but CANNOT synthesise SENSOR PROVENANCE. Re-splicing one Unsplash JPEG creates no genuine Bayer interpolation structure and no genuine sensor noise. Therefore cfa_periodicity, spectral_peaks and the noise-residual detector MUST be validated against real images, never against generated splices.
 
 For synthetic benchmark fusion, those three provenance detectors are omitted from the fused verdict because their synthetic scores are not valid evidence. Their calibrated weights remain available to the runtime ensemble for genuine uploaded images; this keeps validation scope separate from ensemble availability.
