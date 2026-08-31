@@ -25,6 +25,37 @@ The catalog stores the AUC, standard error, participating class counts, and
 corpus revision under each calibrated detector entry. A null means that the
 corpus did not contain a valid paired comparison. It is not a zero score.
 
+## Corpus shortcut acceptance gate
+
+The first question for an AI-generation corpus is whether metadata alone can
+predict its label. [`scripts/check_format_shortcut.py`](../scripts/check_format_shortcut.py)
+fits a single threshold stump over decoded container format, width, height, file
+size, and EXIF presence. It reports pooled and grouped held-out AUC, standard
+error, and per-axis results. Run it on a few hundred real sample rows before
+downloading or ingesting a proposed axis:
+
+```text
+.venv/bin/python scripts/check_format_shortcut.py --manifest sample.jsonl --check
+```
+
+The acceptance diagnostic uses `0.55` as its maximum held-out shortcut AUC.
+This is not an absolute performance floor for a detector. A future axis must
+pass its own `per_axis` result, and a failed result blocks the axis regardless
+of its size, labels, or detector scores.
+
+The current AI screen fails this check at held-out AUC `0.8750 +/- 0.0598`
+(pooled `0.9583 +/- 0.0137`), selected on width. Round 10's per-generator
+AI table therefore remains a metadata-confounded exploratory result. Round
+12's CLIP `1.0000 +/- 0.0000` seen and unseen generator results are also not
+generation evidence, because the probe can separate the corpus's metadata
+domains. Round 14's 400-row WildFake sample fails independently at
+`1.0000 +/- 0.0000` held-out and pooled metadata AUC, selected on decoded
+format: generated DDIM images are PNG and CelebA-HQ negatives are JPEG.
+
+Until an AI axis passes this gate, its per-generator and fused AI-generation
+numbers must be labelled exploratory and must not be used to claim general
+generation-detection skill.
+
 The complete calibration corpus currently contains 916 rows in 317 source
 groups: 100 synthetic processing-history rows and 816 rows from the local
 manifest, including 400 source-directory-stratified IMD2020 rows, 12 strict

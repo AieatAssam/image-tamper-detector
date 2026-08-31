@@ -1,5 +1,36 @@
 # Corpus and benchmark
 
+## AI-generation acceptance caveat
+
+AI-generation measurements in this repository are currently exploratory, not
+trustworthy generation measurements. The current 390-row AI screen versus 12
+strict camera negatives gives the metadata-only format shortcut gate a held-out
+AUC of `0.8750 +/- 0.0598` and pooled AUC of `0.9583 +/- 0.0137`. The selected
+feature is decoded image width, with format, file size, and EXIF also available
+to the stump. This means the published Round 10 per-generator table is
+confounded, including its apparent detector differences between generators.
+
+Round 12's CLIP result of `1.0000 +/- 0.0000` on both seen and unseen generator
+groups is likewise a domain-confounded result, not evidence of generation
+detection: CLIP can separate the corpus's metadata domains. The Round 14
+WildFake sample independently gives `1.0000 +/- 0.0000` held-out and pooled
+metadata AUC, selected on PNG versus JPEG, so WildFake does not repair this
+measurement problem.
+
+Before adding any AI axis to the manifest, build a small JSONL sample with the
+actual image paths, labels, source groups, and the dataset-owned axis name, then
+run:
+
+```bash
+.venv/bin/python scripts/check_format_shortcut.py --manifest sample.jsonl --check
+```
+
+The command reports an overall result and `per_axis` results. A candidate axis
+must be near chance on the metadata-only held-out check before bulk download or
+corpus ingestion. The `0.55` check is a corpus-shortcut diagnostic, not an AUC
+floor for any detector. CI remains synthetic-only and does not download this
+corpus.
+
 S05 has two distinct corpus roles:
 
 - `data/corpus/synthetic/` measures processing-history cues: authentic recompression, splices, copy-move, double JPEG compression, local retouching, and resized authentic content. Manipulation families may use the four existing files under `data/samples/`, but both negative families (`authentic_recompress` and `resize_then_save`) derive only from the genuinely authentic `landscape_original.jpg`. Each index entry and sidecar records `source_label` (`authentic`, `known_forgery`, or `ai_generated`) so parent provenance cannot be confused with the family-specific `label`. Source EXIF is preserved or a neutral source description is added to each JPEG. `index.json` and JSON sidecars are reviewable; image and mask bytes are reproducible and ignored by Git.
