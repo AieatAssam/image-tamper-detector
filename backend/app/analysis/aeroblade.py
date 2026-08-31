@@ -1,14 +1,7 @@
-"""Optional AEROBLADE-style detector using external MIT TAESD ONNX models.
+"""Optional AEROBLADE-style detector using TAESD and LPIPS."""
 
-The detector is an independent implementation of the AEROBLADE paper's
-reconstruction-error idea.  It uses the MIT-licensed, distilled TAESD ONNX
-encoder/decoder pair from ``julienkay/taesd`` (revision
-``c8a437fd0201c21c3bcd298fcf3181b063bcc1eb``); the weights are not bundled.
-The paper uses LPIPS.  This implementation deliberately uses mean L1 because
-the runtime extra has no perceptual backbone, and therefore must not be read as
-paper-level AEROBLADE performance.
-"""
-
+from contextlib import nullcontext
+from functools import lru_cache
 from pathlib import Path
 from time import perf_counter
 from typing import Any
@@ -18,11 +11,16 @@ import numpy as np
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
 
 
-DEFAULT_ENCODER_PATH = Path("models/taesd/encoder.onnx")
-DEFAULT_DECODER_PATH = Path("models/taesd/decoder.onnx")
+DEFAULT_TAESD_PATH = Path("models/taesd")
+DEFAULT_LPIPS_CACHE = Path("models/lpips")
+DEFAULT_LPIPS_WEIGHTS = DEFAULT_LPIPS_CACHE / "checkpoints/alexnet-owt-7be5be79.pth"
 DEFAULT_THRESHOLD = 0.05
 DEFAULT_SCALE = 0.02
 MAX_ANALYSIS_SIDE = 512
+
+
+class OptionalDependencyUnavailable(RuntimeError):
+    pass
 
 
 class AerobladeDetector:
@@ -31,51 +29,48 @@ class AerobladeDetector:
     family = "learned"
     applicable_formats = frozenset({"JPEG", "PNG", "WEBP", "TIFF"})
     produces_map = False
-    description = "Measures TAESD autoencoder reconstruction error as a latent-diffusion cue."
+    description = "Measures TAESD perceptual reconstruction error as a latent-diffusion cue."
     limitations = [
         "Uses distilled TAESD, an approximation of the Stable Diffusion autoencoder used by AEROBLADE.",
-        "Uses mean L1 reconstruction error instead of the paper's stronger LPIPS distance.",
-        "Latent-diffusion-only; useless against splicing, copy-move, or GAN output.",
-        "Requires externally supplied ONNX encoder and decoder weights.",
+        "Uses LPIPS, but not the paper's exact autoencoder or training setup.",
+        "Latent-diffusion-specific; useless against splicing, copy-move, or GAN output.",
+        "Requires the optional torch extra and externally fetched TAESD and LPIPS weights.",
     ]
     threshold = DEFAULT_THRESHOLD
     scale = DEFAULT_SCALE
     higher_is_worse = False
 
-    def __init__(
-        self,
-        encoder_path: str | Path = DEFAULT_ENCODER_PATH,
-        decoder_path: str | Path = DEFAULT_DECODER_PATH,
-    ) -> None:
-        self.encoder_path = Path(encoder_path)
-        self.decoder_path = Path(decoder_path)
+    def __init__(self, taesd_path: str | Path = DEFAULT_TAESD_PATH) -> None:
+        self.taesd_path = Path(taesd_path)
 
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
-        return True, "optional TAESD reconstruction detector"
+        if ctx.format not in self.applicable_formats:
+            return False, f"AEROBLADE is latent-diffusion-specific and does not support decoded format {ctx.format or 'unknown'}"
+        if min(ctx.width, ctx.height) < 32:
+            return False, "AEROBLADE is latent-diffusion-specific and requires at least 32x32 pixels"
+        return True, "latent-diffusion-specific TAESD reconstruction cue"
 
     def run(self, ctx: ImageContext) -> DetectorResult:
         started = perf_counter()
         config = _calibration_settings(self)
-        if not self.encoder_path.is_file() or not self.decoder_path.is_file():
-            return self._unavailable(started, "AEROBLADE TAESD ONNX models not installed", float(config["threshold"]))
+        applicable, reason = self.applicable(ctx)
+        if not applicable:
+            return self._unavailable(started, reason, float(config["threshold"]))
         try:
-            import onnxruntime as ort
-        except Exception:
-            return self._unavailable(started, "AEROBLADE onnxruntime extra not installed", float(config["threshold"]))
+            torch, vae, perceptual = self._load_models()
+        except OptionalDependencyUnavailable as exc:
+            return self._unavailable(started, str(exc), float(config["threshold"]))
+        except (ImportError, OSError) as exc:
+            return self._unavailable(started, f"AEROBLADE optional extra unavailable: {exc}", float(config["threshold"]))
 
         try:
-            encoder = ort.InferenceSession(str(self.encoder_path), providers=["CPUExecutionProvider"])
-            decoder = ort.InferenceSession(str(self.decoder_path), providers=["CPUExecutionProvider"])
-            image = _prepare_input(ctx, encoder)
-            latent = _run_first_output(encoder, image)
-            reconstruction = _run_first_output(decoder, latent)
-            if reconstruction.shape != image.shape:
-                raise ValueError(
-                    f"TAESD reconstruction shape {reconstruction.shape} does not match input {image.shape}"
-                )
-            error = float(np.mean(np.abs(np.clip(reconstruction, 0.0, 1.0) - image)))
+            image = _prepare_input(ctx, torch)
+            with _inference_mode(torch):
+                latent = vae.encode(image).latents
+                reconstruction = vae.decode(latent).sample
+                distance = float(perceptual(image, reconstruction).mean().item())
             score = to_probability(
-                error,
+                distance,
                 float(config["threshold"]),
                 float(config["scale"]),
                 bool(config["higher_is_worse"]),
@@ -87,12 +82,8 @@ class AerobladeDetector:
                 score,
                 flagged,
                 float(config["threshold"]),
-                f"TAESD mean L1 reconstruction error {error:.6f}",
-                {
-                    "reconstruction_l1": error,
-                    "analysis_height": float(image.shape[2]),
-                    "analysis_width": float(image.shape[3]),
-                },
+                f"latent-diffusion-specific TAESD LPIPS reconstruction error {distance:.6f}",
+                {"reconstruction_lpips": distance},
                 None,
                 _duration(started),
             )
@@ -102,13 +93,30 @@ class AerobladeDetector:
                 DetectorState.ERROR,
                 None,
                 None,
-                self.threshold,
+                float(config["threshold"]),
                 "AEROBLADE detector failed",
                 {},
                 None,
                 _duration(started),
                 str(exc),
             )
+
+    @lru_cache(maxsize=2)
+    def _load_models(self) -> tuple[Any, Any, Any]:
+        if not (self.taesd_path / "config.json").is_file():
+            raise OptionalDependencyUnavailable("AEROBLADE TAESD weights are not installed")
+        if not DEFAULT_LPIPS_WEIGHTS.is_file():
+            raise OptionalDependencyUnavailable("AEROBLADE LPIPS AlexNet weights are not installed")
+        try:
+            import torch
+            import lpips
+            from diffusers import AutoencoderTiny
+        except Exception as exc:
+            raise OptionalDependencyUnavailable(f"AEROBLADE optional extra is not installed: {exc}") from exc
+        vae = AutoencoderTiny.from_pretrained(str(self.taesd_path), local_files_only=True).eval()
+        torch.hub.set_dir(str(DEFAULT_LPIPS_CACHE))
+        perceptual = lpips.LPIPS(net="alex").eval()
+        return torch, vae, perceptual
 
     def _unavailable(self, started: float, reason: str, threshold: float) -> DetectorResult:
         return DetectorResult(
@@ -117,46 +125,29 @@ class AerobladeDetector:
             None,
             None,
             threshold,
-            reason,
+            f"AEROBLADE is latent-diffusion-specific; {reason}",
             {},
             None,
             _duration(started),
         )
 
 
-def _prepare_input(ctx: ImageContext, encoder: Any) -> np.ndarray:
-    """Create RGB [0, 1] NCHW input, honoring fixed ONNX spatial dimensions."""
+def _prepare_input(ctx: ImageContext, torch: Any) -> Any:
     from PIL import Image
 
-    shape = encoder.get_inputs()[0].shape
-    if len(shape) != 4:
-        raise ValueError(f"TAESD encoder input must be rank 4, got {shape}")
-    fixed_height = _fixed_dimension(shape[2])
-    fixed_width = _fixed_dimension(shape[3])
-    image = Image.fromarray(ctx.rgb_uint8, mode="RGB")
-    if fixed_height and fixed_width:
-        size = (fixed_width, fixed_height)
-    else:
-        height, width = image.height, image.width
-        ratio = min(1.0, MAX_ANALYSIS_SIDE / max(height, width))
-        size = (
-            max(8, round(width * ratio / 8) * 8),
-            max(8, round(height * ratio / 8) * 8),
-        )
+    image = Image.fromarray(ctx.downscaled_rgb_uint8, mode="RGB")
+    ratio = min(1.0, MAX_ANALYSIS_SIDE / max(image.size))
+    size = (
+        max(32, round(image.width * ratio / 8) * 8),
+        max(32, round(image.height * ratio / 8) * 8),
+    )
     image = image.resize(size, Image.Resampling.LANCZOS)
-    return np.asarray(image, dtype=np.float32).transpose(2, 0, 1)[None] / 255.0
+    array = np.asarray(image, dtype=np.float32).transpose(2, 0, 1)[None] / 127.5 - 1.0
+    return torch.from_numpy(array)
 
 
-def _fixed_dimension(value: Any) -> int | None:
-    return value if isinstance(value, int) and value > 0 else None
-
-
-def _run_first_output(session: Any, value: np.ndarray) -> np.ndarray:
-    inputs = session.get_inputs()
-    outputs = session.get_outputs()
-    if not inputs or not outputs:
-        raise ValueError("TAESD ONNX model has no input or output")
-    return np.asarray(session.run([outputs[0].name], {inputs[0].name: value})[0], dtype=np.float32)
+def _inference_mode(torch: Any) -> Any:
+    return torch.inference_mode() if hasattr(torch, "inference_mode") else nullcontext()
 
 
 def _calibration_settings(detector: AerobladeDetector) -> dict[str, float | bool]:
@@ -165,7 +156,6 @@ def _calibration_settings(detector: AerobladeDetector) -> dict[str, float | bool
 
         return _settings(detector.id)
     except KeyError:
-        # The calibration entry is added with the opt-in registry integration.
         return {
             "threshold": detector.threshold,
             "scale": detector.scale,

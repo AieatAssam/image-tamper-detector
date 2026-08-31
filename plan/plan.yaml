@@ -166,11 +166,33 @@ decisions:
     decision: "Biome replaces ESLint (and prettier) for lint + format"
     rationale: "repo owner instruction on 2026-08-28"
   - id: D5
-    decision: "Learned model runs on onnxruntime, NOT torch"
+    decision: "SUPERSEDED 2026-08-31 by D5b. Was: learned models run on onnxruntime, NOT torch."
+    original_rationale: >
+      VERIFIED 2026-08-28: torch 2.13.0 published wheels only up to cp313 — no
+      cp314 wheel existed. Depending on torch would have forced the project back
+      to Python 3.13 and contradicted D1.
+  - id: D5b
+    decision: "torch IS permitted, as an OPTIONAL extra only"
     rationale: >
-      VERIFIED 2026-08-28: torch 2.13.0 publishes wheels only up to cp313 — no
-      cp314 wheel exists. Depending on torch would force the whole project back
-      to Python 3.13 and contradict D1. onnxruntime 1.29.0 has cp314 wheels.
+      RE-VERIFIED 2026-08-31: torch 2.13.0 now publishes cp314 wheels
+      (tags cp310..cp314), as does torchvision 0.28.0. The empirical blocker
+      behind D5 is gone, so the project can use torch on Python 3.14.7 without
+      contradicting D1. Repo owner authorised the change.
+    constraints:
+      - "torch, torchvision and any model runtime live in requirements-learned.txt ONLY. requirements.txt stays lean and the Docker image builds from it."
+      - "CI remains torch-free and network-free: it runs the synthetic corpus with the base requirements."
+      - "Every torch-backed detector must import lazily inside try/except and return NOT_APPLICABLE — never raise at import — when the extra or its weights are absent. A default install must behave exactly as before."
+      - "Weights are never committed. Fetch scripts pin an explicit revision and verify a checksum, per the S12 pattern."
+      - "Permissive licences only. Verified 2026-08-31: torch (BSD-style), torchvision BSD, open-clip-torch MIT, transformers Apache-2.0, lpips BSD, timm Apache-2.0, laion/CLIP-ViT-L-14 weights MIT, madebyollin/taesd MIT."
+    does_not_unblock: >
+      D6 is UNCHANGED and is a LICENCE constraint, not a runtime one. TruFor and
+      Noiseprint++ remain excluded: their licence permits use "only for
+      informational and nonprofit purposes", which is incompatible with this
+      repository's MIT licence. Adding torch does not change that. The same
+      applies to the NPR authors' released weights (repository declares no
+      licence) and to the Splicebuster reference implementation. Those stay
+      paper-only. "Everything previously discarded" does NOT include anything
+      discarded for licensing.
   - id: D6
     decision: "The learned detector is onnx-community/Deep-Fake-Detector-v2-Model-ONNX, NOT TruFor"
     rationale: >

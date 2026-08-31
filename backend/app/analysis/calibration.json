@@ -1,28 +1,28 @@
 {
   "detectors": {
     "aeroblade": {
-      "ai_axis_auc": null,
-      "ai_axis_n_negative": 0,
-      "ai_axis_n_positive": 0,
+      "ai_axis_auc": 0.5399572649572649,
+      "ai_axis_n_negative": 12,
+      "ai_axis_n_positive": 390,
       "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": null,
+      "ai_axis_standard_error": 0.08224046194146653,
       "clipped": false,
-      "heldout_auc": null,
+      "heldout_auc": 0.5031446540880503,
       "higher_is_worse": false,
-      "scale": 1.0,
-      "threshold": 0.0,
+      "scale": 0.02141833771020174,
+      "threshold": 0.09583558887243271,
       "weight": 0.0,
       "weight_guard": {
-        "auc": null,
+        "auc": 0.5110132158590308,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 0,
-        "n_pos": 0,
+        "n_neg": 250,
+        "n_pos": 260,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": null
+        "se": 0.025584213778430943
       },
-      "weight_reason": "heldout_auc unavailable: no applicable observations",
-      "within_source_auc": null
+      "weight_reason": "within_source_auc=0.511013 <= 0.5 + SE=0.025584",
+      "within_source_auc": 0.5110132158590308
     },
     "c2pa": {
       "ai_axis_auc": null,
@@ -72,6 +72,30 @@
       "weight_reason": "within_source_auc unavailable for Hanley-McNeil guard",
       "within_source_auc": null
     },
+    "clip_probe": {
+      "ai_axis_auc": 1.0,
+      "ai_axis_n_negative": 12,
+      "ai_axis_n_positive": 390,
+      "ai_axis_negative_scope": "real_camera",
+      "ai_axis_standard_error": 0.0,
+      "clipped": true,
+      "heldout_auc": 0.5230769230769231,
+      "higher_is_worse": true,
+      "scale": 0.09044502506911628,
+      "threshold": 0.7939407755134292,
+      "weight": 0.0021987867770255362,
+      "weight_guard": {
+        "auc": 1.0,
+        "drop": false,
+        "metric": "ai_axis_auc",
+        "n_neg": 12,
+        "n_pos": 390,
+        "rule": "keep only when ai_axis_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.0
+      },
+      "weight_unclipped": 0.0023172509366955318,
+      "within_source_auc": 0.5488069414316703
+    },
     "copy_move": {
       "ai_axis_auc": 0.38596491228070173,
       "ai_axis_n_negative": 6,
@@ -83,7 +107,7 @@
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 1.0,
-      "weight": 0.2308010665466268,
+      "weight": 0.22902804418509454,
       "weight_guard": {
         "auc": 0.5846774193548387,
         "drop": false,
@@ -93,7 +117,7 @@
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
         "se": 0.055533239187862155
       },
-      "weight_unclipped": 0.2411790010183603,
+      "weight_unclipped": 0.24136740108806484,
       "within_source_auc": 0.5846774193548387
     },
     "double_jpeg": {
@@ -107,7 +131,7 @@
       "higher_is_worse": true,
       "scale": 0.3222013082734957,
       "threshold": -1.2161879758632954,
-      "weight": 0.13441484495924869,
+      "weight": 0.13267184641281599,
       "weight_guard": {
         "auc": 0.6598639455782312,
         "drop": false,
@@ -117,7 +141,7 @@
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
         "se": 0.024895535336266532
       },
-      "weight_unclipped": 0.14045878779663368,
+      "weight_unclipped": 0.13981981499320847,
       "within_source_auc": 0.6598639455782312
     },
     "ela": {
@@ -203,7 +227,7 @@
       "higher_is_worse": true,
       "scale": 0.5,
       "threshold": 4.0,
-      "weight": 0.08296851628729073,
+      "weight": 0.08206854677333676,
       "weight_guard": {
         "auc": 0.5385487528344671,
         "drop": false,
@@ -213,7 +237,7 @@
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
         "se": 0.026526225840307432
       },
-      "weight_unclipped": 0.08669918286578553,
+      "weight_unclipped": 0.08649015851415003,
       "within_source_auc": 0.5385487528344671
     },
     "learned": {
@@ -275,7 +299,7 @@
       "higher_is_worse": true,
       "scale": 10.652132275660499,
       "threshold": 3.2242669451552217,
-      "weight": 0.009718517858717477,
+      "weight": 0.009674020429609338,
       "weight_guard": {
         "auc": 0.5433839479392625,
         "drop": false,
@@ -285,7 +309,7 @@
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
         "se": 0.025438797247157766
       },
-      "weight_unclipped": 0.010155509520017994,
+      "weight_unclipped": 0.010195228175989527,
       "within_source_auc": 0.5433839479392625
     },
     "qtable": {
@@ -347,7 +371,7 @@
       "higher_is_worse": true,
       "scale": 0.2571495771408081,
       "threshold": 3.2332499027252197,
-      "weight": 0.009077168230312346,
+      "weight": 0.00948120039580706,
       "weight_guard": {
         "auc": 0.5357917570498916,
         "drop": false,
@@ -357,7 +381,7 @@
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
         "se": 0.025478661704110016
       },
-      "weight_unclipped": 0.009485321704178774,
+      "weight_unclipped": 0.009992019566309589,
       "within_source_auc": 0.5357917570498916
     },
     "splicebuster": {
@@ -417,10 +441,10 @@
     "n_images": 916
   },
   "fusion": {
-    "intercept": 0.3203542463355105,
+    "intercept": 0.3270728718347808,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-30T21:30:22Z",
+  "generated_at": "2026-08-31T02:39:49Z",
   "heldout": {
     "auc": 0.5784615384615385,
     "n": 557,
@@ -436,5 +460,5 @@
     }
   },
   "version": "2026-08-28",
-  "weight_skill_spearman": 0.5302030767619516
+  "weight_skill_spearman": 0.5458137240480705
 }

@@ -25,11 +25,12 @@ different source images are never compared.
 
 The generator-specific AI axes do not ship their camera counterpart bytes. For the
 AI-generation guard, `scripts/calibrate.py` therefore records an explicit
-`ai_axis_auc` screen for `learned` and `npr`, comparing applicable generated
+`ai_axis_auc` screen for `learned`, `npr`, and `clip_probe`, comparing applicable generated
 rows from `sd35_flux` and `synthbuster` with applicable `real_camera` rows.
 This is an unpaired cross-source screen, not a within-source claim. The
 selected `weight_guard.metric` says which measurement controlled a detector's
-weight.
+weight. The CLIP probe's separate fit holds out complete generators; its OOD
+report, rather than this pooled screen, is the primary generalization result.
 
 The held-out split is deterministic, uses `source_image` groups, and reports
 only the groups excluded from fitting. Both per-detector `heldout_auc` and the
@@ -69,4 +70,9 @@ after its corpus measurement showed the raw direction was inverted. The Round
 11 calibration reports a fused held-out AUC of 0.5784615384615385 on 916 rows
 across 317 source groups. This is lower than the prior 0.6521739130434783 and
 is reported without a tuning change; no AUC floor was introduced and no
-weight was tuned to improve fusion.
+weight was tuned to improve fusion. Round 12 adds optional TAESD/LPIPS
+AEROBLADE and a frozen CLIP probe. AEROBLADE is zero-weighted by its
+source-paired guard (`0.511013 +/- 0.025584`). CLIP's generator-held-out report
+is `1.0000 +/- 0.0000` OOD and `1.0000 +/- 0.0000` ID with four camera
+negatives in each test partition; all AI rows are PNG and the camera negatives
+are JPEG, so this is not a universal performance claim.

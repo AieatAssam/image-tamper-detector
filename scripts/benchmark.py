@@ -36,6 +36,7 @@ VALIDATED_BY = {
     "c2pa": {"real_c2pa_signed", "real_camera"},
     "splicebuster": {"synthetic_splice"},
     "aeroblade": {"real_ai", "sd35_flux", "synthbuster"},
+    "clip_probe": {"real_ai", "sd35_flux", "synthbuster"},
     "learned": {"real_ai", "sd35_flux", "synthbuster"},
     "npr": {"real_ai", "sd35_flux", "synthbuster"},
 }

@@ -212,7 +212,8 @@ frontend:
 
 # ------------------------------------------------------------------------------
 optional_learned_model:
-  # Installed ONLY by S12, and ONLY into the `learned` extra. Never a hard dep.
+  # Installed ONLY by optional learned work, and ONLY into the `learned` extra. Never a hard dep.
+  resolved_on: "2026-08-31"
   onnxruntime:
     pin: "==1.29.0"
     requires_python: ">=3.11"
@@ -222,9 +223,23 @@ optional_learned_model:
     requires_python: ">=3.10"
     reason: "download the ONNX artifact by repo id + revision"
   torch:
-    status: REJECTED
-    evidence: >
-      torch 2.13.0 publishes 24 wheels; the highest CPython tag is cp313
-      (torch-2.13.0-cp313-cp313-manylinux_2_28_x86_64.whl). NO cp314 wheel
-      exists. Installing torch would force the project back to Python 3.13.
-    consequence: "S12 uses onnxruntime. Do not add torch under any circumstances."
+    pin: "==2.13.0"
+    requires_python: ">=3.10"
+    evidence: "PyPI JSON release query on 2026-08-31 lists cp314 wheels, including macOS arm64 and manylinux x86_64."
+    consequence: "Permitted only in requirements-learned.txt; default requirements, CI, and Docker remain torch-free."
+  torchvision:
+    pin: "==0.28.0"
+    requires_python: ">=3.10"
+    evidence: "PyPI JSON release query on 2026-08-31 lists cp314 wheels, including macOS arm64 and manylinux x86_64."
+    consequence: "Permitted only in requirements-learned.txt; imported only through optional torch-backed detectors."
+  diffusers:
+    pin: "==0.40.0"
+    requires_python: ">=3.10"
+    evidence: "PyPI JSON release query on 2026-08-31; Apache-2.0."
+  open-clip-torch:
+    pin: "==3.3.0"
+    requires_python: ">=3.9"
+    evidence: "PyPI JSON release query on 2026-08-31; MIT."
+  lpips:
+    pin: "==0.1.4"
+    evidence: "PyPI JSON release query on 2026-08-31; BSD source package."

@@ -34,10 +34,12 @@ RAW_KEYS = {
     "c2pa": "generative_assertion",
     "splicebuster": "mahalanobis_max",
     "resampling": "local_inconsistency",
+    "aeroblade": "reconstruction_lpips",
     "npr": "npr_statistic",
+    "clip_probe": "clip_probability",
 }
 HIGHER_WORSE = {"entropy": False, "qtable": False, "aeroblade": False}
-AI_AXIS_GUARD = frozenset({"learned", "npr"})
+AI_AXIS_GUARD = frozenset({"learned", "npr", "clip_probe"})
 AI_AXES = frozenset({"sd35_flux", "synthbuster"})
 FALSE_POSITIVE_FAMILIES = ("authentic_recompress", "resize_then_save")
 FALSE_POSITIVE_LIMIT = 0.10

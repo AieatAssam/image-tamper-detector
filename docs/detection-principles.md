@@ -41,7 +41,7 @@ generated rows with applicable `real_camera` rows as an explicitly unpaired
 cross-source screen. It is not a within-source paired claim. The generator
 field is copied from the archive directory and is never inferred.
 
-### Round 11 coverage snapshot
+### Round 12 coverage snapshot
 
 This audit snapshot separates the main image-manipulation families. AI
 generation is now measurable per named generator, but the AI negative class is
@@ -53,7 +53,7 @@ cross-source camera imagery and should not be read as a paired reconstruction.
 | Splicing | `splicebuster`, `zero`, `ghosts`, `prnu`, `resampling` | 0.669 synthetic / 0.487 real | weak; does not generalise |
 | Copy-move | `copy_move` | 0.585 | weak but real |
 | Local retouch | `prnu`, `ela`, `splicebuster` | ~0.54 | weak |
-| AI generation | `spectral`, `entropy`, `cfa`, `learned`, `aeroblade`, `npr` | see R11 report per generator | measurable on 11 named generators; CFA and AEROBLADE abstain |
+| AI generation | `spectral`, `entropy`, `cfa`, `learned`, `aeroblade`, `clip_probe`, `npr` | see R12 report per generator | measured on 11 named generators; CFA abstains, AEROBLADE is latent-diffusion-specific |
 | Provenance | `c2pa`, `exif` | n/a; declarative | correct but rarely present |
 
 Every applicable raw statistic is mapped to a probability using
@@ -791,6 +791,51 @@ It is not a general splice detector, receipt/document forgery detector, or
 image-origin oracle. It is opt-in and is image-gated to faces; even when its
 weights are installed, it must remain scoped to that task.
 
+## Frozen CLIP linear probe (`new.clip_probe`)
+
+### Principle
+
+A frozen vision-language backbone supplies a broad image representation. A
+linear probe fitted on this repository's corpus can use that representation
+for an AI-generation screen without updating the backbone. This is a learned
+classifier, not a forensic proof and not a face or splice detector.
+
+### Method
+
+The optional adapter uses open-clip-torch's `ViT-L-14` architecture with the
+MIT-licensed LAION `CLIP-ViT-L-14-laion2B-s32B-b82K` weights. The backbone is
+loaded locally, put in evaluation mode, and all parameters are frozen. Only
+the external linear probe is fitted. `scripts/fit_clip_probe.py` uses the
+repository's standardized logistic calibration routine, groups rows by
+`source_image`, and holds out complete generator names. It reports both
+in-distribution performance on generators seen during fitting and the
+out-of-distribution result on generators never seen during fitting; the latter
+is the meaningful generalization measurement.
+
+The probe is image-side only: it checks decoded format, image size, and the
+presence of its local backbone and probe files. Missing optional dependencies
+or weights return `NOT_APPLICABLE`; no manifest axis or generator name is
+consulted at inference.
+
+### Measured performance
+
+Round 12 held out `glide`, `stable-diffusion-1-4`,
+`stable-diffusion-3.5-medium`, and `stable-diffusion-xl` with seed
+`20260828`. The ID and OOD test partitions each contain four held-out
+`real_camera` negatives because source-image grouping is preserved. Both
+aggregate AUCs are `1.0000 +/- 0.0000` by the Hanley-McNeil calculation. This
+is a dataset result, not a universal claim: all measured AI rows are PNG while
+the strict camera negatives are JPEG, so the score may contain a file-domain
+cue. The report retains per-generator values and the negative scope instead of
+treating the apparent perfect separation as an acceptance floor.
+
+### Failure modes
+
+The probe can learn corpus, format, content, or generator-family shortcuts and
+must be re-evaluated on re-encoded and genuinely cross-domain images. It is
+not an origin oracle, splice localizer, or proof that an image came from a
+particular generator.
+
 ## AEROBLADE-style reconstruction (`new.aeroblade`)
 
 ### Principle
@@ -802,46 +847,48 @@ general manipulation detector.
 
 ### Method
 
-The optional adapter resizes an image to the external TAESD ONNX encoder's
-shape, maps RGB to `[0,1]`, encodes to a latent, decodes, clips the reconstruction
-to `[0,1]`, and computes
+The optional adapter resizes an image to a bounded multiple-of-eight shape,
+maps RGB to `[-1,1]`, encodes with the distilled TAESD autoencoder, decodes,
+and computes the paper's perceptual distance with LPIPS:
 
 ```text
-reconstruction_l1 = mean(abs(decoded - input))
+reconstruction_lpips = LPIPS(input, decoded)
 ```
 
-The paper uses LPIPS. This implementation uses mean L1 because it does not add
-a perceptual backbone. Lower error is mapped as more suspicious. The ONNX
-encoder and decoder paths are external and are never bundled in this tree.
+Lower error is mapped as more suspicious. TAESD and the LPIPS AlexNet cache are
+external and are never bundled in this tree. The implementation uses a
+distilled approximation, not the exact Stable Diffusion autoencoder used for
+the paper's headline results.
 
 ### Citation and provenance
 
 J. Ricker, D. Lukovnikov, and A. Fischer, “AEROBLADE: Training-Free Detection
 of Latent Diffusion Images Using Autoencoder Reconstruction Error,” CVPR,
 2024, arXiv:2401.17879. The algorithm is independently reimplemented. The
-runtime uses the distilled MIT-licensed TAESD ONNX conversion pinned in
-`backend/app/analysis/aeroblade.py`, derived from the MIT
-`madebyollin/taesd` project. The distilled model is not the exact autoencoder
-used for the paper's headline results.
+runtime uses the MIT-licensed `madebyollin/taesd` Diffusers artifact and LPIPS,
+both pinned and fetched by `scripts/fetch_model.py`. The distilled model is
+not the exact autoencoder used for the paper's headline results.
 
 ### Signal direction
 
-Lower mean L1 reconstruction error is more suspicious for latent-diffusion
+Lower LPIPS reconstruction error is more suspicious for latent-diffusion
 output.
 
 ### Measured performance
 
-See `measurements.detectors.aeroblade` in the catalog. The detector is opt-in
-and the external model files are absent from the standard calibration corpus,
-so no corpus AUC is claimed. Any future number must state that it uses distilled
-TAESD and L1 rather than exact-AE LPIPS.
+Round 12 measured the detector on the 402 generated rows and 12 strict camera
+negatives. It is latent-diffusion-specific and therefore not a general AI
+detector. Its source-paired calibration AUC was `0.511013 +/- 0.025584`, so its
+fusion weight remains zero. The AI-axis screen was `0.539957 +/- 0.082240`.
+These numbers use distilled TAESD and LPIPS, not the paper's exact autoencoder
+or training setup.
 
 ### Failure modes
 
 This detector is latent-diffusion-only and is useless against splicing,
-copy-move, or GAN output. Distillation and L1 substitution can materially
-lower performance relative to the paper. Missing ONNX artifacts produce an
-abstention rather than a clean verdict.
+copy-move, or GAN output. Distillation can materially lower performance
+relative to the paper. Missing optional dependencies or model artifacts
+produce an abstention rather than a clean verdict.
 
 ## What this system cannot do
 
@@ -876,7 +923,8 @@ abstention rather than a clean verdict.
 | CFA periodicity | Reimplemented from paper | IPOL reference is AGPL-3.0-or-later | No |
 | Noisesniffer residual | Adapted implementation | IPOL 2024/462, Apache-2.0 | No reference source; local adaptation only |
 | AEROBLADE score | Reimplemented from paper | AEROBLADE repository has no project license | No |
-| TAESD runtime pair | Adapted external artifact | MIT-licensed distilled TAESD conversion, pinned in code | No weights |
+| TAESD runtime | Adapted external artifact | MIT-licensed `madebyollin/taesd`, pinned revision and checksums in the fetch script | No weights |
+| CLIP linear probe | Reimplemented from paper direction | MIT `open-clip-torch`; MIT LAION ViT-L/14 weights; local probe trained from this corpus | No weights |
 | Face learned model | Adapted runtime integration | Cataloged ONNX artifact, Apache-2.0 | No weights |
 | JPEG, ELA, EXIF, spectral, copy-move, double-JPEG | Local implementations | Primary papers and tool specifications cited above | No third-party source |
 
