@@ -2,6 +2,15 @@
 
 Experimental image-forensics service. It reports calibrated signals, not proof of origin or editing history. The implementation plan in [`plan/plan.yaml`](plan/plan.yaml) is authoritative.
 
+Accuracy warning: no AI-generation AUC in this repository is an open-web
+accuracy claim. The current corpus fails the metadata shortcut gate (held-out
+AUC `0.8750 +/- 0.0598`), so Round 10's per-generator table and Round 12's
+CLIP `1.0000` result are retired or qualified. The R15C parity variant passes
+the metadata ablations, but its R16A CLIP result still rounds to 1.000 with
+only 12 real-camera negatives and remains a content/corpus confound. See
+[`docs/detection-principles.md`](docs/detection-principles.md) before quoting
+any detector number.
+
 ## Run locally
 
 The repository pins Python 3.13.13 in `.python-version` for the usable local runtime:
@@ -29,10 +38,15 @@ The response contains a three-valued result for each detector (`applicable`, `no
 
 ELA is meaningful only for JPEG input. The noise-residual detector is not camera attribution: real PRNU attribution requires a reference fingerprint from the same camera. C2PA absence is not evidence of tampering. The optional learned model is face-deepfake-specific and is not a general splice, document, or receipt detector.
 
-The committed calibration reports a held-out AUC of 0.5784615384615385 on the
-current 916-entry, partly synthetic corpus, including a source-balanced
-IMD2020 sample and generator-specific AI axes. That is still small and is not
-representative of the open web. See
+The service has `native` and `parity` evidence variants. AI-axis detectors are
+validated on parity; provenance and JPEG-history detectors use native bytes.
+The upload path is not yet variant-aware, so this scope is a documented serving
+precondition, not an automatic guarantee.
+
+The committed calibration artifact reports a held-out AUC of
+`0.5784615384615385` on the current 916-entry, partly synthetic corpus. This is
+the pre-parity native legacy fit, not a current AI-generation accuracy claim;
+the corpus is small and is not representative of the open web. See
 [`docs/corpus.md`](docs/corpus.md) and [`docs/calibration.md`](docs/calibration.md).
 
 ## Corpus and optional model

@@ -27,6 +27,23 @@ current committed calibration numbers were not refit in Round 16C; its
 The current manifest has no parity rows, so `--variant both` is currently
 equivalent to native data and cannot manufacture missing parity observations.
 
+R15C's temporary parity corpus is the first encoding that passes the metadata
+gate: every format, dimension, file-size, and EXIF ablation returned held-out
+and pooled AUC `0.500`. It is nevertheless not interchangeable with native:
+the exact 120,000-byte re-save strips EXIF and changes JPEG quality and history.
+The R16A/B measurements are therefore recorded per variant in the catalog, and
+the consolidation refit must be run only after the parity rows are available
+to the manifest.
+
+The latest committed detector measurements are the R15C/R16A/R16B results,
+not the values currently serialized in `calibration.json`: AI-axis examples
+are AEROBLADE parity `0.416 +/- 0.088`, learned parity `0.184 +/- 0.131`, NPR
+parity `0.2803 +/- 0.0846`, and CLIP parity `0.999585 +/- 0.000757` on the
+402-AI/12-camera screen. The complete per-detector table, including N/A rows,
+corpus, variant, applicable count, and date, is in
+[`docs/detection-principles.md`](detection-principles.md) and
+[`plan/reference/detector-catalog.yaml`](../plan/reference/detector-catalog.yaml).
+
 The held-out split still groups by the underlying `source_image`, keeping
 native and parity encodings of one source together. Within-source comparisons
 key the comparison by `source_image+variant`, so a native positive is never
@@ -62,13 +79,14 @@ authentic/manipulated pairs sharing the same `source_image`; rows from
 different source images are never compared.
 
 The generator-specific AI axes do not ship their camera counterpart bytes. For the
-AI-generation guard, `scripts/calibrate.py` therefore records an explicit
-`ai_axis_auc` screen for `learned`, `npr`, and `clip_probe`, comparing applicable generated
-rows from `sd35_flux` and `synthbuster` with applicable `real_camera` rows.
-This is an unpaired cross-source screen, not a within-source claim. The
-selected `weight_guard.metric` says which measurement controlled a detector's
-weight. The CLIP probe's separate fit holds out complete generators; its OOD
-report, rather than this pooled screen, is the primary generalization result.
+AI-generation guard, `scripts/calibrate.py` records an explicit unpaired
+`ai_axis_auc` screen, now scoped to the detector's declared variant. The
+screen compares applicable generated rows from `sd35_flux` and `synthbuster`
+with applicable `real_camera` rows; it is not a within-source claim. A
+calibration-time scope does not protect serving: the caller must provide the
+matching native or parity bytes, and the current upload path remains
+variant-blind as a documented limitation. The CLIP result is not a primary
+generalization result while only 12 real-camera negatives are available.
 
 The held-out split is deterministic, uses `source_image` groups, and reports
 only the groups excluded from fitting. Both per-detector `heldout_auc` and the
@@ -98,19 +116,12 @@ non-negative: an anti-correlated detector is dropped at weight zero rather than
 silently inverted in fusion. The fitted intercept also enforces the contract's `<= 0.10` manipulated rate
 for the `authentic_recompress` and `resize_then_save` false-positive traps.
 
-The committed numbers are valid for images resembling the corpus. The corpus
-is small, partly synthetic, and not representative of the open web. The
-manifest currently has 12 strict real-camera images, 12 real-AI images, two
-C2PA fixtures, 400 source-balanced IMD2020 rows, 120 `sd35_flux` rows, and 270
-`synthbuster` rows. Synthetic images cannot validate CFA, spectral, or PRNU
-sensor-provenance detectors. The `double_jpeg` aggregate was sign-corrected
-after its corpus measurement showed the raw direction was inverted. The Round
-11 calibration reports a fused held-out AUC of 0.5784615384615385 on 916 rows
-across 317 source groups. This is lower than the prior 0.6521739130434783 and
-is reported without a tuning change; no AUC floor was introduced and no
-weight was tuned to improve fusion. Round 12 adds optional TAESD/LPIPS
-AEROBLADE and a frozen CLIP probe. AEROBLADE is zero-weighted by its
-source-paired guard (`0.511013 +/- 0.025584`). CLIP's generator-held-out report
-is `1.0000 +/- 0.0000` OOD and `1.0000 +/- 0.0000` ID with four camera
-negatives in each test partition; all AI rows are PNG and the camera negatives
-are JPEG, so this is not a universal performance claim.
+The committed calibration artifact is still the native legacy fit from before
+the R16 measurements. Its fused held-out AUC `0.5784615384615385` on 916 rows
+across 317 source groups is an artifact description, not a current parity
+performance claim; the older fused result is superseded and omitted. The corpus remains small, partly synthetic, and unlike the
+open web. Synthetic rows cannot validate CFA, spectral, or sensor-provenance
+claims. R16A's CLIP value still rounds to 1.000 after re-save, but the 12
+negative rows and content/domain confound prevent treating it as generation
+skill. The final native/parity refit is intentionally deferred to consolidation
+after the 17A/17B detector results land.

@@ -346,7 +346,10 @@ def _ai_axis_values(rows: list[dict], score_by_index: dict[int, float]) -> list[
     values.extend(
         (score_by_index[index], False)
         for index, row in enumerate(rows)
-        if index in score_by_index and row["family"] == "real_camera" and not row["label"]
+        if index in score_by_index and not row["label"] and (
+            row["family"] == "real_camera"
+            or (row["family"] == "imd2020" and row.get("variant", "native") == "parity")
+        )
     )
     return values
 
@@ -512,6 +515,13 @@ def main() -> int:
         ai_n_pos = sum(label for _score, label in ai_values)
         ai_n_neg = len(ai_values) - ai_n_pos
         ai_se = hanley_mcneil_se(ai_auc, ai_n_pos, ai_n_neg)
+        negative_scope = "real_camera+imd2020(parity)" if any(
+            index in score_by_index
+            and not rows[index]["label"]
+            and rows[index]["family"] == "imd2020"
+            and rows[index].get("variant", "native") == "parity"
+            for index in range(len(rows))
+        ) else "real_camera"
         guard_metric = "within_source_auc"
         guard_auc = all_within_source_auc
         guard_se = all_se
@@ -535,7 +545,7 @@ def main() -> int:
             "ai_axis_standard_error": ai_se,
             "ai_axis_n_positive": ai_n_pos,
             "ai_axis_n_negative": ai_n_neg,
-            "ai_axis_negative_scope": "real_camera",
+            "ai_axis_negative_scope": negative_scope,
             "variant_scope": sorted(VARIANT_SCOPES[detector.id]),
             "validated_by": sorted(VALIDATED_BY.get(detector.id, set())),
             "clipped": False,

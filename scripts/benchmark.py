@@ -283,8 +283,15 @@ def _per_generator(rows: list[dict]) -> dict[str, dict[str, dict[str, float | in
             # ponytail: use the available camera negatives for unpaired datasets;
             # add source-matched negatives when the dataset publishes them.
             variants = {variant for _source, variant in source_groups}
-            negative_rows = [row for row in authentic if row["axis"] == "real_camera" and row.get("variant", "native") in variants]
-            negative_scope = "real_camera"
+            negative_rows = [
+                row for row in authentic
+                if row.get("variant", "native") in variants
+                and (
+                    row["axis"] == "real_camera"
+                    or (row["axis"] == "imd2020" and row.get("variant", "native") == "parity")
+                )
+            ]
+            negative_scope = "real_camera+imd2020" if "parity" in variants else "real_camera"
         stats = _auc_stats(
             [float(row["score"]) for row in positive_rows + negative_rows],
             [True] * len(positive_rows) + [False] * len(negative_rows),

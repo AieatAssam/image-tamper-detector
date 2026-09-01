@@ -3,16 +3,19 @@
 This is the scientific reference for the detector set. The machine-readable
 registry is [`plan/reference/detector-catalog.yaml`](../plan/reference/detector-catalog.yaml).
 It is the source of truth for detector names, signal directions, applicability,
-limitations, citations, and measured performance. In particular, the current
-`within_source_auc` and `auc_standard_error` values are not copied into this
-document: follow each detector's catalog key to read the current value.
+limitations, citations, and measured performance. Each current measurement is
+identified by AUC, Hanley–McNeil SE, corpus, variant, applicable count, and
+date; the catalog is authoritative when this prose is abbreviated.
 
 ## How to read the measurements
 
-The benchmark compares manipulated or AI-generated rows only with authentic
-rows sharing the same `source_image`. This prevents the image source from
-becoming a hidden class label. AUC is the probability that a randomly selected
-positive row scores above its paired negative, with ties counted as one half.
+For source-paired measurements, the benchmark compares manipulated rows only
+with authentic rows sharing the same `source_image`; this prevents the image
+source from becoming a hidden class label. AI-axis AUCs instead compare
+applicable generated rows with the available camera-negative pool and are
+explicitly unpaired. In either case, AUC is the probability that a randomly
+selected positive row scores above the comparison negative, with ties counted
+as one half.
 The reported uncertainty is the Hanley-McNeil estimate:
 
 ```text
@@ -21,9 +24,11 @@ Q1 = A / (2 - A)
 Q2 = 2A^2 / (1 + A)
 ```
 
-The catalog stores the AUC, standard error, participating class counts, and
-corpus revision under each calibrated detector entry. A null means that the
-corpus did not contain a valid paired comparison. It is not a zero score.
+The catalog stores the AUC, standard error, participating count, corpus,
+variant, scope, and date for every runtime detector ID. A null means that the
+corpus did not contain a valid comparison. It is not a zero score. The current
+measurements below are the latest committed observations; they are not the
+unrefitted `calibration.json` artifact.
 
 ## Corpus shortcut acceptance gate
 
@@ -56,6 +61,65 @@ Until an AI axis passes this gate, its per-generator and fused AI-generation
 numbers must be labelled exploratory and must not be used to claim general
 generation-detection skill.
 
+## Native and parity are separate evidence axes
+
+`native` preserves the supplied bytes and therefore retains capture metadata,
+EXIF, quantisation tables, and JPEG history. `parity` is the deterministic
+R15C byte-budget re-save: 1024×1024 RGB, optimized non-progressive 4:2:0 JPEG,
+EXIF removed, and exactly 120,000 bytes. Its metadata gate is exactly chance
+for format, dimensions, file size, and EXIF, but it changes JPEG quality and
+history. The parity encoder therefore removes the size shortcut while adding a
+quality distribution that remains class-correlated.
+
+The R16C machine-readable policy is the measurement contract:
+
+| variant scope | detectors |
+|---|---|
+| parity only | `aeroblade`, `clip_probe`, `learned`, `npr`, `spectral`, `entropy` |
+| native only | `c2pa`, `qtable`, `exif`, `cfa`, `ela` |
+| both | `copy_move`, `double_jpeg`, `jpeg_ghosts`, `prnu`, `resampling`, `splicebuster`, `zero` |
+
+Calibration applies this scope while fitting and gating. Benchmarking applies
+the same scope while serving a selected variant. The upload path is still
+variant-blind, so a serving orchestrator must choose bytes matching the fitted
+variant; calibration-time scope alone does not make a parity-only model safe on
+native input. This is the explicit R16C train/serve limitation.
+
+## Current evidence snapshot (R17C)
+
+The table gives one primary, latest completed measurement per detector. AUCs
+are not pooled across native and parity. `AI-axis` is an unpaired screen using
+402 AI rows and 12 strict camera negatives; it is not a within-source claim.
+The comparison values are retained only where both variants were measured in
+R16A/B; the catalog records them under `comparison`.
+
+| detector | AUC ± SE | corpus / variant / date | scope |
+|---|---:|---|---|
+| `aeroblade` | 0.416 ± 0.088 | R15C byte budget / parity / 2026-09-01 | AI-axis |
+| `c2pa` | N/A | local manifest / native / 2026-08-31 | no valid paired AUC |
+| `cfa` | N/A | local manifest / native / 2026-08-31 | no valid AI comparison |
+| `clip_probe` | 0.999585 ± 0.000757 | R15C byte budget / parity / 2026-09-01 | AI-axis; 12 negatives |
+| `copy_move` | 0.386 ± 0.127 | R15C / native / 2026-08-31 | AI-axis diagnostic |
+| `double_jpeg` | 0.192 ± 0.082 | R15C / native / 2026-08-31 | AI-axis diagnostic |
+| `ela` | 0.4190 ± 0.0985 | R16B bounded / native / 2026-09-01 | AI-axis diagnostic |
+| `entropy` | 0.7616 ± 0.0559 | R16B bounded / parity / 2026-09-01 | AI-axis |
+| `exif` | 0.083 ± 0.058 | R15C / native / 2026-08-31 | AI-axis diagnostic |
+| `jpeg_ghosts` | 0.4667 ± 0.0984 | R16B bounded / native / 2026-09-01 | AI-axis diagnostic |
+| `learned` | 0.184 ± 0.131 | R15C byte budget / parity / 2026-09-01 | face-applicable AI-axis |
+| `npr` | 0.2803 ± 0.0846 | R16B bounded / parity / 2026-09-01 | AI-axis |
+| `prnu` | 0.6282 ± 0.0743 | R16B bounded / native / 2026-09-01 | AI-axis; blind residual |
+| `qtable` | N/A | local manifest / native / 2026-08-31 | no valid paired AUC |
+| `resampling` | 0.298 ± 0.094 | R15C / native / 2026-08-31 | exploratory |
+| `spectral` | 0.508 ± 0.084 | R15C byte budget / parity / 2026-08-31 | AI-axis |
+| `splicebuster` | 0.720 ± 0.110 | R15C / native / 2026-08-31 | AI-axis diagnostic |
+| `zero` | 0.275 ± 0.084 | R15C / native / 2026-08-31 | AI-axis diagnostic |
+
+The numbers are traceable to [R15C](../plan/audit/REPAIR-REPORT-R15C.md),
+[R16A](../plan/audit/REPAIR-REPORT-R16A.md), and
+[R16B](../plan/audit/REPAIR-REPORT-R16B.md). Agents 17A and 17B are expected
+to supersede some rows during this round; until those reports are committed,
+no replacement value is claimed here.
+
 The complete calibration corpus currently contains 916 rows in 317 source
 groups: 100 synthetic processing-history rows and 816 rows from the local
 manifest, including 400 source-directory-stratified IMD2020 rows, 12 strict
@@ -66,26 +130,18 @@ provenance. The synthetic and real portions must therefore be read as
 different validation populations, not pooled evidence of one universal
 detector skill.
 
-Round 11 adds generator-specific AI axes. Their Zenodo archives do not ship
+The generator-specific AI axes do not ship
 the genuine camera counterpart bytes, so `ai_axis_auc` compares applicable
 generated rows with applicable `real_camera` rows as an explicitly unpaired
 cross-source screen. It is not a within-source paired claim. The generator
 field is copied from the archive directory and is never inferred.
 
-### Round 12 coverage snapshot
+### Corpus roles
 
-This audit snapshot separates the main image-manipulation families. AI
-generation is now measurable per named generator, but the AI negative class is
-cross-source camera imagery and should not be read as a paired reconstruction.
-
-| Mechanism | Current detector coverage | Best within-source AUC | Position after Round 11 |
-|---|---|---:|---|
-| Recompression / re-save | `double_jpeg`, `jpeg_ghosts`, `zero`, `qtable`, `ela` | 0.660 (`double_jpeg`) | adequate |
-| Splicing | `splicebuster`, `zero`, `ghosts`, `prnu`, `resampling` | 0.669 synthetic / 0.487 real | weak; does not generalise |
-| Copy-move | `copy_move` | 0.585 | weak but real |
-| Local retouch | `prnu`, `ela`, `splicebuster` | ~0.54 | weak |
-| AI generation | `spectral`, `entropy`, `cfa`, `learned`, `aeroblade`, `clip_probe`, `npr` | see R12 report per generator | measured on 11 named generators; CFA abstains, AEROBLADE is latent-diffusion-specific |
-| Provenance | `c2pa`, `exif` | n/a; declarative | correct but rarely present |
+The benchmark has separate source-paired manipulation measurements and an
+unpaired AI-axis screen. The latter uses a small, heterogeneous camera-negative
+class and is not an open-web error rate. Do not quote a detector number without
+the corpus and variant in the current-evidence table or catalog.
 
 Every applicable raw statistic is mapped to a probability using
 
@@ -141,11 +197,10 @@ suspicious.
 
 ### Measured performance
 
-See `measurements.detectors.ela` in the catalog for the current
-within-source AUC, standard error, applicable population, and corpus revision.
-The result is a documented negative finding in the current calibration, near
-0.44 AUC, and its fusion weight is consequently zero. It is retained so later
-corpora can test whether the weakness is corpus-specific.
+The current primary result is AUC `0.4190 +/- 0.0985` on 47 applicable
+R16B-bounded native rows, dated 2026-09-01. The matched parity diagnostic was
+`0.3601 +/- 0.0875` on 414 rows. ELA remains a negative, compression-sensitive
+finding; the native value is the one used for its declared scope.
 
 ### Failure modes
 
@@ -188,9 +243,9 @@ generated image, but it does not identify the camera or the editor.
 
 ### Measured performance
 
-See `measurements.detectors.prnu` in the catalog. The value is the
-within-source result for the blind noise residual, not a claim of PRNU
-identification skill.
+The current native result is AUC `0.6282 +/- 0.0743` on 414 applicable rows,
+dated 2026-09-01; the matched parity result is `0.6490 +/- 0.0719`. These are
+AI-axis measurements of the blind residual, not camera-attribution skill.
 
 ### Failure modes
 
@@ -254,9 +309,9 @@ increases. The implementation maps both lower-moving terms to higher suspicion
 (`1 / (1 + ratio)` and `1 - normalized_entropy`), while the near-constant
 fraction already moves higher. Therefore the final composite's
 `higher_is_worse=True` declaration in calibration agrees with the physics.
-It was not flipped to chase the AUC. The Round 11 result is a genuine negative
-finding on modern generators: the AI-axis AUC is `0.341667 +/- 0.087205`, with
-seven of eleven generator AUCs below 0.5.
+It was not flipped to chase the AUC. The current R16B parity result is a
+genuine below-chance finding on this screen: `0.2803 +/- 0.0846` on 414 rows,
+dated 2026-09-01. The matched native result is `0.3696 +/- 0.0876`.
 
 Round 11 measured this statistic and left its fusion weight at zero. It is
 training-free, but is intentionally not a reproduction of NPR's learned model.
@@ -273,9 +328,9 @@ Lower matching proportion is more suspicious for AI generation.
 
 ### Measured performance
 
-See `measurements.detectors.entropy` in the catalog. The current
-within-source result is a documented negative finding, near 0.47 AUC, so the
-calibration guard assigns zero fusion weight.
+The current parity result is AUC `0.7616 +/- 0.0559` on 414 applicable rows,
+dated 2026-09-01. The matched native result is `0.5305 +/- 0.0828`. This is a
+controlled AI-axis screen, not a universal AI-generation accuracy claim.
 
 ### Failure modes
 
@@ -313,8 +368,9 @@ statistical cue. No manifest has no direction and is an abstention.
 
 ### Measured performance
 
-See `measurements.detectors.c2pa` in the catalog. The current corpus
-does not provide a valid source-paired AUC for this declarative capability.
+The native corpus has no valid source-paired AUC for this declarative
+capability (30 applicable rows, dated 2026-08-31). Parity has zero applicable
+rows because the re-save removes the provenance it measures.
 
 ### Failure modes
 
@@ -360,10 +416,9 @@ Lower distance, especially zero with EXIF Make/Model, is more suspicious.
 
 ### Measured performance
 
-See `measurements.detectors.qtable` in the catalog. The current
-IMD2020 population is entirely abstaining because the required camera
-provenance gate is absent, so its AUC is null rather than zero. The catalog
-also records the applicable synthetic and camera populations where present.
+The native corpus has no valid source-paired AUC (12 applicable rows, dated
+2026-08-31). Parity has zero applicable rows because its uniform encoder
+replaces the native quantisation tables. This is `null`, not zero.
 
 ### Failure modes
 
@@ -410,9 +465,10 @@ are more suspicious.
 
 ### Measured performance
 
-See `measurements.detectors.double_jpeg` in the catalog. Its
-within-source result is the current strongest single calibrated cue, but the
-value remains corpus-dependent and is not a universal JPEG-forgery guarantee.
+The current native result is AUC `0.192 +/- 0.082` on 42 applicable rows, dated
+2026-08-31. The parity diagnostic is `0.373 +/- 0.088` on 414 rows. Parity
+overwrites the history that this detector is intended to inspect, so native is
+the primary measurement.
 
 ### Failure modes
 
@@ -449,8 +505,10 @@ More distinct, spatially coherent quality modes are more suspicious.
 
 ### Measured performance
 
-See `measurements.detectors.jpeg_ghosts` in the catalog for the source-paired
-AUC and standard error.
+The current native result is AUC `0.4667 +/- 0.0984` on 47 applicable rows,
+dated 2026-09-01. The matched parity diagnostic is `0.5220 +/- 0.0834` on 414
+rows. The native value is the primary result because parity overwrites JPEG
+history.
 
 ### Failure modes
 
@@ -490,8 +548,10 @@ keypoints is `NOT_APPLICABLE`, not a clean result.
 
 ### Measured performance
 
-See `measurements.detectors.copy_move` in the catalog for the within-source
-AUC, standard error, and applicable count.
+The current native result is AUC `0.386 +/- 0.127` on 82 applicable rows, dated
+2026-08-31. The parity diagnostic is `0.561 +/- 0.117` on 88 rows. These are
+unpaired AI-axis diagnostics, not evidence that the detector generalises beyond
+the tested corpus.
 
 ### Failure modes
 
@@ -535,12 +595,11 @@ the input gate, not a generated-image score.
 
 ### Measured performance
 
-See `measurements.detectors.cfa` in the catalog. The 402-image Round 11 AI
-benchmark has zero applicable generated rows because all downloaded AI images
-are PNG. A probe also found the same no-dominant-pattern result on a camera
-JPEG re-encoded in memory as PNG, so relaxing the gate would confound
-generation with re-encoding. The strict gate is unchanged and the AI AUC is
-null.
+The current native population has no valid AI-comparison AUC (12 applicable
+rows, dated 2026-08-31). Parity has zero applicable rows by design: its JPEG
+re-save destroys the capture evidence. A probe also found the same
+no-dominant-pattern result on a camera JPEG re-encoded in memory as PNG, so
+relaxing the gate would confound generation with re-encoding.
 
 ### Failure modes
 
@@ -580,9 +639,12 @@ GAN or diffusion generation.
 
 ### Measured performance
 
-See `measurements.detectors.spectral` in the catalog. Its real-camera
-and real-AI scope is distinct from the synthetic splice scope; synthetic rows
-are not used as sensor-provenance evidence.
+The current parity result is AUC `0.508 +/- 0.084` on 414 applicable rows,
+dated 2026-08-31. This is an AI-axis screen; synthetic processing-history rows
+are not used as sensor-provenance evidence. Round 10's generator-specific
+result was strongly non-uniform (`glide` 0.964 +/- 0.027 versus
+`stable-diffusion-3.5` 0.529 +/- 0.095), which is why no pooled generator
+claim is made here.
 
 ### Failure modes
 
@@ -619,9 +681,9 @@ disagreement are more suspicious. EXIF absence is neutral.
 
 ### Measured performance
 
-See `measurements.detectors.exif` in the catalog. Only two
-IMD2020 rows currently have applicable EXIF evidence and they do not form a
-valid source-paired comparison, so the AUC is null.
+The latest native result is AUC `0.083 +/- 0.058` on 42 applicable rows, dated
+2026-08-31. Parity has zero applicable rows because EXIF is intentionally
+removed; EXIF absence itself is not a tampering result.
 
 ### Failure modes
 
@@ -667,19 +729,11 @@ guard, not a corpus label or calibration scope.
 
 ### Measured performance
 
-The complete corpus gives the following metric-set and source-paired results:
-
-| scope | metric-set AUC | within-source AUC |
-|---|---:|---:|
-| synthetic processing-history corpus, 100 images | 0.668527 | 0.748428 |
-| local manifest, 426 images | 0.486766 | 0.459184 |
-| pooled within-source result after gating | not applicable | 0.608696 |
-
-The fitted fusion weight and held-out fused AUC are recorded in
-`backend/app/analysis/calibration.json`. The local manifest remains useful as a
-stress population, but its lower result shows that a quality gate does not make
-internet-sourced processing histories equivalent to controlled splices. No
-calibration-only scope is used.
+The latest native result is AUC `0.720 +/- 0.110` on 35 applicable rows, dated
+2026-08-31. The native result is the only current primary measurement: the
+parity re-save overwrites the processing history this detector is meant to
+inspect. A quality gate does not make internet-sourced histories equivalent to
+controlled splices.
 
 ### Failure modes
 
@@ -720,13 +774,11 @@ Higher local block disagreement is more suspicious for local resampling.
 
 ### Measured performance
 
-The corpus-level measurements are synthetic metric-set AUC 0.521354 and
-within-source AUC 0.524390, versus IMD2020 metric-set AUC 0.541445 and
-within-source AUC 0.537879. The pooled within-source result is
-0.474926 +/- 0.030282. The synthetic and IMD2020 results do not show a clear
-corpus-specific failure that justifies scoping, so resampling remains unscoped.
-It has no labeled local-resampling positive family and remains at zero fusion
-weight under the existing statistical guard.
+The current native result is AUC `0.298 +/- 0.094` on 360 applicable rows,
+dated 2026-08-31. The parity diagnostic is `0.240 +/- 0.082` on 414 rows.
+These are exploratory because the corpus has no labeled local-resampling
+positive family; the two encodings are reported separately and no universal
+skill is claimed.
 
 ### Failure modes
 
@@ -766,9 +818,10 @@ more suspicious.
 
 ### Measured performance
 
-See `measurements.detectors.zero` in the catalog. The current result is a
-documented near-chance finding, around 0.50 AUC, and the guard gives it zero
-fusion weight.
+The latest native result is AUC `0.275 +/- 0.084` on 402 applicable rows, dated
+2026-08-31. Parity was not used as a primary result because the uniform JPEG
+re-save overwrites the grid history; the detector remains a negative finding
+on this screen and has zero fusion weight.
 
 ### Failure modes
 
@@ -807,14 +860,13 @@ Higher `Deepfake` probability is more suspicious only for face-deepfake inputs.
 
 ### Measured performance
 
-See `measurements.detectors.learned` in the catalog. The optional model was
-present for this calibration. After applying the face gate, its AI-axis AUC is
-`0.423853 +/- 0.136642` from 109 applicable generated images and five
-applicable camera negatives, so its fusion weight is zero. The old
-source-paired result (`0.623529`) is retained as context but does not justify
-using this face-specific model on the AI axes. Runs without its external
-weights must report null rather than treating `NOT_APPLICABLE` as a negative
-result.
+The optional model was present for R16A. After the face gate, the current
+parity AI-axis AUC is `0.184 +/- 0.131` on 140 applicable rows, dated
+2026-09-01; the native comparison is `0.423 +/- 0.137` on 116 rows. The
+per-generator parity results include `0.091 +/- 0.106` for
+`stable-diffusion-1-3` and `0.125 +/- 0.119` for FLUX, so the model is not a
+general AI detector and its fusion weight remains zero. Runs without external
+weights must report null rather than treating `NOT_APPLICABLE` as negative.
 
 ### Failure modes
 
@@ -850,15 +902,12 @@ consulted at inference.
 
 ### Measured performance
 
-Round 12 held out `glide`, `stable-diffusion-1-4`,
-`stable-diffusion-3.5-medium`, and `stable-diffusion-xl` with seed
-`20260828`. The ID and OOD test partitions each contain four held-out
-`real_camera` negatives because source-image grouping is preserved. Both
-aggregate AUCs are `1.0000 +/- 0.0000` by the Hanley-McNeil calculation. This
-is a dataset result, not a universal claim: all measured AI rows are PNG while
-the strict camera negatives are JPEG, so the score may contain a file-domain
-cue. The report retains per-generator values and the negative scope instead of
-treating the apparent perfect separation as an acceptance floor.
+R12's `1.0000 +/- 0.0000` result is retired as forensic evidence: it was a
+container-format artifact. R16A still measured `0.999585 +/- 0.000757` on the
+parity rows (rounds to 1.000) and `0.999793 +/- 0.000532` on native rows, dated
+2026-09-01. Both use only 12 real-camera negatives against 402 AI rows. The
+parity re-save removes the format shortcut, but the CLIP separation can still
+be a content or corpus confound; it is not generation proof.
 
 ### Failure modes
 
@@ -907,12 +956,19 @@ output.
 
 ### Measured performance
 
-Round 12 measured the detector on the 402 generated rows and 12 strict camera
-negatives. It is latent-diffusion-specific and therefore not a general AI
-detector. Its source-paired calibration AUC was `0.511013 +/- 0.025584`, so its
-fusion weight remains zero. The AI-axis screen was `0.539957 +/- 0.082240`.
-These numbers use distilled TAESD and LPIPS, not the paper's exact autoencoder
-or training setup.
+R16A's current parity AI-axis AUC is `0.416 +/- 0.088` on 414 rows, dated
+2026-09-01; the native comparison is `0.547 +/- 0.082`. Per-generator parity
+falls from native `0.668 +/- 0.079` to `0.456 +/- 0.093` for FLUX, and from
+`0.386 +/- 0.100` to `0.189 +/- 0.082` for `stable-diffusion-1-3`.
+
+This contradicts the paper's reported mean AP of `0.992` across its tested
+latent-diffusion generators; AP and this pooled AUC are not identical metrics,
+but the direction and magnitude still warrant the discrepancy being recorded.
+It does not disprove the paper. Honest candidate
+explanations are the distilled TAESD stand-in rather than the paper's exact
+autoencoder, corpus and post-processing differences, or an implementation
+error in this repository. The current adapter is latent-diffusion-specific,
+and its fusion weight remains zero.
 
 ### Failure modes
 
@@ -962,7 +1018,11 @@ produce an abstention rather than a clean verdict.
 The table records a legal boundary: a published algorithm may be derived from,
 but a source file may not be copied or translated into this repository unless
 its license permits that use. Model weights are external, optional artifacts
-and are not committed.
+and are not committed. Under decision D6, TruFor, Noiseprint++, and Comprint
+remain excluded: their available implementations are nonprofit-use-only, do
+not provide a verified compatible ONNX export/direct weight path for this
+runtime, and are incompatible with this repository's distribution terms. No
+substitute implementation or weights are claimed.
 
 ## Bibliography
 

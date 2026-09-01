@@ -11,11 +11,14 @@ to the stump. This means the published Round 10 per-generator table is
 confounded, including its apparent detector differences between generators.
 
 Round 12's CLIP result of `1.0000 +/- 0.0000` on both seen and unseen generator
-groups is likewise a domain-confounded result, not evidence of generation
-detection: CLIP can separate the corpus's metadata domains. The Round 14
-WildFake sample independently gives `1.0000 +/- 0.0000` held-out and pooled
-metadata AUC, selected on PNG versus JPEG, so WildFake does not repair this
-measurement problem.
+groups is retired as a forensic result: it was a container-format artifact,
+not evidence of generation detection. R16A still measured `0.999585 +/-
+0.000757` on parity and `0.999793 +/- 0.000532` on native, both rounded to
+1.000, but only 12 real-camera negatives were available. That remains a
+content/corpus confound, not a trustworthy CLIP result. The Round 14 WildFake
+sample independently gives `1.0000 +/- 0.0000` held-out and pooled metadata
+AUC, selected on PNG versus JPEG, so WildFake does not repair this measurement
+problem.
 
 Before adding any AI axis to the manifest, build a small JSONL sample with the
 actual image paths, labels, source groups, and the dataset-owned axis name, then
@@ -56,16 +59,32 @@ same per-detector scope while fitting and while calculating guards. The
 canonical runtime-ID mapping is in `plan/reference/detector-catalog.yaml` and
 is copied into `calibration.json` for artifact-time inspection.
 
-The provisional Round 16C scope is: parity-only `aeroblade`, `clip_probe`,
+The current Round 16C scope is: parity-only `aeroblade`, `clip_probe`,
 `learned`, `npr`, `spectral`, and `entropy`; native-only `c2pa`, `qtable`,
 `exif`, `cfa`, and `ela`; both `copy_move`, `double_jpeg`, `jpeg_ghosts`,
 `prnu`, `resampling`, `splicebuster`, and `zero`. ELA is explicitly native-only
-because the R15C evidence classified it with compression/history detectors; the
-omitted final assignment remains subject to the 16A/16B measurements.
+because the R15C evidence classified it with compression/history detectors.
+R16A/B completed the previously blocked model and slow-detector measurements;
+their numbers are recorded per variant, while the final consolidation refit is
+still pending.
 
 Parity is not a free normalisation. Its uniform JPEG re-save strips EXIF and
 changes the quality factor and JPEG history. That is why provenance and
 compression detectors remain scoped separately from the AI-generation screen.
+
+R15C's exact parity gate passed every ablation at held-out and pooled AUC
+`0.500`, but the required byte budget changed the quality distribution:
+AI-generated rows had median quality 66 and mean 63.24, while the 12 camera
+negatives had median 81.5 and mean 74.58. Parity removes the file-size shortcut,
+not every encoding cue. R16A/B therefore measured detectors on both axes and
+kept their AUCs separate; the latest values and their dates are recorded in
+the [detection principles](detection-principles.md) and catalog.
+
+R15 matched-pair evaluation found only five pairs at the requested tolerance,
+so it does not support a general matched-pair claim. R15B's separate
+`imd2020_inpaint` candidate was rejected before ingestion: its metadata gate
+was `0.9917 +/- 0.0084` held out and `0.9975 +/- 0.0025` pooled, selected on
+EXIF presence. It has no detector score in this repository.
 
 S05 has two distinct corpus roles:
 
