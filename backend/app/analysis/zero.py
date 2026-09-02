@@ -18,6 +18,7 @@ from time import perf_counter
 import cv2
 import numpy as np
 from scipy.fft import dct
+from scipy.ndimage import find_objects
 from scipy.stats import binom
 
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
@@ -133,18 +134,28 @@ def _foreign_regions(
             continue
         grown = cv2.dilate(candidate, neighborhood)
         component_count, labels, _, _ = cv2.connectedComponentsWithStats(grown, 8)
+        # One pass per grid rather than one full-image pass per label: the
+        # per-label pixel count and bounding box are the only quantities the
+        # NFA needs, and both come from the masked label image directly.
+        region_labels = np.where(candidate != 0, labels, 0)
+        pixel_counts = np.bincount(region_labels.ravel(), minlength=component_count)
+        boxes = find_objects(region_labels, max_label=component_count - 1)
+        accepted = []
         for label in range(1, component_count):
-            region = (candidate != 0) & (labels == label)
-            ys, xs = np.nonzero(region)
-            if not len(xs):
+            support = int(pixel_counts[label])
+            box = boxes[label - 1]
+            if support == 0 or box is None:
                 continue
-            bbox_area = (int(xs.max()) - int(xs.min()) + 1) * (int(ys.max()) - int(ys.min()) + 1)
-            current_nfa = _log10_nfa(len(xs), bbox_area, votes.shape)
+            row_slice, column_slice = box
+            bbox_area = (row_slice.stop - row_slice.start) * (column_slice.stop - column_slice.start)
+            current_nfa = _log10_nfa(support, bbox_area, votes.shape)
             if current_nfa < 0:
-                mask[region] = 255
+                accepted.append(label)
                 region_count += 1
-                region_area += len(xs)
+                region_area += support
                 region_nfa = min(region_nfa, current_nfa)
+        if accepted:
+            mask[np.isin(region_labels, accepted)] = 255
 
     if np.any(mask):
         mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, neighborhood)

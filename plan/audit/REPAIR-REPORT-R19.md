@@ -69,6 +69,16 @@ Three defects sat in files no family owned:
    `len(features) < 2` guard, emitting `RuntimeWarning: Mean of empty slice` on
    images with no eligible blocks. The guard now runs first; the returned values
    are unchanged.
+4. The repaired `zero` broke the served upload path. Its paper-faithful
+   per-pixel vote map is cheap (0.6s), but `_foreign_regions` evaluated every
+   connected component with a full-image `(candidate != 0) & (labels == label)`
+   and `np.nonzero`, so a busy image cost 73.6s and exceeded the 60s
+   `ANALYSIS_TIMEOUT_SECONDS`, returning HTTP 504 for every upload. The per-label
+   pixel count and bounding box now come from one `np.bincount` and one
+   `scipy.ndimage.find_objects` pass per grid. `zero` falls to 2.5s and a full
+   analysis to 4.3s. The output is unchanged: score, flag and metrics are
+   identical to the pre-optimization code on seven images including the
+   reference forgery, so the R19 calibration still applies.
 
 ## Tests
 
