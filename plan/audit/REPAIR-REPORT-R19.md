@@ -157,6 +157,20 @@ result (`0.6148 +/- 0.0233`, 390 positive against 212 parity negatives) but no
 within-source population, so the guard drops it. These are scope limits of the
 corpus, not new failures introduced by the repairs.
 
+### S10's fusion gate passes for the first time
+
+S10 requires the fused held-out AUC to beat the best single detector. It has
+been `failed` since R7. On the R19 refit the fused held-out AUC is
+`0.6079881656804734` and the best single held-out detector is `jpeg_ghosts` at
+`0.5901639344262295`, so the gate passes on the point estimate and
+`plan/STATUS.yaml` is updated.
+
+The margin is `0.0178` on 1022 held-out rows and no standard error is recorded
+for the fused estimate, so this is a gate result, not a demonstration of fusion
+skill. Part of the change is that `double_jpeg`, previously the strongest member
+and the reason fusion looked weak by comparison, is now zero-weighted. The gate
+itself was not altered.
+
 ### `exif` now carries the largest weight
 
 `exif` holds weight `0.315` on within-source AUC `0.6081 +/- 0.0802` with 20
