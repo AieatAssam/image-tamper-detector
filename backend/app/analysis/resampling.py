@@ -1,9 +1,7 @@
-"""Local resampling inconsistency detector, reimplemented from Kirchner (2008).
+"""Fast resampling detector reimplemented from Kirchner (2008).
 
-The implementation uses Kirchner's fixed 3x3 linear predictor.  It measures
-periodic structure in the two-dimensional DFT of the absolute prediction
-residual, then scores disagreement between bounded overlapping image blocks.
-The source implementation is not used here.
+The implementation uses Kirchner's fixed 3x3 linear predictor, p-map, and
+cumulative-periodogram decision. The source implementation is not used here.
 """
 
 from __future__ import annotations
@@ -18,9 +16,7 @@ from backend.app.analysis.base import DetectorResult, DetectorState, ImageContex
 
 
 _MAX_ANALYSIS_SIDE = 1024
-_BLOCK_SIZE = 128
-_BLOCK_STRIDE = 64
-_MIN_IMAGE_SIDE = _BLOCK_SIZE * 4
+_MIN_IMAGE_SIDE = 256
 _PREDICTOR = np.array(
     [
         [-0.25, 0.50, -0.25],
@@ -30,8 +26,9 @@ _PREDICTOR = np.array(
     dtype=np.float32,
 )
 
-# These are provisional until the integrating agent adds this detector to the
-# shared calibration file.  The raw value is dimensionless block disagreement.
+# These retain the existing calibration interface until the integrating agent
+# refits the changed raw statistic. The paper determines this threshold
+# empirically from a false-acceptance target.
 _SCORE_THRESHOLD = 0.115
 _SCORE_SCALE = 0.04
 
@@ -49,14 +46,6 @@ def _analysis_gray(ctx: ImageContext) -> np.ndarray:
     return image
 
 
-def _positions(length: int) -> list[int]:
-    last = max(0, length - _BLOCK_SIZE)
-    values = list(range(0, last + 1, _BLOCK_STRIDE))
-    if not values or values[-1] != last:
-        values.append(last)
-    return values
-
-
 def _absolute_residual(gray: np.ndarray) -> np.ndarray:
     image = np.asarray(gray, dtype=np.float32)
     if image.ndim != 2:
@@ -65,19 +54,54 @@ def _absolute_residual(gray: np.ndarray) -> np.ndarray:
     return np.abs(image - prediction)
 
 
-def _peak_to_background(block: np.ndarray) -> float:
-    centered = block.astype(np.float32) - float(np.mean(block))
-    window = np.outer(np.hanning(block.shape[0]), np.hanning(block.shape[1])).astype(np.float32)
-    spectrum = np.abs(np.fft.fftshift(np.fft.fft2(centered * window)))
+def _p_map(gray: np.ndarray) -> np.ndarray:
+    image = np.asarray(gray, dtype=np.float32)
+    residual = _absolute_residual(image)
+    if float(np.max(image)) > 1.0:
+        residual /= 255.0
+    return np.exp(-np.square(residual)).astype(np.float32)
+
+
+def _contrast_spectrum(p_map: np.ndarray) -> np.ndarray:
+    image = np.asarray(p_map, dtype=np.float32)
+    height, width = image.shape
+    spatial_y = np.linspace(-1.0, 1.0, height, dtype=np.float32)
+    spatial_x = np.linspace(-1.0, 1.0, width, dtype=np.float32)
+    spatial_radius = np.hypot(spatial_y[:, None], spatial_x[None, :])
+    radial_window = np.ones_like(spatial_radius, dtype=np.float32)
+    transition = (spatial_radius >= 0.75) & (spatial_radius <= np.sqrt(2.0))
+    radial_window[spatial_radius > np.sqrt(2.0)] = 0.0
+    radial_window[transition] = 0.5 + 0.5 * np.cos(
+        np.pi * (spatial_radius[transition] - 0.75) / (np.sqrt(2.0) - 0.75)
+    )
+    spectrum = np.abs(np.fft.fftshift(np.fft.fft2(image * radial_window)))
+    frequencies_y = np.fft.fftshift(np.fft.fftfreq(height))
+    frequencies_x = np.fft.fftshift(np.fft.fftfreq(width))
+    radius = 2.0 * np.hypot(frequencies_y[:, None], frequencies_x[None, :])
+
+    highpass = 0.5 - 0.5 * np.cos(np.pi * np.minimum(radius, np.sqrt(2.0)) / np.sqrt(2.0))
+    contrasted = spectrum * highpass
+    maximum = float(np.max(contrasted))
+    if maximum <= 1e-12:
+        return np.zeros_like(contrasted, dtype=np.float32)
+    return ((contrasted / maximum) ** 4 * maximum).astype(np.float32)
+
+
+def _cumulative_periodogram(p_map: np.ndarray) -> tuple[float, np.ndarray]:
+    spectrum = _contrast_spectrum(p_map)
     height, width = spectrum.shape
-    yy, xx = np.indices((height, width))
-    radius = np.hypot(yy - height // 2, xx - width // 2)
-    valid = (radius > 4) & (radius <= min(height, width) * 0.45)
-    background = float(np.median(spectrum[valid]))
-    if background <= 1e-8:
-        return 0.0
-    # The upper-tail percentile is a stable peak estimate for finite noisy blocks.
-    return float(np.percentile(spectrum[valid], 99.5) / background)
+    unshifted = np.fft.ifftshift(spectrum)
+    first_quadrant = np.square(unshifted[: height // 2 + 1, : width // 2 + 1])
+    first_quadrant[0, 0] = 0.0
+    cumulative = np.cumsum(np.cumsum(first_quadrant, axis=0), axis=1)
+    total = float(cumulative[-1, -1])
+    if total <= 1e-12:
+        return 0.0, np.zeros_like(cumulative, dtype=np.float32)
+    cumulative = (cumulative / total).astype(np.float32)
+    gradient_x = cv2.Sobel(cumulative, cv2.CV_32F, 1, 0, ksize=3)
+    gradient_y = cv2.Sobel(cumulative, cv2.CV_32F, 0, 1, ksize=3)
+    delta = float(np.max(np.hypot(gradient_x, gradient_y)))
+    return delta, cumulative
 
 
 def _measure(gray: np.ndarray) -> tuple[float, np.ndarray, dict[str, float]]:
@@ -87,52 +111,32 @@ def _measure(gray: np.ndarray) -> tuple[float, np.ndarray, dict[str, float]]:
     if min(image.shape) < _MIN_IMAGE_SIDE:
         raise ValueError("resampling analysis requires at least 256x256 pixels")
 
-    absolute_residual = _absolute_residual(image)
-    rows = _positions(image.shape[0])
-    columns = _positions(image.shape[1])
-    block_peaks = np.asarray(
-        [
-            _peak_to_background(absolute_residual[row : row + _BLOCK_SIZE, column : column + _BLOCK_SIZE])
-            for row in rows
-            for column in columns
-        ],
-        dtype=np.float32,
-    ).reshape(len(rows), len(columns))
-    median = float(np.median(block_peaks))
-    deviations = np.abs(block_peaks - median)
-    # Robust disagreement is intentionally used instead of the median level:
-    # a uniform web resize is not tampering, while a resized pasted block is.
-    disagreement = float(np.percentile(deviations, 75) / max(abs(median), 1e-6))
+    delta, cumulative = _cumulative_periodogram(_p_map(image))
     metrics = {
-        "local_inconsistency": disagreement,
-        "block_peak_median": median,
-        "block_peak_p90": float(np.percentile(block_peaks, 90)),
-        "block_peak_max": float(np.max(block_peaks)),
-        "block_count": float(block_peaks.size),
+        "periodogram_delta": delta,
+        "periodogram_max": float(np.max(cumulative)),
+        "periodogram_height": float(cumulative.shape[0]),
+        "periodogram_width": float(cumulative.shape[1]),
     }
-    return disagreement, block_peaks, metrics
+    return delta, cumulative, metrics
 
 
-def _visualization(block_peaks: np.ndarray, image_shape: tuple[int, int], output_shape: tuple[int, int]) -> np.ndarray:
-    median = float(np.median(block_peaks))
-    deviations = np.abs(block_peaks - median).astype(np.float32)
-    if float(deviations.max()) <= 1e-8:
-        heatmap = np.zeros_like(deviations, dtype=np.uint8)
+def _visualization(periodogram: np.ndarray, output_shape: tuple[int, int]) -> np.ndarray:
+    if float(periodogram.max()) <= float(periodogram.min()):
+        heatmap = np.zeros_like(periodogram, dtype=np.uint8)
     else:
-        heatmap = cv2.normalize(deviations, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
-    heatmap = cv2.resize(heatmap, (image_shape[1], image_shape[0]), interpolation=cv2.INTER_NEAREST)
+        heatmap = cv2.normalize(periodogram, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
     return cv2.resize(heatmap, (output_shape[1], output_shape[0]), interpolation=cv2.INTER_NEAREST)
 
 
 class ResamplingDetector:
     id = "resampling"
-    name = "Local Resampling Inconsistency"
+    name = "Resampling Spectral Periodicity"
     family = "geometric"
     applicable_formats = frozenset({"JPEG", "PNG", "WEBP", "TIFF"})
     produces_map = True
-    description = "Measures block-to-block disagreement in fixed-predictor resampling spectra."
+    description = "Measures cumulative-periodogram gradients in a fixed-predictor resampling p-map."
     limitations = [
-        "A globally resized image is not tampering and is intentionally not flagged by this score.",
         "Small, heavily compressed, or smoothly textured regions may not leave a measurable periodic signal.",
         "This is a resampling cue and cannot establish who edited an image or distinguish every interpolation method.",
     ]
@@ -154,8 +158,8 @@ class ResamplingDetector:
             ratio = _MAX_ANALYSIS_SIDE / longest
             image_shape = tuple(max(1, round(dimension * ratio)) for dimension in image_shape)
         if min(image_shape) < _MIN_IMAGE_SIDE:
-            return False, "resampling requires both analysis dimensions to be at least 512px for stable block disagreement"
-        return True, "image is large enough for bounded local resampling analysis"
+            return False, "resampling requires both analysis dimensions to be at least 256px for spectral analysis"
+        return True, "image is large enough for bounded resampling spectral analysis"
 
     def run(self, ctx: ImageContext) -> DetectorResult:
         started = perf_counter()
@@ -174,17 +178,17 @@ class ResamplingDetector:
             )
 
         gray = _analysis_gray(ctx)
-        raw, block_peaks, metrics = _measure(gray)
+        raw, cumulative, metrics = _measure(gray)
         score = to_probability(raw, self.threshold, self.scale, self.higher_is_worse)
         flagged = score >= 0.5
-        visualization = _visualization(block_peaks, gray.shape, (ctx.height, ctx.width))
+        visualization = _visualization(cumulative, (ctx.height, ctx.width))
         return DetectorResult(
             self.id,
             DetectorState.APPLICABLE,
             score,
             flagged,
             self.threshold,
-            f"local resampling inconsistency {raw:.3f} ({'exceeds' if flagged else 'is below'} {self.threshold:.3f})",
+            f"cumulative-periodogram gradient {raw:.3f} ({'exceeds' if flagged else 'is below'} {self.threshold:.3f})",
             {**metrics, "analysis_width": float(gray.shape[1]), "analysis_height": float(gray.shape[0])},
             visualization,
             _duration(started),

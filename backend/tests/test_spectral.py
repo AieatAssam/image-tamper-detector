@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 
 from backend.app.analysis.base import ImageContext
+from backend.app.analysis import spectral
 from backend.app.analysis.spectral import SpectralPeakDetector
 
 
@@ -30,6 +31,15 @@ def test_spectral_is_stable_across_png_encoding():
     first = detector.measure(image)[0]
     second = detector.measure(np.asarray(Image.fromarray(image).convert("L")))[0]
     assert abs(first - second) < 0.05
+
+
+def test_spectral_does_not_apply_jpeg_grid_mask(monkeypatch):
+    def fail(*_args, **_kwargs):
+        raise AssertionError("JPEG lattice masking is not part of this variant")
+
+    monkeypatch.setattr(spectral, "_jpeg_grid_mask", fail, raising=False)
+    image = np.random.default_rng(19).integers(0, 256, (64, 64), dtype=np.uint8)
+    SpectralPeakDetector().measure(image)
 
 
 def test_jpeg_grid_does_not_change_spectral_score():

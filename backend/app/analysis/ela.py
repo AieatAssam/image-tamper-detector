@@ -1,10 +1,10 @@
 """
 Error Level Analysis (ELA) module for detecting image tampering.
 
-This implementation is based on the methodology described in:
+The raw residual follows the methodology described in:
 'A Picture's Worth: Digital Image Analysis and Forensics'
-by Dr. Neal Krawetz, presented at Black Hat DC 2008,
-and enhanced with modern computer vision techniques.
+by Dr. Neal Krawetz, presented at Black Hat USA 2007.
+The legacy feature classifier below remains a repository-specific heuristic.
 """
 
 import numpy as np
@@ -18,7 +18,7 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-MAX_ANALYSIS_SIDE = 1024
+MAX_ANALYSIS_SIDE: int | None = None
 
 @dataclass
 class TamperingFeatures:
@@ -29,25 +29,27 @@ class TamperingFeatures:
     compression_artifacts: float  # Level of compression artifacts
 
 class ELAAnalyzer:
-    def __init__(self, 
+    def __init__(self,
                  quality: int = 95,
-                 resave_quality: int = 75,
-                 max_image_size: int = MAX_ANALYSIS_SIDE):
+                 resave_quality: Optional[int] = None,
+                 max_image_size: Optional[int] = MAX_ANALYSIS_SIDE):
         """
         Initialize ELA analyzer with enhanced feature detection.
         
         Args:
-            quality: Initial JPEG quality level (1-100)
-            resave_quality: Quality level for resaving (should be lower than quality)
-            max_image_size: Maximum dimension for image processing
+            quality: JPEG quality level for the controlled resave (1-100)
+            resave_quality: Backwards-compatible override for the controlled resave
+            max_image_size: Optional explicit processing bound
         """
-        if not 1 <= quality <= 100 or not 1 <= resave_quality <= 100:
+        if not 1 <= quality <= 100:
             raise ValueError("Quality values must be between 1 and 100")
-        if resave_quality >= quality:
-            raise ValueError("Resave quality should be lower than initial quality")
-            
+        if resave_quality is not None and not 1 <= resave_quality <= 100:
+            raise ValueError("Quality values must be between 1 and 100")
+        if max_image_size is not None and max_image_size < 1:
+            raise ValueError("Maximum image size must be positive")
+
         self.quality = quality
-        self.resave_quality = resave_quality
+        self.resave_quality = quality if resave_quality is None else resave_quality
         self.max_image_size = max_image_size
 
     def _preprocess_image(self, image: Image.Image) -> Image.Image:
@@ -55,8 +57,8 @@ class ELAAnalyzer:
         if image.mode != 'RGB':
             image = image.convert('RGB')
         
-        # Resize if necessary while maintaining aspect ratio
-        if max(image.size) > self.max_image_size:
+        # An explicit bound is a caller policy, not part of paper-defined ELA.
+        if self.max_image_size is not None and max(image.size) > self.max_image_size:
             ratio = self.max_image_size / max(image.size)
             new_size = tuple(int(dim * ratio) for dim in image.size)
             image = image.resize(new_size, Image.Resampling.LANCZOS)
@@ -98,35 +100,19 @@ class ELAAnalyzer:
             else:
                 raise ValueError("Invalid input type. Must be string, Path, bytes, or PIL image")
 
-            # Preprocess image
+            # Decode the supplied image without changing its dimensions.
             original = self._preprocess_image(original)
-            
-            # Save at high quality
-            high_quality_buffer = io.BytesIO()
-            original.save(high_quality_buffer, format='JPEG', quality=self.quality)
-            high_quality_buffer.seek(0)
-            high_quality = Image.open(high_quality_buffer)
-            
-            # Resave at lower quality
-            low_quality_buffer = io.BytesIO()
-            high_quality.save(low_quality_buffer, format='JPEG', quality=self.resave_quality)
-            low_quality_buffer.seek(0)
-            low_quality = Image.open(low_quality_buffer)
-            
-            # Convert to numpy arrays
-            high_array = np.array(high_quality)
-            low_array = np.array(low_quality)
-            
-            # Calculate ELA with adaptive scaling
-            ela = cv2.absdiff(high_array, low_array)
-            max_diff = np.max(ela)
-            if max_diff > 0:
-                scale = 255.0 / max_diff
-                ela_enhanced = cv2.convertScaleAbs(ela * scale)
-            else:
-                ela_enhanced = cv2.convertScaleAbs(ela)
-            
-            return np.array(original), ela_enhanced
+            input_array = np.asarray(original, dtype=np.uint8)
+
+            # Krawetz ELA: compare the decoded input with one controlled resave.
+            resaved_buffer = io.BytesIO()
+            original.save(resaved_buffer, format="JPEG", quality=self.resave_quality)
+            resaved_buffer.seek(0)
+            resaved = Image.open(resaved_buffer).convert("RGB")
+            resaved_array = np.asarray(resaved, dtype=np.uint8)
+            ela = cv2.absdiff(input_array, resaved_array)
+
+            return input_array, ela
             
         except Exception as e:
             raise ValueError(f"Error during ELA analysis: {e}")

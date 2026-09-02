@@ -5,7 +5,8 @@ import pytest
 import numpy as np
 from pathlib import Path
 import cv2
-from backend.app.analysis.prnu import MAX_ANALYSIS_SIDE, PRNUAnalyzer, _analysis_image, _log_binomial_tail, _significance
+from backend.app.analysis import prnu
+from backend.app.analysis.prnu import MAX_ANALYSIS_SIDE, PRNUAnalyzer, _analysis_image, _grow_region, _log_binomial_tail, _significance
 
 @pytest.fixture
 def prnu_analyzer():
@@ -107,3 +108,21 @@ def test_noisesniffer_nfa_is_a_higher_is_worse_significance_score():
     assert visualization.shape == image.shape
     assert visualization.dtype == np.uint8
     assert np.isfinite(score)
+
+
+def test_noisesniffer_uses_paper_region_growth_constant(monkeypatch):
+    def fake_tail(red_blocks, all_blocks, block_size, percentile):
+        return 0.0 if (red_blocks, all_blocks) == (1, 1) else -0.7
+
+    monkeypatch.setattr(prnu, "_log_binomial_tail", fake_tail)
+    all_counts = np.array([[1, 1]], dtype=np.int32)
+    red_counts = np.array([[1, 0]], dtype=np.int32)
+
+    region, _, _ = _grow_region((0, 0), all_counts, red_counts, 3, 0.5)
+
+    assert region == [(0, 0)]
+
+
+def test_noisesniffer_rejects_untested_block_size():
+    with pytest.raises(ValueError, match="3, 5, or 8"):
+        PRNUAnalyzer(block_size=7)

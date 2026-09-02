@@ -6,13 +6,13 @@ import numpy as np
 from pathlib import Path
 from PIL import Image
 import cv2
+from backend.app.analysis import entropy as entropy_module
 from backend.app.analysis.entropy import MAX_ANALYSIS_SIDE, EntropyAnalyzer, EntropyFeatures, _analysis_image
 
 # Test constants
-TEST_RADIUS = 4  # Match default radius
-TEST_TOLERANCE = 0.12  # Match default tolerance
+TEST_RADIUS = 5  # Match cited blog radius
+TEST_TOLERANCE = 0.1  # Match cited blog tolerance
 TEST_MATCHING_THRESHOLD = 0.35  # Match default threshold
-TEST_UNIFORMITY_THRESHOLD = 0.2  # Keep same uniformity threshold
 
 @pytest.fixture
 def entropy_analyzer():
@@ -21,7 +21,6 @@ def entropy_analyzer():
         radius=TEST_RADIUS,
         tolerance=TEST_TOLERANCE,
         matching_threshold=TEST_MATCHING_THRESHOLD,
-        uniformity_threshold=TEST_UNIFORMITY_THRESHOLD
     )
 
 @pytest.fixture
@@ -31,6 +30,10 @@ def data_dir():
 
 def test_entropy_analyzer_initialization():
     """Test entropy analyzer initialization with valid parameters."""
+    default_analyzer = EntropyAnalyzer(matching_threshold=TEST_MATCHING_THRESHOLD)
+    assert default_analyzer.radius == 5
+    assert default_analyzer.tolerance == 0.1
+
     # Test valid initialization
     analyzer = EntropyAnalyzer(
         radius=TEST_RADIUS,
@@ -80,14 +83,12 @@ def test_analyze_returns_correct_shapes(entropy_analyzer, data_dir):
             assert len(features.entropy_green.shape) == 2
             assert len(features.entropy_blue.shape) == 2
             assert len(features.matching_mask.shape) == 2
-            assert len(features.uniformity_mask.shape) == 2  # New uniformity mask
             
             # Check all maps have same shape as image
             assert image_rgb.shape[:2] == features.entropy_red.shape
             assert image_rgb.shape[:2] == features.entropy_green.shape
             assert image_rgb.shape[:2] == features.entropy_blue.shape
             assert image_rgb.shape[:2] == features.matching_mask.shape
-            assert image_rgb.shape[:2] == features.uniformity_mask.shape  # New uniformity mask
 
 def test_error_handling(entropy_analyzer):
     """Test error handling for invalid inputs."""
@@ -118,7 +119,6 @@ def test_detect_ai_generated_original_images(entropy_analyzer, data_dir):
     print("\nOriginal image analysis:")
     print(f"Matching proportion: {proportion:.3f}")
     print(f"Threshold: {entropy_analyzer.matching_threshold:.3f}")
-    print(f"Uniformity threshold: {entropy_analyzer.uniformity_threshold:.3f}")
     
     # For original images, expect high proportion of matching pixels
     assert proportion > entropy_analyzer.matching_threshold
@@ -140,7 +140,6 @@ def test_detect_ai_generated_ai_images(entropy_analyzer, data_dir):
     print("\nAI-generated image analysis:")
     print(f"Matching proportion: {proportion:.3f}")
     print(f"Threshold: {entropy_analyzer.matching_threshold:.3f}")
-    print(f"Uniformity threshold: {entropy_analyzer.uniformity_threshold:.3f}")
     
     # For AI-generated images, expect low proportion of matching pixels
     assert proportion < entropy_analyzer.matching_threshold
@@ -168,9 +167,23 @@ def test_entropy_computation(entropy_analyzer, data_dir):
     assert features.matching_mask.dtype == bool  # Binary mask
     assert np.all((features.matching_mask == 0) | (features.matching_mask == 1))  # Only 0s and 1s
     
-    # Test uniformity mask
-    assert features.uniformity_mask.dtype == bool  # Binary mask
-    assert np.all((features.uniformity_mask == 0) | (features.uniformity_mask == 1))  # Only 0s and 1s
+
+
+def test_entropy_matching_uses_raw_values_without_uint8_wrap(monkeypatch):
+    maps = iter(
+        (
+            np.array([[0.0, 255.0]], dtype=np.float32),
+            np.array([[255.0, 0.0]], dtype=np.float32),
+            np.array([[0.0, 0.0]], dtype=np.float32),
+        )
+    )
+    monkeypatch.setattr(entropy_module.filters.rank, "entropy", lambda *_args: next(maps))
+
+    _, features = EntropyAnalyzer(radius=1, tolerance=0.1, matching_threshold=0.5).analyze(
+        np.zeros((1, 2, 3), dtype=np.uint8)
+    )
+
+    assert not np.any(features.matching_mask)
 
 def test_image_preprocessing(entropy_analyzer, data_dir):
     """Test image preprocessing with different input types."""

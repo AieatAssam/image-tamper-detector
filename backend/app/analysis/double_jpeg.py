@@ -4,6 +4,7 @@ from time import perf_counter
 
 import cv2
 import numpy as np
+from scipy.optimize import least_squares
 
 from backend.app.analysis.adapters import _settings
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
@@ -42,23 +43,33 @@ def _leading_digits(values: np.ndarray) -> np.ndarray:
     return np.floor(values / np.power(10.0, np.floor(np.log10(values)))).astype(np.int8).clip(1, 9)
 
 
+def _fit_generalized_benford(observed: np.ndarray) -> tuple[float, float, float]:
+    digits = np.arange(1, 10, dtype=float)
+
+    def model(parameters: np.ndarray) -> np.ndarray:
+        s, q = parameters
+        with np.errstate(divide="ignore", invalid="ignore"):
+            values = np.log10(1.0 + 1.0 / (s + digits**q))
+        return values / max(float(values.sum()), 1e-12)
+
+    result = least_squares(
+        lambda parameters: model(parameters) - observed,
+        x0=np.array((0.0, 1.5), dtype=float),
+        bounds=(np.array((-0.99, 0.1)), np.array((2.0, 5.0))),
+    )
+    fitted = model(result.x)
+    error = float(np.sum((observed - fitted) ** 2 / np.maximum(fitted, 1e-9)))
+    return error, float(result.x[0]), float(result.x[1])
+
+
 def _benford_divergence(values: np.ndarray) -> float:
     digits = _leading_digits(values)
     if digits.size == 0:
         return 0.0
     observed = np.bincount(digits, minlength=10)[1:10].astype(np.float64)
     observed /= observed.sum()
-    best_error = float("inf")
-    # Small deterministic grid fit: enough for this diagnostic and avoids a new optimizer dependency.
-    for s in np.linspace(0.0, 2.0, 9):
-        for q in np.linspace(0.5, 2.0, 7):
-            model = np.log10(1.0 + 1.0 / (s + np.arange(1, 10, dtype=float) ** q))
-            n = float(np.dot(observed, model) / max(np.dot(model, model), 1e-12))
-            fitted = n * model
-            fitted /= max(fitted.sum(), 1e-12)
-            error = float(np.sum((observed - fitted) ** 2 / np.maximum(fitted, 1e-9)))
-            best_error = min(best_error, error)
-    return 0.0 if not np.isfinite(best_error) else best_error
+    error, _, _ = _fit_generalized_benford(observed)
+    return 0.0 if not np.isfinite(error) else error
 
 
 def _periodicity_ratio(values: np.ndarray) -> float:
@@ -105,10 +116,7 @@ class DoubleJpegDetector:
         periodicity = [_periodicity_ratio(coefficients[:, index]) for index in range(coefficients.shape[1])]
         benford_score = float(np.mean(benford))
         periodicity_score = float(np.mean(periodicity))
-        # The measured indicators are anti-correlated on the corpus: authentic
-        # recompresses have the larger aggregate. Reverse that statistic so
-        # the catalog's higher-is-worse direction remains true.
-        aggregate = -(0.5 * benford_score + 0.5 * periodicity_score)
+        aggregate = 0.5 * benford_score + 0.5 * periodicity_score
         score = to_probability(aggregate, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
         flagged = score >= 0.5
         visualization = _block_visualization(coefficients, block_shape, ctx.gray_uint8.shape)

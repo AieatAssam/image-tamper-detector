@@ -116,10 +116,27 @@ non-negative: an anti-correlated detector is dropped at weight zero rather than
 silently inverted in fusion. The fitted intercept also enforces the contract's `<= 0.10` manipulated rate
 for the `authentic_recompress` and `resize_then_save` false-positive traps.
 
-The committed calibration artifact is still the native legacy fit from before
-the R16 measurements. Its fused held-out AUC `0.5784615384615385` on 916 rows
-across 317 source groups is an artifact description, not a current parity
-performance claim; the older fused result is superseded and omitted. The corpus remains small, partly synthetic, and unlike the
+The committed calibration artifact is the Round 19 consolidation refit, run
+with `--corpus all --variant both` after the paper-fidelity repairs in
+`plan/audit/REPAIR-REPORT-R19.md` changed the raw statistics of `splicebuster`,
+`resampling`, `cfa`, `spectral`, `npr`, `entropy`, `c2pa`, `copy_move`, and
+`double_jpeg`. Its fused held-out AUC is `0.6079881656804734` on 1022 held-out
+rows over a 1530-row fit population, with weight/held-out-skill Spearman
+`0.49466263219604506`. It is an artifact description, not an open-web
+performance claim, and it is not comparable to the superseded native-only
+`0.5784615384615385` fit: the population, the variant selection, and several
+detector statistics all changed at once.
+
+`double_jpeg` is the round's largest single movement. Its within-source AUC on
+this corpus went `0.660` to `0.2966101694915254` (n=200/208, Hanley-McNeil SE
+`0.0255855`) and the non-negative weight guard dropped it to zero. The cause is
+that the previous code negated its aggregate, which made the corpus label
+correlate while contradicting the physical premise. On a controlled q=85 versus
+q=75 recompression probe the repaired detector separates perfectly and the old
+one separates perfectly backwards (within-source AUC `1.0` versus `0.0`; see
+`plan/audit/REPAIR-REPORT-R19-jpeg.md`). The below-chance corpus result is
+recorded as an anti-correlated measurement, exactly as AEROBLADE's `0.330` and
+`learned`'s `0.086` were in R18A. No sign was flipped to recover the number. The corpus remains small, partly synthetic, and unlike the
 open web. Synthetic rows cannot validate CFA, spectral, or sensor-provenance
 claims. R16A's CLIP value still rounds to 1.000 after re-save, but the 12
 negative rows and content/domain confound prevent treating it as generation

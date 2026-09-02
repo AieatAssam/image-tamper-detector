@@ -1,28 +1,36 @@
 {
   "detectors": {
     "aeroblade": {
-      "ai_axis_auc": 0.5399572649572649,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 390,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 0,
+      "ai_axis_n_positive": 0,
       "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.08224046194146653,
+      "ai_axis_standard_error": null,
       "clipped": false,
-      "heldout_auc": 0.5031446540880503,
+      "heldout_auc": null,
       "higher_is_worse": false,
-      "scale": 0.02141833771020174,
-      "threshold": 0.09583558887243271,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "validated_by": [
+        "real_ai",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "parity"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.5110132158590308,
+        "auc": null,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 250,
-        "n_pos": 260,
+        "n_neg": 0,
+        "n_pos": 0,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.025584213778430943
+        "se": null
       },
-      "weight_reason": "within_source_auc=0.511013 <= 0.5 + SE=0.025584",
-      "within_source_auc": 0.5110132158590308
+      "weight_reason": "heldout_auc unavailable: no applicable observations",
+      "within_source_auc": null
     },
     "c2pa": {
       "ai_axis_auc": null,
@@ -35,6 +43,13 @@
       "higher_is_worse": true,
       "scale": 1.0,
       "threshold": 0.0,
+      "validated_by": [
+        "real_c2pa_signed",
+        "real_camera"
+      ],
+      "variant_scope": [
+        "native"
+      ],
       "weight": 0.0,
       "weight_guard": {
         "auc": null,
@@ -57,8 +72,18 @@
       "clipped": false,
       "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 5.900303685720387e-05,
-      "threshold": 0.00023601214742881548,
+      "scale": 0.0089285708963871,
+      "threshold": 0.08418367058038712,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "real_camera",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "native"
+      ],
       "weight": 0.0,
       "weight_guard": {
         "auc": null,
@@ -73,244 +98,328 @@
       "within_source_auc": null
     },
     "clip_probe": {
-      "ai_axis_auc": 1.0,
-      "ai_axis_n_negative": 12,
+      "ai_axis_auc": 0.8110788582486695,
+      "ai_axis_n_negative": 212,
       "ai_axis_n_positive": 390,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.0,
-      "clipped": true,
-      "heldout_auc": 0.5230769230769231,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": 0.017074431931609138,
+      "clipped": false,
+      "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.09044502506911628,
-      "threshold": 0.7939407755134292,
-      "weight": 0.0021987867770255362,
+      "scale": 0.0687141859008169,
+      "threshold": 0.9820398467299019,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "parity"
+      ],
+      "weight": 0.0,
       "weight_guard": {
-        "auc": 1.0,
+        "auc": 0.8110788582486695,
         "drop": false,
         "metric": "ai_axis_auc",
-        "n_neg": 12,
+        "n_neg": 212,
         "n_pos": 390,
         "rule": "keep only when ai_axis_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.0
+        "se": 0.017074431931609138
       },
-      "weight_unclipped": 0.0023172509366955318,
-      "within_source_auc": 0.5488069414316703
+      "within_source_auc": null
     },
     "copy_move": {
-      "ai_axis_auc": 0.38596491228070173,
-      "ai_axis_n_negative": 6,
-      "ai_axis_n_positive": 76,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.12677774898455357,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 211,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": null,
       "clipped": true,
-      "heldout_auc": 0.5963302752293578,
+      "heldout_auc": 0.5666666666666667,
       "higher_is_worse": true,
-      "scale": 1.0,
-      "threshold": 1.0,
-      "weight": 0.22902804418509454,
+      "scale": 3.0,
+      "threshold": 9.0,
+      "validated_by": [
+        "imd2020",
+        "synthetic_copymove"
+      ],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
+      "weight": 0.08285233520956026,
       "weight_guard": {
-        "auc": 0.5846774193548387,
+        "auc": 0.592964824120603,
         "drop": false,
         "metric": "within_source_auc",
-        "n_neg": 50,
-        "n_pos": 55,
+        "n_neg": 199,
+        "n_pos": 199,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.055533239187862155
+        "se": 0.02836186471233934
       },
-      "weight_unclipped": 0.24136740108806484,
-      "within_source_auc": 0.5846774193548387
+      "weight_unclipped": 0.17689088438493988,
+      "within_source_auc": 0.592964824120603
     },
     "double_jpeg": {
-      "ai_axis_auc": 0.19166666666666668,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 30,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.0822837900569704,
-      "clipped": true,
-      "heldout_auc": 0.65814696485623,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 212,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": null,
+      "clipped": false,
+      "heldout_auc": 0.2710843373493976,
       "higher_is_worse": true,
-      "scale": 0.3222013082734957,
-      "threshold": -1.2161879758632954,
-      "weight": 0.13267184641281599,
+      "scale": 0.2925417704601727,
+      "threshold": 1.4201855350697326,
+      "validated_by": [
+        "imd2020",
+        "synthetic_recompress"
+      ],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
+      "weight": 0.0,
       "weight_guard": {
-        "auc": 0.6598639455782312,
-        "drop": false,
+        "auc": 0.2966101694915254,
+        "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 231,
-        "n_pos": 240,
+        "n_neg": 208,
+        "n_pos": 200,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.024895535336266532
+        "se": 0.025585546115291707
       },
-      "weight_unclipped": 0.13981981499320847,
-      "within_source_auc": 0.6598639455782312
+      "weight_reason": "within_source_auc=0.296610 <= 0.5 + SE=0.025586",
+      "within_source_auc": 0.2966101694915254
     },
     "ela": {
-      "ai_axis_auc": 0.30277777777777776,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 30,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 0,
+      "ai_axis_n_positive": 0,
       "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.09524411456477513,
+      "ai_axis_standard_error": null,
       "clipped": false,
-      "heldout_auc": 0.4281150159744409,
-      "higher_is_worse": true,
-      "scale": 0.013851113901286433,
-      "threshold": 0.449001248439414,
-      "weight": 0.0,
-      "weight_guard": {
-        "auc": 0.4376417233560091,
-        "drop": true,
-        "metric": "within_source_auc",
-        "n_neg": 231,
-        "n_pos": 240,
-        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.026403534166689748
-      },
-      "weight_reason": "within_source_auc=0.437642 <= 0.5 + SE=0.026404",
-      "within_source_auc": 0.4376417233560091
-    },
-    "entropy": {
-      "ai_axis_auc": 0.5544871794871795,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 390,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.08116829676341812,
-      "clipped": false,
-      "heldout_auc": 0.48923076923076925,
-      "higher_is_worse": false,
-      "scale": 0.05073037181386067,
-      "threshold": 0.697947247706422,
-      "weight": 0.0,
-      "weight_guard": {
-        "auc": 0.47288503253796094,
-        "drop": true,
-        "metric": "within_source_auc",
-        "n_neg": 251,
-        "n_pos": 260,
-        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.025531609503020178
-      },
-      "weight_reason": "within_source_auc=0.472885 <= 0.5 + SE=0.025532",
-      "within_source_auc": 0.47288503253796094
-    },
-    "exif": {
-      "ai_axis_auc": 0.08333333333333333,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 30,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.057747205736972035,
-      "clipped": false,
-      "heldout_auc": 0.5247524752475248,
+      "heldout_auc": 0.5178571428571429,
       "higher_is_worse": true,
       "scale": 2.220446049250313e-16,
-      "threshold": 0.0,
+      "threshold": 0.48529411753511087,
+      "validated_by": [
+        "imd2020",
+        "synthetic_recompress",
+        "synthetic_splice"
+      ],
+      "variant_scope": [
+        "native"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.5,
+        "auc": 0.5164233576642335,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 51,
-        "n_pos": 60,
+        "n_neg": 212,
+        "n_pos": 214,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.05522779130530093
+        "se": 0.027985952913406168
       },
-      "weight_reason": "within_source_auc=0.500000 <= 0.5 + SE=0.055228",
-      "within_source_auc": 0.5
+      "weight_reason": "within_source_auc=0.516423 <= 0.5 + SE=0.027986",
+      "within_source_auc": 0.5164233576642335
+    },
+    "entropy": {
+      "ai_axis_auc": 0.646528785679729,
+      "ai_axis_n_negative": 212,
+      "ai_axis_n_positive": 390,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": 0.022639943244821055,
+      "clipped": false,
+      "heldout_auc": null,
+      "higher_is_worse": false,
+      "scale": 0.07497191429138184,
+      "threshold": 0.15215015411376953,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "real_camera",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "parity"
+      ],
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "within_source_auc unavailable for Hanley-McNeil guard",
+      "within_source_auc": null
+    },
+    "exif": {
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 12,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera",
+      "ai_axis_standard_error": null,
+      "clipped": true,
+      "heldout_auc": 0.5431034482758621,
+      "higher_is_worse": true,
+      "scale": 0.38749999999999996,
+      "threshold": 0.7,
+      "validated_by": [
+        "imd2020",
+        "real_camera",
+        "synthetic_recompress"
+      ],
+      "variant_scope": [
+        "native"
+      ],
+      "weight": 0.3146006173706399,
+      "weight_guard": {
+        "auc": 0.6081081081081081,
+        "drop": false,
+        "metric": "within_source_auc",
+        "n_neg": 37,
+        "n_pos": 20,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.08018075546853513
+      },
+      "weight_unclipped": 0.671676679890601,
+      "within_source_auc": 0.6081081081081081
     },
     "jpeg_ghosts": {
-      "ai_axis_auc": 0.4166666666666667,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 30,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.10036417701235284,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 212,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": null,
       "clipped": true,
-      "heldout_auc": 0.5511182108626198,
+      "heldout_auc": 0.5901639344262295,
       "higher_is_worse": true,
-      "scale": 0.5,
-      "threshold": 4.0,
-      "weight": 0.08206854677333676,
+      "scale": 2.220446049250313e-16,
+      "threshold": 2.0,
+      "validated_by": [
+        "imd2020",
+        "synthetic_splice"
+      ],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
+      "weight": 0.14830519051825317,
       "weight_guard": {
-        "auc": 0.5385487528344671,
+        "auc": 0.5972222222222222,
         "drop": false,
         "metric": "within_source_auc",
-        "n_neg": 231,
-        "n_pos": 240,
+        "n_neg": 180,
+        "n_pos": 180,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.026526225840307432
+        "se": 0.029764365558260047
       },
-      "weight_unclipped": 0.08649015851415003,
-      "within_source_auc": 0.5385487528344671
+      "weight_unclipped": 0.3166336379451102,
+      "within_source_auc": 0.5972222222222222
     },
     "learned": {
-      "ai_axis_auc": 0.42385321100917434,
-      "ai_axis_n_negative": 5,
-      "ai_axis_n_positive": 109,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.13664179659732437,
+      "ai_axis_auc": 0.08519402985074627,
+      "ai_axis_n_negative": 125,
+      "ai_axis_n_positive": 134,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": 0.018590277818154418,
       "clipped": false,
-      "heldout_auc": 0.6363636363636364,
+      "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.06994080543518066,
-      "threshold": 0.808146059513092,
+      "scale": 0.06497473269701004,
+      "threshold": 0.9324893355369568,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "parity"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.42385321100917434,
+        "auc": 0.08519402985074627,
         "drop": true,
         "metric": "ai_axis_auc",
-        "n_neg": 5,
-        "n_pos": 109,
+        "n_neg": 125,
+        "n_pos": 134,
         "rule": "keep only when ai_axis_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.13664179659732437
+        "se": 0.018590277818154418
       },
-      "weight_reason": "ai_axis_auc=0.423853 <= 0.5 + SE=0.136642",
-      "within_source_auc": 0.6235294117647059
+      "weight_reason": "ai_axis_auc=0.085194 <= 0.5 + SE=0.018590",
+      "within_source_auc": null
     },
     "npr": {
-      "ai_axis_auc": 0.3416666666666667,
-      "ai_axis_n_negative": 12,
+      "ai_axis_auc": 0.30108853410740205,
+      "ai_axis_n_negative": 212,
       "ai_axis_n_positive": 390,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.08720542226749045,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": 0.023111103266426656,
       "clipped": false,
-      "heldout_auc": 0.4676923076923077,
+      "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.04306673842963582,
-      "threshold": 0.6534500592807039,
+      "scale": 0.03531787529169583,
+      "threshold": 0.9115533396049508,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "parity"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.3416666666666667,
+        "auc": 0.30108853410740205,
         "drop": true,
         "metric": "ai_axis_auc",
-        "n_neg": 12,
+        "n_neg": 212,
         "n_pos": 390,
         "rule": "keep only when ai_axis_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.08720542226749045
+        "se": 0.023111103266426656
       },
-      "weight_reason": "ai_axis_auc=0.341667 <= 0.5 + SE=0.087205",
-      "within_source_auc": 0.4793926247288503
+      "weight_reason": "ai_axis_auc=0.301089 <= 0.5 + SE=0.023111",
+      "within_source_auc": null
     },
     "prnu": {
-      "ai_axis_auc": 0.5878205128205128,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 390,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.0783621029701363,
-      "clipped": true,
-      "heldout_auc": 0.5153846153846153,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 224,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": null,
+      "clipped": false,
+      "heldout_auc": 0.5698529411764706,
       "higher_is_worse": true,
-      "scale": 10.652132275660499,
-      "threshold": 3.2242669451552217,
-      "weight": 0.009674020429609338,
+      "scale": 6.406430287141021,
+      "threshold": -0.6961208574727343,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "real_camera"
+      ],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
+      "weight": 0.0,
       "weight_guard": {
-        "auc": 0.5433839479392625,
+        "auc": 0.57,
         "drop": false,
         "metric": "within_source_auc",
-        "n_neg": 251,
-        "n_pos": 260,
+        "n_neg": 200,
+        "n_pos": 200,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.025438797247157766
+        "se": 0.02855685689771115
       },
-      "weight_unclipped": 0.010195228175989527,
-      "within_source_auc": 0.5433839479392625
+      "within_source_auc": 0.57
     },
     "qtable": {
       "ai_axis_auc": null,
@@ -319,145 +428,156 @@
       "ai_axis_negative_scope": "real_camera",
       "ai_axis_standard_error": null,
       "clipped": false,
-      "heldout_auc": 0.4885057471264368,
+      "heldout_auc": 0.5,
       "higher_is_worse": false,
       "scale": 2.220446049250313e-16,
       "threshold": 298.0,
+      "validated_by": [
+        "imd2020",
+        "real_camera",
+        "synthetic_recompress"
+      ],
+      "variant_scope": [
+        "native"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.4699570815450644,
+        "auc": 0.47058823529411764,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 47,
-        "n_pos": 53,
+        "n_neg": 34,
+        "n_pos": 18,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.058069136163396824
+        "se": 0.08426986828058185
       },
-      "weight_reason": "within_source_auc=0.469957 <= 0.5 + SE=0.058069",
-      "within_source_auc": 0.4699570815450644
+      "weight_reason": "within_source_auc=0.470588 <= 0.5 + SE=0.084270",
+      "within_source_auc": 0.47058823529411764
     },
     "resampling": {
-      "ai_axis_auc": 0.29828571428571427,
-      "ai_axis_n_negative": 10,
-      "ai_axis_n_positive": 350,
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 0,
+      "ai_axis_n_positive": 0,
       "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.09375451402219721,
+      "ai_axis_standard_error": null,
       "clipped": false,
-      "heldout_auc": 0.5,
+      "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.06675232574343681,
-      "threshold": 0.12543317675590515,
+      "scale": 1.0,
+      "threshold": 0.0,
+      "validated_by": [],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.4749262536873156,
+        "auc": null,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 173,
-        "n_pos": 192,
+        "n_neg": 0,
+        "n_pos": 0,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.030282095118942188
+        "se": null
       },
-      "weight_reason": "within_source_auc=0.474926 <= 0.5 + SE=0.030282",
-      "within_source_auc": 0.4749262536873156
+      "weight_reason": "heldout_auc unavailable: no applicable observations",
+      "within_source_auc": null
     },
     "spectral": {
-      "ai_axis_auc": 0.6019230769230769,
-      "ai_axis_n_negative": 12,
+      "ai_axis_auc": 0.6147798742138365,
+      "ai_axis_n_negative": 212,
       "ai_axis_n_positive": 390,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.07703026387699966,
-      "clipped": true,
-      "heldout_auc": 0.563076923076923,
-      "higher_is_worse": true,
-      "scale": 0.2571495771408081,
-      "threshold": 3.2332499027252197,
-      "weight": 0.00948120039580706,
-      "weight_guard": {
-        "auc": 0.5357917570498916,
-        "drop": false,
-        "metric": "within_source_auc",
-        "n_neg": 251,
-        "n_pos": 260,
-        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.025478661704110016
-      },
-      "weight_unclipped": 0.009992019566309589,
-      "within_source_auc": 0.5357917570498916
-    },
-    "splicebuster": {
-      "ai_axis_auc": 0.72,
-      "ai_axis_n_negative": 5,
-      "ai_axis_n_positive": 30,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.11009277271760926,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": 0.023298631578934442,
       "clipped": false,
-      "heldout_auc": 0.6521739130434783,
+      "heldout_auc": null,
       "higher_is_worse": true,
-      "scale": 0.9040770530700684,
-      "threshold": 9.749585151672363,
+      "scale": 0.5444828271865845,
+      "threshold": 4.830554008483887,
+      "validated_by": [
+        "imd2020",
+        "real_ai",
+        "real_camera",
+        "sd35_flux",
+        "synthbuster"
+      ],
+      "variant_scope": [
+        "parity"
+      ],
       "weight": 0.0,
       "weight_guard": {
-        "auc": 0.6086956521739131,
-        "drop": false,
-        "metric": "within_source_auc",
-        "n_neg": 134,
-        "n_pos": 154,
-        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.03300110319471434
-      },
-      "within_source_auc": 0.6086956521739131
-    },
-    "zero": {
-      "ai_axis_auc": 0.4878205128205128,
-      "ai_axis_n_negative": 12,
-      "ai_axis_n_positive": 390,
-      "ai_axis_negative_scope": "real_camera",
-      "ai_axis_standard_error": 0.08532276833068587,
-      "clipped": false,
-      "heldout_auc": 0.5030769230769231,
-      "higher_is_worse": true,
-      "scale": 2.220446049250313e-16,
-      "threshold": 9.538404828860132,
-      "weight": 0.0,
-      "weight_guard": {
-        "auc": 0.5065075921908894,
+        "auc": null,
         "drop": true,
         "metric": "within_source_auc",
-        "n_neg": 251,
-        "n_pos": 260,
+        "n_neg": 0,
+        "n_pos": 0,
         "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
-        "se": 0.02556482271436026
+        "se": null
       },
-      "weight_reason": "within_source_auc=0.506508 <= 0.5 + SE=0.025565",
-      "within_source_auc": 0.5065075921908894
-    }
-  },
-  "variant_policy": {
-    "variants": [
-      "native",
-      "parity"
-    ],
-    "default_variant": "native",
-    "enforcement": "calibrate.py and benchmark.py exclude rows outside each detector's declared variant_scope; serving must select the matching variant before detector invocation",
-    "detector_scope": {
-      "aeroblade": ["parity"],
-      "clip_probe": ["parity"],
-      "learned": ["parity"],
-      "npr": ["parity"],
-      "spectral": ["parity"],
-      "entropy": ["parity"],
-      "c2pa": ["native"],
-      "qtable": ["native"],
-      "exif": ["native"],
-      "cfa": ["native"],
-      "ela": ["native"],
-      "copy_move": ["native", "parity"],
-      "double_jpeg": ["native", "parity"],
-      "jpeg_ghosts": ["native", "parity"],
-      "prnu": ["native", "parity"],
-      "resampling": ["native", "parity"],
-      "splicebuster": ["native", "parity"],
-      "zero": ["native", "parity"]
+      "weight_reason": "within_source_auc unavailable for Hanley-McNeil guard",
+      "within_source_auc": null
+    },
+    "splicebuster": {
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 0,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera",
+      "ai_axis_standard_error": null,
+      "clipped": false,
+      "heldout_auc": null,
+      "higher_is_worse": true,
+      "scale": 19.786386066551017,
+      "threshold": 22.545359307632634,
+      "validated_by": [
+        "synthetic_splice"
+      ],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
+      "weight": 0.0,
+      "weight_guard": {
+        "auc": null,
+        "drop": true,
+        "metric": "within_source_auc",
+        "n_neg": 0,
+        "n_pos": 0,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": null
+      },
+      "weight_reason": "within_source_auc unavailable for Hanley-McNeil guard",
+      "within_source_auc": null
+    },
+    "zero": {
+      "ai_axis_auc": null,
+      "ai_axis_n_negative": 212,
+      "ai_axis_n_positive": 0,
+      "ai_axis_negative_scope": "real_camera+imd2020(parity)",
+      "ai_axis_standard_error": null,
+      "clipped": true,
+      "heldout_auc": 0.5514705882352942,
+      "higher_is_worse": true,
+      "scale": 0.0855255220361999,
+      "threshold": 38.91271365589274,
+      "validated_by": [
+        "imd2020",
+        "synthetic_splice"
+      ],
+      "variant_scope": [
+        "native",
+        "parity"
+      ],
+      "weight": 0.021986114234251935,
+      "weight_guard": {
+        "auc": 0.5425,
+        "drop": false,
+        "metric": "within_source_auc",
+        "n_neg": 200,
+        "n_pos": 200,
+        "rule": "keep only when within_source_auc > 0.5 + Hanley-McNeil SE",
+        "se": 0.02877599806614702
+      },
+      "weight_unclipped": 0.04694065871828771,
+      "within_source_auc": 0.5425
     }
   },
   "fitted_on": {
@@ -465,21 +585,25 @@
       "real",
       "synthetic"
     ],
-    "corpus_revision": "51f4fde6fac9bd99c40c66b33b3fd9542ce9fe3669a5e5d1f8b3cebad60fa919",
-    "n_images": 916,
-    "variant_selection": "native",
-    "variants": ["native"]
+    "corpus_revision": "573dc59d27ebd77654da6ae6a14d351109815e8994d57b3dc0b29675ce0068a3",
+    "n_images": 1530,
+    "variant_selection": "both",
+    "variants": [
+      "native",
+      "parity"
+    ]
   },
   "fusion": {
-    "intercept": 0.3270728718347808,
+    "intercept": -0.05933318062453329,
     "method": "weighted_logit"
   },
-  "generated_at": "2026-08-31T02:39:49Z",
+  "generated_at": "2026-09-02T10:07:38Z",
   "heldout": {
-    "auc": 0.5784615384615385,
-    "n": 557,
+    "auc": 0.6079881656804734,
+    "n": 1022,
     "seed": 20260828,
-    "split_by": "source_image"
+    "split_by": "source_image",
+    "within_source_auc_by": "source_image+variant"
   },
   "legacy": {
     "entropy": {
@@ -490,5 +614,5 @@
     }
   },
   "version": "2026-08-28",
-  "weight_skill_spearman": 0.5458137240480705
+  "weight_skill_spearman": 0.49466263219604506
 }

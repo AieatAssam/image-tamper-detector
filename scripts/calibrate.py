@@ -21,7 +21,7 @@ from backend.app.analysis.registry import get_all, run_all  # noqa: E402
 
 RAW_KEYS = {
     "ela": "edge_discontinuity",
-    "prnu": "uniformity_score",
+    "prnu": "noisesniffer_significance",
     "entropy": "matching_proportion",
     "qtable": "libjpeg_distance",
     "double_jpeg": "aggregate",

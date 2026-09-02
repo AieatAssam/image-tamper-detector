@@ -64,7 +64,7 @@ class NoiseResidualAdapter:
     family = "sensor"
     applicable_formats = frozenset({"JPEG", "PNG", "WEBP", "TIFF"})
     produces_map = True
-    description = "Measures local variance in a denoising residual as a noise inconsistency cue."
+    description = "Runs the Noisesniffer a-contrario test for locally improbable noise structure."
     limitations = ["This is not camera attribution without a reference fingerprint."]
 
     def __init__(self) -> None:
@@ -82,8 +82,8 @@ class NoiseResidualAdapter:
         flagged = score >= 0.5
         return DetectorResult(
             self.id, DetectorState.APPLICABLE, score, flagged, float(config["threshold"]),
-            f"noise residual variance {raw:.3f} {'exceeds' if flagged else 'is below'} the {float(config['threshold']):.3f} threshold",
-            {"uniformity_score": raw}, visualization, _duration(started),
+            f"Noisesniffer significance -log10(NFA) {raw:.3f} {'exceeds' if flagged else 'is below'} the {float(config['threshold']):.3f} threshold",
+            {"noisesniffer_significance": raw}, visualization, _duration(started),
         )
 
 

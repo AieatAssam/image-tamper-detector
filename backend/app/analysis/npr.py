@@ -76,24 +76,15 @@ class NprDetector:
             raise ValueError("NPR requires an RGB image at least 4x4 pixels")
         image = image.astype(np.float32) / 255.0
 
-        reference_pixels = image[1:, 1:]
-        differences = (
-            image[:-1, :-1] - reference_pixels,
-            image[:-1, 1:] - reference_pixels,
-            image[1:, :-1] - reference_pixels,
-        )
-        value_sum = sum(difference.sum(axis=2) for difference in differences)
-        value_square_sum = sum(np.square(difference).sum(axis=2) for difference in differences)
-        intra_variance = value_square_sum / 12.0 - np.square(value_sum / 12.0)
-        reference = reference_pixels.mean(axis=2)
+        relationships = _npr_relationships(image)
+        intra_variance = np.var(relationships, axis=(2, 3, 4))
+        height, width = relationships.shape[:2]
+        reference = image[:height * 2:2, :width * 2:2].mean(axis=2)
         inter_variance = float(np.var(reference))
         ratio = float(np.mean(intra_variance) / (inter_variance + 1e-8))
         near_constant = float(np.mean(intra_variance <= (1.0 / 255.0) ** 2))
 
-        quantized = np.concatenate(
-            tuple(np.rint(difference * 255.0).astype(np.int16).ravel() for difference in differences)
-            + (np.zeros(reference_pixels.size, dtype=np.int16),)
-        ) + 255
+        quantized = np.rint(relationships * 255.0).astype(np.int16).ravel() + 255
         counts = np.bincount(quantized, minlength=511).astype(np.float64)
         probabilities = counts[counts > 0] / counts.sum()
         difference_entropy = float(-(probabilities * np.log2(probabilities)).sum())
@@ -114,6 +105,14 @@ class NprDetector:
             "normalized_difference_entropy": normalized_entropy,
             "npr_statistic": statistic,
         }
+
+
+def _npr_relationships(image: np.ndarray) -> np.ndarray:
+    """Return per-channel relationships for aligned, non-overlapping 2x2 grids."""
+    height, width = image.shape[0] // 2, image.shape[1] // 2
+    patches = image[:height * 2, :width * 2].reshape(height, 2, width, 2, 3)
+    patches = patches.transpose(0, 2, 1, 3, 4)
+    return patches - patches[:, :, :1, :1, :]
 
 
 def near_constant_map(intra_variance: np.ndarray) -> np.ndarray:

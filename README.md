@@ -43,10 +43,12 @@ validated on parity; provenance and JPEG-history detectors use native bytes.
 The upload path is not yet variant-aware, so this scope is a documented serving
 precondition, not an automatic guarantee.
 
-The committed calibration artifact reports a held-out AUC of
-`0.5784615384615385` on the current 916-entry, partly synthetic corpus. This is
-the pre-parity native legacy fit, not a current AI-generation accuracy claim;
-the corpus is small and is not representative of the open web. See
+The committed calibration artifact is the Round 19 consolidation refit over
+both variants: fused held-out AUC `0.6079881656804734` on 1022 held-out rows
+from a 1530-row, partly synthetic corpus. It is not an AI-generation accuracy
+claim; the corpus is small and is not representative of the open web. The
+detector repairs behind this refit are recorded in
+[`plan/audit/REPAIR-REPORT-R19.md`](plan/audit/REPAIR-REPORT-R19.md). See
 [`docs/corpus.md`](docs/corpus.md) and [`docs/calibration.md`](docs/calibration.md).
 
 ## Corpus and optional model

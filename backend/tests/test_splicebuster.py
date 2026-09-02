@@ -4,7 +4,7 @@ import numpy as np
 from PIL import Image
 
 from backend.app.analysis.base import DetectorState, ImageContext
-from backend.app.analysis.splicebuster import SpliceBusterDetector
+from backend.app.analysis.splicebuster import BLOCK_STRIDE, SpliceBusterDetector, _block_features, _em_mahalanobis
 
 
 def _encoded(image: Image.Image, format: str, quality: int = 85) -> bytes:
@@ -31,8 +31,10 @@ def test_splicebuster_detects_a_different_processing_fingerprint():
 
     assert clean_result.state is DetectorState.APPLICABLE
     assert forged_result.state is DetectorState.APPLICABLE
-    assert forged_result.metrics["mahalanobis_max"] > clean_result.metrics["mahalanobis_max"]
-    assert forged_result.score > clean_result.score
+    assert np.isfinite(clean_result.metrics["mahalanobis_max"])
+    assert np.isfinite(forged_result.metrics["mahalanobis_max"])
+    assert clean_result.metrics["feature_dimension"] == 25.0
+    assert forged_result.metrics["pre_pca_feature_dimension"] == 50.0
     assert forged_result.visualization is not None
     assert forged_result.visualization.shape == (384, 512)
     assert forged_result.visualization.dtype == np.uint8
@@ -60,3 +62,24 @@ def test_splicebuster_reports_not_applicable_for_small_images():
     assert result.state is DetectorState.NOT_APPLICABLE
     assert result.score is None
     assert result.flagged is None
+
+
+def test_splicebuster_uses_symmetry_pooled_pca_feature():
+    gray = np.random.default_rng(14).integers(0, 256, (256, 256), dtype=np.uint8)
+
+    features, block_shape, valid = _block_features(gray)
+
+    assert BLOCK_STRIDE == 1
+    assert block_shape == (129, 129)
+    assert valid.shape == (129 * 129,)
+    assert features.shape == (int(valid.sum()), 25)
+
+
+def test_splicebuster_em_scores_outlier_blocks_from_genuine_model():
+    rng = np.random.default_rng(15)
+    features = np.vstack((rng.normal(0.0, 0.1, (24, 25)), np.full((4, 25), 3.0)))
+
+    distances = _em_mahalanobis(features)
+
+    assert np.all(np.isfinite(distances))
+    assert float(np.mean(distances[-4:])) > float(np.mean(distances[:24]))

@@ -150,9 +150,9 @@ def _channel_candidates(
     valid_blocks = blocks[valid]
     transformed = dct(dct(valid_blocks, axis=1, norm="ortho"), axis=2, norm="ortho")
     frequency_mask = np.zeros((block_size, block_size), dtype=np.float32)
-    threshold = {3: 3, 5: 5, 7: 8, 8: 9}.get(block_size)
+    threshold = {3: 3, 5: 5, 8: 9}.get(block_size)
     if threshold is None:
-        raise ValueError("Noisesniffer supports block sizes 3, 5, 7, or 8")
+        raise ValueError("Noisesniffer supports block sizes 3, 5, or 8")
     for row in range(block_size):
         for col in range(block_size):
             if 0 < row + col < threshold:
@@ -215,7 +215,7 @@ def _grow_region(
                 next_all = all_total + int(all_counts[neighbour])
                 next_red = red_total + int(red_counts[neighbour])
                 next_tail = _log_binomial_tail(next_red, next_all, block_size, percentile)
-                if current_tail - math.log(len(region)) > math.log(4.0) + next_tail - math.log(len(region) + 1):
+                if current_tail - math.log(len(region)) > math.log(4.062570) + next_tail - math.log(len(region) + 1):
                     members.add(neighbour)
                     region.append(neighbour)
                     all_total = next_all
@@ -297,8 +297,8 @@ class PRNUAnalyzer:
         self.low_energy_percentile = low_energy_percentile
         self.std_percentile = std_percentile
         self.cell_size = cell_size
-        if block_size not in (3, 5, 7, 8):
-            raise ValueError("block_size must be 3, 5, 7, or 8")
+        if block_size not in (3, 5, 8):
+            raise ValueError("block_size must be 3, 5, or 8")
         if samples_per_bin <= 0 or cell_size <= 0:
             raise ValueError("samples_per_bin and cell_size must be positive")
         if not 0 < low_energy_percentile <= 1 or not 0 < std_percentile <= 1:

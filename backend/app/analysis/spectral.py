@@ -71,8 +71,6 @@ class SpectralPeakDetector:
         cy = cx = 256
         radius = np.hypot(yy - cy, xx - cx)
         valid = radius > 5
-        grid = _jpeg_grid_mask(xx - cx, yy - cy, neighbourhood=3)
-        valid &= ~grid
         values = flattened[valid]
         sigma = float(np.std(values))
         if sigma <= 1e-8:
@@ -96,15 +94,6 @@ def _azimuthal_average(spectrum: np.ndarray) -> np.ndarray:
     counts = np.bincount(radius.ravel())
     averages = sums / np.maximum(counts, 1)
     return averages[radius].astype(np.float32)
-
-
-def _jpeg_grid_mask(dx: np.ndarray, dy: np.ndarray, neighbourhood: int) -> np.ndarray:
-    """Mask the 8x8 JPEG lattice: offsets at (64*i, 64*j), not image axes."""
-    x = np.mod(dx, 64)
-    y = np.mod(dy, 64)
-    near_x = (x <= neighbourhood) | (x >= 64 - neighbourhood)
-    near_y = (y <= neighbourhood) | (y >= 64 - neighbourhood)
-    return near_x & near_y
 
 
 def _duration(started: float) -> int:

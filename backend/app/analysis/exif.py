@@ -22,6 +22,9 @@ from backend.app.analysis.base import (
 from backend.app.analysis.adapters import _settings
 
 
+_EDITOR_MARKERS = ("photoshop", "gimp", "lightroom", "snapseed")
+
+
 class ExifConsistencyDetector:
     id = "exif"
     name = "EXIF Consistency"
@@ -68,8 +71,10 @@ class ExifConsistencyDetector:
         software = _first(metadata, 0x0131, 0x000B)
         if software:
             software_text = str(software)
-            metrics["editor_software"] = 1.0
-            evidence.append((0.85, f"EXIF software tag is {software_text!r}"))
+            metrics["software_tag"] = 1.0
+            if any(marker in software_text.lower() for marker in _EDITOR_MARKERS):
+                metrics["editor_software"] = 1.0
+                evidence.append((0.85, f"EXIF software tag is {software_text!r}"))
 
         camera_tags = (0x010F, 0x0110, 0x9003, 0x829A)
         missing_camera = not any(_first(metadata, tag) is not None for tag in camera_tags)
@@ -136,8 +141,21 @@ def _number(value: object | None) -> int | None:
 
 
 def _thumbnail_bytes(ctx: ImageContext) -> bytes | None:
-    # Pillow exposes IFD1 values on some builds, but commonly exposes only the
-    # offset/length pair. Resolve that pair from the original JPEG APP1 bytes.
+    # Pillow exposes IFD1 as an offset/length pair. Resolve that pair against
+    # the format's EXIF payload before falling back to the JPEG APP1 parser.
+    try:
+        with Image.open(BytesIO(ctx.raw_bytes)) as image:
+            exif_blob = image.info.get("exif")
+        if isinstance(exif_blob, bytes):
+            thumbnail = _tiff_thumbnail(exif_blob)
+            if thumbnail:
+                return thumbnail
+    except Exception:
+        pass
+    if ctx.raw_bytes.startswith((b"II*\x00", b"MM\x00*")):
+        thumbnail = _tiff_thumbnail(ctx.raw_bytes)
+        if thumbnail:
+            return thumbnail
     try:
         ifd = ctx.pil_image.getexif().get_ifd(0x5100)
         for value in ifd.values():
@@ -146,6 +164,20 @@ def _thumbnail_bytes(ctx: ImageContext) -> bytes | None:
     except Exception:
         pass
     return _jpeg_exif_thumbnail(ctx.raw_bytes)
+
+
+def _tiff_thumbnail(payload: bytes) -> bytes | None:
+    if payload.startswith(b"Exif\x00\x00"):
+        tiff = payload[6:]
+    else:
+        tiff = payload
+    found = _tiff_ifd1_thumbnail(tiff)
+    if not found:
+        return None
+    offset, size = found
+    if offset < 0 or size <= 0 or offset + size > len(tiff):
+        return None
+    return tiff[offset : offset + size]
 
 
 def _jpeg_exif_thumbnail(raw: bytes) -> bytes | None:

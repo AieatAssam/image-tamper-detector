@@ -1,10 +1,12 @@
 from io import BytesIO
+from math import log10
 
 import numpy as np
 from PIL import Image
+from scipy.stats import binom
 
 from backend.app.analysis.base import DetectorState, ImageContext
-from backend.app.analysis.zero import ZeroDetector
+from backend.app.analysis.zero import ZeroDetector, _log10_nfa, _vote_map
 
 
 def _encoded(image: Image.Image, format: str, quality: int = 70) -> bytes:
@@ -48,3 +50,19 @@ def test_zero_is_not_applicable_to_tiny_images():
     assert result.state is DetectorState.NOT_APPLICABLE
     assert result.score is None
     assert result.flagged is None
+
+
+def test_zero_votes_are_pixel_level_and_border_is_invalid():
+    gray = np.random.default_rng(4).integers(0, 256, (64, 80)).astype(np.float32)
+    votes, zero_counts = _vote_map(gray)
+    assert votes.shape == gray.shape
+    assert zero_counts.shape == gray.shape
+    assert np.all(votes[:7] == -1)
+    assert np.all(votes[-7:] == -1)
+    assert np.all(votes[:, :7] == -1)
+    assert np.all(votes[:, -7:] == -1)
+
+
+def test_zero_nfa_uses_paper_conservative_subsampling_factor():
+    expected = 2 * log10(64) + 2 * log10(64 * 64) + float(binom.logsf(0, 1, 1 / 64)) / np.log(10)
+    assert np.isclose(_log10_nfa(64, 64, (64, 64)), expected)

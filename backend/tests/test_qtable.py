@@ -19,6 +19,7 @@ def _jpeg(quality: int) -> bytes:
 
 def test_pil_quality_fingerprint_and_estimate():
     detector = QuantizationTableDetector()
+    assert "heuristic" in detector.description.lower()
     fingerprints = set()
     for quality in (60, 75, 85, 95):
         result = detector.run(ImageContext(_jpeg(quality)))

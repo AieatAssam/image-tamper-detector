@@ -6,7 +6,7 @@ from pathlib import Path
 from time import perf_counter
 from typing import Any
 
-from c2pa import Reader
+from c2pa import Context, Reader
 
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext
 
@@ -54,7 +54,7 @@ class C2PAAnalyzer:
                 raise ValueError(f"Unsupported file format: {path}")
             result = self._analyze(path.read_bytes(), path=path)
         elif isinstance(image_input, bytes):
-            result = self._analyze(image_input, mime="image/jpeg")
+            result = self._analyze(image_input, mime=_mime_for_bytes(image_input))
         else:
             raise ValueError("Input must be an image path or bytes")
         return result
@@ -63,9 +63,17 @@ class C2PAAnalyzer:
         self, raw: bytes, *, path: Path | None = None, mime: str | None = None
     ) -> dict[str, Any]:
         try:
-            reader = Reader(path) if path is not None else Reader(mime or "application/octet-stream", BytesIO(raw))
-            with reader as active_reader:
-                store = json.loads(active_reader.json())
+            with Context() as context:
+                reader = (
+                    Reader(path, context=context)
+                    if path is not None
+                    else Reader(mime or "application/octet-stream", BytesIO(raw), context=context)
+                )
+                with reader as active_reader:
+                    store = json.loads(active_reader.json())
+                    state = active_reader.get_validation_state()
+                    if isinstance(state, str) and state and "validation_state" not in store:
+                        store["validation_state"] = state
         except Exception as exc:
             if _is_missing_manifest(exc):
                 return _not_applicable()
@@ -84,44 +92,64 @@ class C2PAAnalyzer:
         if not isinstance(manifest, dict):
             return _not_applicable()
 
-        validation_failed = _validation_failed(store)
+        validation_state = _validation_state(store)
+        validation_failed = validation_state in {"invalid", "error"}
+        if validation_state == "unknown" and _has_validation_problem(store):
+            validation_failed = True
         generator = _generator(manifest)
-        generated = _has_generative_action(manifest)
-        if not generated and generator:
+        structured_generated = _has_generative_action(manifest)
+        generated = validation_state in {"valid", "trusted"} and structured_generated
+        if not generated and validation_state in {"valid", "trusted"} and generator:
             generated = any(name in generator.lower() for name in self.known_ai_generators)
 
         metadata = {
             "active_manifest": active_id,
             "claim_generator": generator,
             "manifest": manifest,
+            "validation_state": validation_state,
+            "trusted": validation_state == "trusted",
             "validation_status": store.get("validation_status"),
             "validation_results": store.get("validation_results"),
         }
         issues = []
         if validation_failed:
-            issues.append({"type": "signature_invalid", "severity": "high",
-                           "description": "C2PA validation failed; post-signing modification is possible",
+            failure_type, failure_description = _validation_issue(store, validation_state)
+            issues.append({"type": failure_type, "severity": "high",
+                           "description": failure_description,
+                           "location": "manifest.validation"})
+        elif validation_state == "unknown":
+            issues.append({"type": "validation_unknown", "severity": "info",
+                           "description": "C2PA manifest has no established validation state",
                            "location": "manifest.validation"})
         if generated:
             issues.append({"type": "ai_generated", "severity": "identification",
                            "description": "Validated C2PA manifest identifies generative image creation",
                            "location": "manifest.assertions.c2pa.actions"})
 
-        if validation_failed:
+        if validation_state == "unknown" and not validation_failed:
+            score, flagged = None, None
+            reason = "C2PA manifest validation state is unavailable"
+        elif validation_failed:
             score, flagged = 0.95, True
             reason = "C2PA manifest is present but validation failed"
         elif generated:
             score, flagged = 1.0, True
             suffix = f" by {generator}" if generator else ""
             reason = f"validated C2PA manifest identifies generative image creation{suffix}"
-        else:
+        elif validation_state in {"valid", "trusted"}:
             score, flagged = 0.05, False
             reason = "valid C2PA manifest contains no generative creation assertion"
+        else:
+            score, flagged = None, None
+            reason = f"C2PA manifest is {validation_state}; validation is not sufficient for provenance scoring"
         return {
             "state": DetectorState.APPLICABLE, "score": score, "flagged": flagged,
             "reason": reason,
             "metrics": {"manifest_present": 1.0, "validation_failed": float(validation_failed),
-                        "generative_assertion": float(generated)},
+                        "generative_assertion": float(structured_generated),
+                        "validated_generative_assertion": float(generated),
+                        "validation_known": float(validation_state != "unknown"),
+                        "trusted": float(validation_state == "trusted")},
             "issues": issues, "metadata": metadata,
         }
 
@@ -139,12 +167,36 @@ def _is_missing_manifest(exc: Exception) -> bool:
     return "manifestnotfound" in text or "no jumbf" in text or "manifest not found" in text
 
 
-def _validation_failed(store: dict[str, Any]) -> bool:
-    validation_state = str(store.get("validation_state", "")).lower()
-    if validation_state:
-        return validation_state in {"invalid", "error"}
+def _validation_state(store: dict[str, Any]) -> str:
+    raw = store.get("validation_state")
+    if isinstance(raw, str) and raw.strip():
+        normalized = raw.strip().lower().replace("_", "-").replace(" ", "-")
+        if normalized in {"well-formed", "valid", "trusted", "invalid", "error"}:
+            return normalized
+        return "unknown"
+    return "unknown"
+
+
+def _has_validation_problem(store: dict[str, Any]) -> bool:
+    # A validation payload also lists successes, so presence alone is not a problem.
+    # Only an explicit failure token counts when the library reports no usable state.
     text = json.dumps([store.get("validation_status"), store.get("validation_results")], default=str).lower()
-    return any(token in text for token in ("fail", "invalid", "error"))
+    return any(token in text for token in ("fail", "invalid", "mismatch", "error", "untrusted"))
+
+
+def _validation_issue(store: dict[str, Any], validation_state: str) -> tuple[str, str]:
+    text = json.dumps([store.get("validation_status"), store.get("validation_results")], default=str).lower()
+    if any(code in text for code in ("assertion.datahash.mismatch", "assertion.hasheduri.mismatch", "claimsignature.mismatch")):
+        return "post_signing_mismatch", "C2PA validation found a signed content mismatch; post-signing modification is possible"
+    if any(code in text for code in ("claimsignature", "cose")):
+        return "signature_invalid", "C2PA signature validation failed"
+    if "signingcredential" in text:
+        return "credential_invalid", "C2PA signing credential validation failed"
+    if validation_state == "unknown" and not _has_validation_problem(store):
+        return "validation_unknown", "C2PA manifest has no established validation state"
+    if validation_state == "unknown":
+        return "validation_failed", "C2PA manifest validation failed; failure type is unspecified"
+    return "validation_failed", "C2PA manifest validation failed"
 
 
 def _generator(manifest: dict[str, Any]) -> str | None:
@@ -161,6 +213,8 @@ def _generator(manifest: dict[str, Any]) -> str | None:
 
 
 def _has_generative_action(value: Any) -> bool:
+    if isinstance(value, dict) and "assertions" in value:
+        value = value.get("assertions", [])
     if isinstance(value, dict):
         source = str(value.get("digitalSourceType", ""))
         if value.get("action") == "c2pa.created" and (
@@ -174,13 +228,24 @@ def _has_generative_action(value: Any) -> bool:
 
 
 def _mime_for(ctx: ImageContext) -> str:
-    if ctx.raw_bytes.startswith(b"\xff\xd8"):
+    return _mime_for_bytes(ctx.raw_bytes, ctx.format)
+
+
+def _mime_for_bytes(raw: bytes, image_format: str | None = None) -> str:
+    if raw.startswith(b"\xff\xd8"):
         return "image/jpeg"
-    if ctx.raw_bytes.startswith(b"\x89PNG"):
+    if raw.startswith(b"\x89PNG"):
         return "image/png"
-    if ctx.raw_bytes.startswith((b"II*\x00", b"MM\x00*")):
+    if raw.startswith((b"II*\x00", b"MM\x00*")):
         return "image/tiff"
-    return "image/jpeg"
+    if raw.startswith(b"RIFF") and raw[8:12] == b"WEBP":
+        return "image/webp"
+    return {
+        "JPEG": "image/jpeg",
+        "PNG": "image/png",
+        "TIFF": "image/tiff",
+        "WEBP": "image/webp",
+    }.get((image_format or "").upper(), "application/octet-stream")
 
 
 def _duration(started: float) -> int:

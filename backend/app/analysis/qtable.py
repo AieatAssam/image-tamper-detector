@@ -12,7 +12,8 @@ from backend.app.analysis.adapters import _settings
 from backend.app.analysis.base import DetectorResult, DetectorState, ImageContext, to_probability
 
 
-# ITU-T T.81, Annex K.  PIL/libjpeg exposes these tables in zig-zag order.
+# ITU-T T.81, Annex K, in natural 8x8 order. Pillow converts the JPEG DQT
+# zig-zag payload before exposing image.quantization.
 LUMINANCE_TABLE = (
     16, 11, 10, 16, 24, 40, 51, 61, 12, 12, 14, 19, 26, 58, 60, 55,
     14, 13, 16, 24, 40, 57, 69, 56, 14, 17, 22, 29, 51, 87, 80, 62,
@@ -62,8 +63,8 @@ class QuantizationTableDetector:
     family = "compression"
     applicable_formats = frozenset({"JPEG"})
     produces_map = False
-    description = "Compares JPEG quantization tables with standard libjpeg quality tables."
-    limitations = ["Requires JPEG plus EXIF Make/Model provenance; standard tables alone are not proof of software re-saving."]
+    description = "Repository heuristic comparing JPEG quantization tables with standard libjpeg quality tables."
+    limitations = ["Requires JPEG plus EXIF Make/Model provenance; this is not a camera/software table database and standard tables alone are not proof of a re-save."]
 
     def applicable(self, ctx: ImageContext) -> tuple[bool, str]:
         image_format, tables = _jpeg_tables(ctx)

@@ -6,7 +6,7 @@ import numpy as np
 from PIL import Image
 
 from backend.app.analysis.base import DetectorState, ImageContext
-from backend.app.analysis.cfa import CfaDetector
+from backend.app.analysis.cfa import CfaDetector, _intermediate_values
 
 
 def _context(rgb: np.ndarray, exif=None) -> ImageContext:
@@ -46,6 +46,15 @@ def test_cfa_is_not_applicable_when_exif_dimensions_disagree():
     assert result.score is None and result.flagged is None
 
 
+def test_intermediate_values_mask_has_two_pixel_border():
+    channel = np.arange(64, dtype=np.float32).reshape(8, 8)
+    mask = _intermediate_values(channel)
+    assert np.all(mask[:2] == 0)
+    assert np.all(mask[-2:] == 0)
+    assert np.all(mask[:, :2] == 0)
+    assert np.all(mask[:, -2:] == 0)
+
+
 def test_small_image_without_exif_is_not_applicable():
     result = CfaDetector().run(_context(np.zeros((64, 64, 3), dtype=np.uint8)))
     assert result.state is DetectorState.NOT_APPLICABLE
@@ -62,7 +71,8 @@ def test_cfa_requires_strict_real_camera_evidence():
     exif[0x010F] = "Example Camera"
     exif[0x0110] = "Example Model"
     output = BytesIO()
-    image = Image.fromarray(np.zeros((256, 256, 3), dtype=np.uint8), "RGB")
+    rng = np.random.default_rng(19)
+    image = Image.fromarray(rng.integers(0, 256, (256, 256, 3), dtype=np.uint8), "RGB")
     image.save(output, format="JPEG", exif=exif.tobytes())
     relaxed = CfaDetector().run(ImageContext(output.getvalue()))
     assert relaxed.state is DetectorState.NOT_APPLICABLE
@@ -85,7 +95,8 @@ def test_cfa_requires_strict_real_camera_evidence():
 
 def test_cfa_reads_nested_exif_pixel_dimensions():
     output = BytesIO()
-    Image.fromarray(np.zeros((256, 256, 3), dtype=np.uint8), "RGB").save(
+    rng = np.random.default_rng(20)
+    Image.fromarray(rng.integers(0, 256, (256, 256, 3), dtype=np.uint8), "RGB").save(
         output, format="JPEG"
     )
     ctx = ImageContext(output.getvalue())
@@ -110,3 +121,24 @@ def test_cfa_uses_full_resolution_after_strict_gate():
         result = detector.run(ImageContext(output.getvalue()))
     assert result.state is DetectorState.APPLICABLE
     assert measure.call_args.args[0].shape == (256, 2048, 3)
+
+
+def test_cfa_unresolved_pattern_abstains_after_strict_gate():
+    exif = Image.Exif()
+    exif[0x010F] = "Example Camera"
+    exif[0x0110] = "Example Model"
+    exif[0xA002] = 256
+    exif[0xA003] = 256
+    output = BytesIO()
+    Image.fromarray(np.zeros((256, 256, 3), dtype=np.uint8), "RGB").save(
+        output, format="JPEG", exif=exif.tobytes()
+    )
+    result = CfaDetector().run(ImageContext(output.getvalue()))
+    assert result.state is DetectorState.NOT_APPLICABLE
+    assert result.score is None and result.flagged is None
+
+
+def test_cfa_ratio_uses_unit_mask_scale():
+    rng = np.random.default_rng(21)
+    ratio, _, _ = CfaDetector().measure(rng.integers(0, 256, (256, 256, 3), dtype=np.uint8))
+    assert ratio > 0.01

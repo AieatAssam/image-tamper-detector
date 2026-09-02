@@ -214,27 +214,33 @@ globally re-saved JPEG can have a uniform error level despite a prior edit.
 
 True PRNU is a camera-specific multiplicative sensor pattern. It requires a
 reference fingerprint estimated from many images of the same camera. This
-repository has no such reference. Its production detector instead measures
-whether a denoising residual has unusually different local variance, which is a
-legitimate blind noise-inconsistency cue but is not camera attribution.
+repository has no such reference. Its production detector instead runs the
+Noisesniffer a-contrario test for locally improbable noise structure, which is
+a legitimate blind noise-inconsistency cue but is not camera attribution.
 
 ### Method
 
-A wavelet/Gaussian residual is formed from the image and its local variance is
-aggregated into a global raw statistic. Higher residual variance is passed
-through the calibrated score mapping. The public detector name describes the
-actual capability rather than calling the statistic PRNU.
+The production path is the Noisesniffer a-contrario test, not a local-variance
+statistic. The image is split into blocks, the blocks are ordered by their
+low-frequency energy, and the number of low-noise blocks falling inside a
+candidate region is compared against the count expected by chance under the
+background model. The raw statistic is the resulting significance,
+`-log10(NFA)`; the runtime reports it as `noisesniffer_significance` and maps
+it through the calibrated score. The public detector name describes the actual
+capability rather than calling the statistic PRNU.
 
 ### Citation and provenance
 
 For true PRNU attribution: J. Lukas, J. Fridrich, and M. Goljan, “Digital
 Camera Identification from Sensor Pattern Noise,” IEEE Transactions on
-Information Forensics and Security, 2006. The blind residual implementation
-also adapts the block-selection and a-contrario ideas of M. Gardella, P.
-Musé, M. Colom, and J.-M. Morel, “Image Forgery Detection Based on Noise
+Information Forensics and Security, 2006. That method is cited only to say what
+this detector is not; it is not implemented here. The implemented method is
+M. Gardella, P. Musé, M. Colom, and J.-M. Morel, “Image Forgery Detection Based on Noise
 Inspection: Analysis and Refinement of the Noisesniffer Method,” *Image
-Processing On Line* 14, article 462, 2024, under Apache-2.0. The adaptation is
-not a copy of the reference source.
+Processing On Line* 14, article 462, 2024, under Apache-2.0. The
+implementation follows that paper but is not a copy of the reference source;
+`plan/audit/PAPER-AUDIT-residual.md` and `plan/audit/REPAIR-REPORT-R19-residual.md`
+record the remaining deviations.
 
 ### Signal direction
 
