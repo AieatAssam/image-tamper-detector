@@ -91,7 +91,7 @@ function renderResults() {
 }
 
 describe('AnalysisResults', () => {
-  it('orders score dots by magnitude and keeps NOT_APPLICABLE out of the plot', () => {
+  it('orders score dots by magnitude and keeps unassessed detectors out of the plot', () => {
     const { container } = renderResults();
     expect(
       [...container.querySelectorAll('[data-detector-id]')].map((node) =>
@@ -99,7 +99,7 @@ describe('AnalysisResults', () => {
       ),
     ).toEqual(['strong', 'weak']);
     expect(container.querySelector('[data-uncertainty="0.09"]')).toBeTruthy();
-    expect(screen.getAllByText('NOT_APPLICABLE')).toHaveLength(2);
+    expect(screen.getAllByText('Not assessed')).toHaveLength(2);
     expect(screen.getAllByText('Not returned').length).toBeGreaterThan(0);
     expect(screen.getByRole('table')).toBeTruthy();
   });

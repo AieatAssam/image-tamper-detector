@@ -31,7 +31,10 @@ function App() {
 
   return (
     <ChakraProvider value={system}>
-      <Container maxW="1100px" py={{ base: 6, md: 12 }}>
+      <a className="skip-link" href="#main-content">
+        Skip to analysis
+      </a>
+      <Container maxW="1200px" py={{ base: 5, md: 10 }}>
         <VStack gap={{ base: 6, md: 10 }} align="stretch">
           <HStack justify="space-between" align="start" gap={4}>
             <Box>
@@ -45,10 +48,11 @@ function App() {
                 Evidence desk / 01
               </Text>
               <Heading as="h1" size={{ base: 'xl', md: '2xl' }} mt={2} letterSpacing="-0.04em">
-                Is this image real?
+                Inspect the evidence
               </Heading>
               <Text color="muted" mt={2} maxW="600px">
-                Upload an image and inspect the signals that support or challenge its provenance.
+                Upload one image to compare forensic signals, see which checks could run, and
+                understand what each result can and cannot tell you.
               </Text>
             </Box>
             <Button
@@ -56,11 +60,14 @@ function App() {
               size="sm"
               onClick={() => setIsDark((value) => !value)}
               aria-label={isDark ? 'Use light colour theme' : 'Use dark colour theme'}
+              aria-pressed={isDark}
             >
-              {isDark ? 'Light mode' : 'Dark mode'}
+              {isDark ? 'Use light theme' : 'Use dark theme'}
             </Button>
           </HStack>
-          <ImageAnalyzer />
+          <Box as="main" id="main-content">
+            <ImageAnalyzer />
+          </Box>
         </VStack>
       </Container>
     </ChakraProvider>

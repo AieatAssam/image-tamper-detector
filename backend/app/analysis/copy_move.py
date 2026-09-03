@@ -17,6 +17,12 @@ CLUSTER_INCONSISTENCY_THRESHOLD = 2.2
 CLUSTER_DEPTH = 4
 MIN_CLUSTER_MATCHES = 3
 MATCH_BATCH_SIZE = 64
+MIN_AFFINE_SCALE = 0.5
+MAX_AFFINE_SCALE = 2.5
+MAX_AFFINE_CONDITION = 3.0
+# ponytail: fixed 8-inlier confidence floor suppresses repeated glyph/texture matches; dense
+# copy-move scenes need a separately calibrated confidence model if this becomes a required class.
+MIN_CONFIDENT_INLIERS = 8
 
 
 def _generalized_matches(descriptors: np.ndarray) -> list[tuple[int, int]]:
@@ -133,6 +139,22 @@ def _estimate_affine(
     return count, source[inliers], destination[inliers], homography
 
 
+def _is_plausible_affine(homography: np.ndarray) -> bool:
+    """Reject numerically unstable matches that imply an impossible transform."""
+    try:
+        singular_values = np.linalg.svd(homography[:2, :2], compute_uv=False)
+    except np.linalg.LinAlgError:
+        return False
+    if not np.all(np.isfinite(singular_values)):
+        return False
+    smallest, largest = float(singular_values[-1]), float(singular_values[0])
+    return (
+        smallest >= MIN_AFFINE_SCALE
+        and largest <= MAX_AFFINE_SCALE
+        and largest / smallest <= MAX_AFFINE_CONDITION
+    )
+
+
 def _visualization(image: np.ndarray, hulls: list[np.ndarray], arrows: list[tuple[np.ndarray, np.ndarray]]) -> np.ndarray:
     output = image.copy()
     for hull in hulls:
@@ -205,6 +227,8 @@ class CopyMoveDetector:
             if estimated is None:
                 continue
             inlier_count, source_inliers, destination_inliers, homography = estimated
+            if not _is_plausible_affine(homography):
+                continue
             verified.append((inlier_count, source_inliers, destination_inliers, homography, cluster_ids))
             verified_cluster_ids.update(cluster_ids)
 
@@ -213,16 +237,17 @@ class CopyMoveDetector:
             score = to_probability(0.0, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
             return DetectorResult(
                 self.id, DetectorState.APPLICABLE, score, score >= 0.5, float(config["threshold"]),
-                "no_forgery_found: sufficient keypoints but no verified affine cluster was found",
+                "no_forgery_found: no verified affine cluster was found",
                 base_metrics, cv2.resize(overlay, (ctx.width, ctx.height), interpolation=cv2.INTER_LINEAR), _duration(started),
             )
 
+        confident = [item for item in verified if item[0] >= MIN_CONFIDENT_INLIERS]
         hulls: list[np.ndarray] = []
         arrows: list[tuple[np.ndarray, np.ndarray]] = []
-        for _, source, destination, _, _ in verified:
+        for _, source, destination, _, _ in confident:
             hulls.extend((cv2.convexHull(source), cv2.convexHull(destination)))
             arrows.append((source, destination))
-        overlay = _visualization(image, hulls, arrows)
+        overlay = _visualization(image, hulls, arrows) if confident else image.copy()
         scale_x = ctx.width / image.shape[1]
         scale_y = ctx.height / image.shape[0]
         best = max(verified, key=lambda item: item[0])
@@ -239,11 +264,19 @@ class CopyMoveDetector:
             "affine_rotation_degrees": float(np.degrees(np.arctan2(best[3][1, 0], best[3][0, 0]))),
             "mask_fraction": float(sum(cv2.contourArea(hull) for hull in hulls) / max(1, ctx.width * ctx.height)),
         }
-        raw = float(len(verified_cluster_ids))
+        strongest_inliers = best[0]
+        raw = float(len(verified_cluster_ids)) if strongest_inliers >= MIN_CONFIDENT_INLIERS else 0.0
         score = to_probability(raw, float(config["threshold"]), float(config["scale"]), bool(config["higher_is_worse"]))
+        if strongest_inliers < MIN_CONFIDENT_INLIERS:
+            reason = (
+                f"verified local matches were too weak to flag: strongest cluster has "
+                f"{strongest_inliers} inliers; {MIN_CONFIDENT_INLIERS} are required"
+            )
+        else:
+            reason = f"verified {len(verified_cluster_ids)} spatial copy-move cluster(s); best cluster has {strongest_inliers} inliers"
         return DetectorResult(
             self.id, DetectorState.APPLICABLE, score, score >= 0.5, float(config["threshold"]),
-            f"verified {len(verified_cluster_ids)} spatial copy-move cluster(s); best cluster has {best[0]} inliers",
+            reason,
             metrics, cv2.resize(overlay, (ctx.width, ctx.height), interpolation=cv2.INTER_LINEAR), _duration(started),
         )
 

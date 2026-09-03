@@ -13,7 +13,7 @@ vi.mock('./api/client', () => ({
 describe('app', () => {
   it('renders the upload surface and disclaimer', async () => {
     render(<App />);
-    expect(screen.getByText('Is this image real?')).toBeTruthy();
+    expect(screen.getByText('Inspect the evidence')).toBeTruthy();
     expect(screen.getByText(/not proof/i)).toBeTruthy();
   });
 });

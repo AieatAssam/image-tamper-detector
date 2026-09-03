@@ -8,7 +8,13 @@ import numpy as np
 from PIL import Image
 
 from backend.app.analysis.base import DetectorState, ImageContext
-from backend.app.analysis.copy_move import CopyMoveDetector, _cluster_matches, _estimate_affine, _generalized_matches
+from backend.app.analysis.copy_move import (
+    CopyMoveDetector,
+    _cluster_matches,
+    _estimate_affine,
+    _generalized_matches,
+    _is_plausible_affine,
+)
 
 
 def _jpeg(array: np.ndarray) -> bytes:
@@ -129,3 +135,8 @@ def test_copy_move_accepts_the_paper_minimum_of_three_inliers():
         estimated = _estimate_affine(source, destination)
     assert estimated is not None
     assert estimated[0] == 3
+
+
+def test_copy_move_rejects_numerically_unstable_affine_transform():
+    unstable = np.array([[12.8, 0.0, 0.0], [0.0, 12.8, 0.0], [0.0, 0.0, 1.0]])
+    assert _is_plausible_affine(unstable) is False

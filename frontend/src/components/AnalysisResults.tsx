@@ -65,8 +65,8 @@ const verdictCopy: Record<
 
 const stateCopy: Record<DetectorState, { label: string; icon: string }> = {
   applicable: { label: 'Applicable', icon: '●' },
-  not_applicable: { label: 'NOT_APPLICABLE', icon: '—' },
-  error: { label: 'Error', icon: '!' },
+  not_applicable: { label: 'Not assessed', icon: '—' },
+  error: { label: 'Could not run', icon: '!' },
 };
 
 function detectorName(id: string, detectors: DetectorInfo[]): string {
@@ -105,8 +105,8 @@ function stateLabel(result: DetectorResult): string {
         : 'Signal available';
   }
   return result.state === 'not_applicable'
-    ? 'No valid comparison for this image'
-    : 'Detector failed';
+    ? 'This check could not assess the image'
+    : 'This check failed before returning evidence';
 }
 
 function ScoreRuler({
@@ -134,7 +134,7 @@ function ScoreRuler({
       </Box>
       <HStack justify="space-between" mt={2} fontFamily="mono" fontSize="xs" color="muted">
         <Text>0%</Text>
-        <Text>threshold {Math.round(threshold * 100)}%</Text>
+        <Text>decision line {Math.round(threshold * 100)}%</Text>
         <Text>100%</Text>
       </HStack>
     </Box>
@@ -167,10 +167,10 @@ function DetectorTable({
         <thead>
           <tr>
             <th scope="col">Detector</th>
-            <th scope="col">State</th>
-            <th scope="col">Score</th>
-            <th scope="col">± training SE</th>
-            <th scope="col">Threshold</th>
+            <th scope="col">Interpretation</th>
+            <th scope="col">Evidence score</th>
+            <th scope="col">Training SE</th>
+            <th scope="col">Decision line</th>
           </tr>
         </thead>
         <tbody>
@@ -182,16 +182,18 @@ function DetectorTable({
                   <span className="table-detector-name">{detectorName(result.id, detectors)}</span>
                   <span className="table-detector-note">{stateLabel(result)}</span>
                 </th>
-                <td>
+                <td data-label="Interpretation">
                   <StatePill state={result.state} />
                 </td>
-                <td className="table-number">
+                <td data-label="Evidence score" className="table-number">
                   {result.score === null ? '—' : scoreText(result.score)}
                 </td>
-                <td className="table-number">
+                <td data-label="Training SE" className="table-number">
                   {uncertainty === null ? 'Not returned' : `±${Math.round(uncertainty * 100)}%`}
                 </td>
-                <td className="table-number">{scoreText(result.threshold)}</td>
+                <td data-label="Decision line" className="table-number">
+                  {scoreText(result.threshold)}
+                </td>
               </tr>
             );
           })}
@@ -230,7 +232,7 @@ function ScoreDotPlot({
           className="dot-plot"
           viewBox={`0 0 ${width} ${height}`}
           role="img"
-          aria-label="Detector scores with one training-time standard-error whiskers"
+          aria-label="Detector scores with optional training-time standard-error whiskers"
         >
           <title>Detector scores with training-time uncertainty</title>
           <line
@@ -241,7 +243,7 @@ function ScoreDotPlot({
             y2={height - 28}
           />
           <text className="plot-threshold-label" x={x(SCORE_THRESHOLD) + 6} y={top - 15}>
-            50% threshold
+            50% decision line
           </text>
           {[0, 0.25, 0.5, 0.75, 1].map((tick) => (
             <g key={tick}>
@@ -755,8 +757,9 @@ export default function AnalysisResults({ results, originalUrl, detectors }: Pro
                 Detector scores, with their limits
               </Heading>
               <Text color="muted" fontSize="sm" mt={1}>
-                Magnitude is shown as a point, not a bar. The whisker is one Hanley–McNeil standard
-                error when the service provides it.
+                The score is the detector’s calibrated evidence estimate, not a guaranteed chance
+                that the image was edited. The decision line is the detector’s operating point. The
+                whisker is training-time uncertainty when the service provides it.
               </Text>
             </Box>
             <Box className="chart-layout">
@@ -770,7 +773,13 @@ export default function AnalysisResults({ results, originalUrl, detectors }: Pro
       <Card.Root variant="outline" className="forensics-card">
         <Card.Body>
           <VStack align="stretch" gap={3}>
-            <Heading size="md">Why this result?</Heading>
+            <Box>
+              <Heading size="md">Why this result?</Heading>
+              <Text color="muted" fontSize="sm" mt={1}>
+                These contributions show which detectors moved the fused assessment and in which
+                direction. They are model inputs, not independent proof.
+              </Text>
+            </Box>
             {rankedContributions.length ? (
               rankedContributions.map((contribution) => {
                 const result = results.detectors.find((item) => item.id === contribution.id);
@@ -787,14 +796,16 @@ export default function AnalysisResults({ results, originalUrl, detectors }: Pro
                           {result?.reason ?? 'No detector explanation was returned.'}
                         </Text>
                       </Box>
-                      <Text
+                      <Box
                         className="contribution-value"
-                        fontFamily="mono"
                         aria-label={`${contribution.signed_contribution.toFixed(2)} ${direction}`}
                       >
-                        {contribution.signed_contribution >= 0 ? '+' : ''}
-                        {contribution.signed_contribution.toFixed(2)}
-                      </Text>
+                        <Text fontFamily="mono">
+                          {contribution.signed_contribution >= 0 ? '+' : ''}
+                          {contribution.signed_contribution.toFixed(2)}
+                        </Text>
+                        <Text className="contribution-direction">{direction}</Text>
+                      </Box>
                     </HStack>
                   </Box>
                 );
