@@ -235,7 +235,7 @@
       "heldout_auc": null,
       "higher_is_worse": false,
       "scale": 0.07497191429138184,
-      "threshold": 0.15215015411376953,
+      "threshold": 0.111,
       "validated_by": [
         "imd2020",
         "real_ai",
